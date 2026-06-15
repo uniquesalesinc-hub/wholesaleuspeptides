@@ -147,7 +147,7 @@ function Hero({ setPage }) {
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:0,borderTop:"1px solid rgba(201,168,76,0.15)",paddingTop:28}}>
           {[
-            "Min Order: 5 Units",
+            "Min Order: 10 Units",
             "Third-Party Tested",
             "White Label Available",
             "USA Fulfillment",
@@ -257,7 +257,7 @@ function ProdCard({ p, onAdd }) {
         <div style={{background:C.off,padding:"8px 10px",marginBottom:10,border:"1px solid "+C.mist}}>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
             <div style={{fontSize:8,color:C.stone,letterSpacing:1,textTransform:"uppercase",fontWeight:700}}>Units</div>
-            <input type="number" min="5" value={qty} onChange={e=>setQty(Math.max(5,parseInt(e.target.value)||5))}
+            <input type="number" min="10" value={qty} onChange={e=>setQty(Math.max(10,parseInt(e.target.value)||10))}
               style={{width:52,padding:"3px 6px",border:"1px solid "+C.mist,background:C.white,fontSize:11,color:C.navy,outline:"none",textAlign:"center"}}/>
           </div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
@@ -266,7 +266,7 @@ function ProdCard({ p, onAdd }) {
           </div>
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:4,marginBottom:11}}>
-          {["Min. Order: 5 Units","White Label Available","COA Available"].map(f=>(
+          {["Min. Order: 10 Units","White Label Available","COA Available"].map(f=>(
             <div key={f} style={{display:"flex",gap:7,alignItems:"center"}}>
               <div style={{width:4,height:4,borderRadius:"50%",background:C.green,flexShrink:0}}/>
               <div style={{fontSize:10,color:C.stone}}>{f}</div>
