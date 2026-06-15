@@ -707,7 +707,7 @@ function AboutPage() {
           {t:"Three-Panel Independent Testing — Every Lot",      b:"HPLC peptide purity (99%+), endotoxin via LAL assay, and heavy metal screen via ICP-MS. Performed by a U.S. third-party laboratory on every production lot — not averaged, not based on manufacturer-supplied COAs."},
           {t:"Batch-Specific COA for White-Label Partners",      b:"White-label partners receive the full third-party COA document for every lot we fulfill under their brand — delivered as PDF for posting on partner websites. Full traceability from the QR code on the bottle to the independent lab report."},
           {t:"Research Use Only (RUO) — Legal Position",        b:"All products are Research Use Only. Not approved by the U.S. FDA for any clinical, diagnostic, or therapeutic use. Clinical trials for many compounds are ongoing. Not drugs, supplements, or medical devices. Partners and purchasers are responsible for compliance with all applicable federal, state, and local laws."},
-          {t:"ACH Payment Policy",                               b:"WholesaleUSPeptides accepts ACH bank transfer only. No credit cards, debit cards, or other payment methods accepted. All orders are held pending until ACH payment clears. 50% deposit required on all new accounts to initiate production. Net terms are not offered."},
+          {t:"Payment Policy",                                   b:"WholesaleUSPeptides accepts ACH bank transfer, debit cards, and Zelle (debit card and Zelle payments accepted up to $2,500). All orders are held pending until payment clears. 50% deposit required on all new accounts to initiate production. Net terms are not offered."},
         ].map(({t,b})=>(
           <div key={t} style={{marginBottom:24,paddingBottom:24,borderBottom:"1px solid "+C.mist}}>
             <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
@@ -835,7 +835,7 @@ function CartDrawer({ cart, setCart, open, setOpen }) {
         </div>
         <div style={{padding:"10px 22px 0"}}>
           <div style={{padding:"8px 12px",background:"#EDE9DF",border:"1px solid "+C.mist,fontSize:10,color:"#6B5E4A",lineHeight:1.6}}>
-            <strong style={{color:C.red}}>RUO:</strong> Research purposes only. Not FDA approved. ACH payment only. Orders held until payment clears.
+            <strong style={{color:C.red}}>RUO:</strong> Research purposes only. Not FDA approved. ACH, debit card, or Zelle (up to $2,500) payment accepted. Orders held until payment clears.
           </div>
         </div>
         <div style={{flex:1,overflowY:"auto",padding:"12px 22px"}}>
@@ -909,11 +909,11 @@ function CartDrawer({ cart, setCart, open, setOpen }) {
                 <span style={{fontWeight:700,color:C.navy}}>{fmt(total*0.5)}</span>
               </div>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.stone}}>
-                <span>Balance Due on Fulfillment</span>
+                <span>Balance Due on Completion of Manufacturing Prior to Shipping</span>
                 <span style={{fontWeight:700,color:C.navy}}>{fmt(total*0.5)}</span>
               </div>
             </div>
-            <div style={{padding:"7px 12px",background:C.navy,marginBottom:10,fontSize:9,color:C.gold,fontWeight:700,letterSpacing:1,textAlign:"center"}}>ACH Bank Transfer Only — No Credit Cards</div>
+            <div style={{padding:"7px 12px",background:C.navy,marginBottom:10,fontSize:9,color:C.gold,fontWeight:700,letterSpacing:1,textAlign:"center"}}>ACH · Debit Card · Zelle (Debit &amp; Zelle up to $2,500) — No Credit Cards</div>
             <button style={{width:"100%",padding:"12px 0",background:C.navy,border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",marginBottom:7}}>
               Submit Order Request
             </button>
