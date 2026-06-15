@@ -128,7 +128,7 @@ function Hero({ setPage }) {
       <div style={{maxWidth:1200,margin:"0 auto"}}>
         <div style={{display:"inline-flex",alignItems:"center",gap:10,marginBottom:24,padding:"6px 14px",border:"1px solid rgba(201,168,76,0.3)",background:"rgba(201,168,76,0.06)"}}>
           <div style={{width:6,height:6,borderRadius:"50%",background:C.gold}}/>
-          <span style={{fontSize:9,letterSpacing:3.5,color:C.gold,textTransform:"uppercase",fontWeight:700}}>Wholesale Manufacturing Platform — Minimum 5 Units Per SKU</span>
+          <span style={{fontSize:9,letterSpacing:3.5,color:C.gold,textTransform:"uppercase",fontWeight:700}}>Wholesale Manufacturing Platform — Minimum 10 Units Per SKU</span>
         </div>
         <h1 style={{fontSize:52,fontWeight:800,color:C.white,lineHeight:1.12,marginBottom:18,letterSpacing:-1.5,fontFamily:"Georgia,serif",maxWidth:720}}>
           Wholesale Peptide Manufacturing<br/>
@@ -299,7 +299,7 @@ function Catalog({ addToCart }) {
         <div style={{maxWidth:1280,margin:"0 auto"}}>
           <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:10}}>Wholesale Catalog</div>
           <h1 style={{fontSize:30,fontWeight:700,color:C.white,fontFamily:"Georgia,serif",marginBottom:5}}>Research Compound Catalog</h1>
-          <p style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>Research Use Only — American Manufacturing — Independent testing per lot — Minimum 5 units per SKU</p>
+          <p style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>Research Use Only — American Manufacturing — Independent testing per lot — Minimum 10 units per SKU</p>
         </div>
       </div>
       <div style={{maxWidth:1280,margin:"0 auto",padding:"24px 40px 72px"}}>
@@ -412,7 +412,7 @@ function HomeSections({ setPage }) {
                   <div style={{fontSize:14,fontWeight:700,color:C.navy,marginBottom:3,fontFamily:"Georgia,serif"}}>{item.n}</div>
                   <div style={{fontSize:11,color:C.stone,marginBottom:12}}>{item.s}</div>
                   <div style={{display:"flex",flexDirection:"column",gap:5,marginBottom:14}}>
-                    {["Minimum Order: 5 Units","White Label Available","COA Available"].map(f=>(
+                    {["Minimum Order: 10 Units","White Label Available","COA Available"].map(f=>(
                       <div key={f} style={{display:"flex",gap:7,alignItems:"center"}}>
                         <div style={{width:4,height:4,borderRadius:"50%",background:C.green,flexShrink:0}}/>
                         <div style={{fontSize:10,color:C.stone}}>{f}</div>
