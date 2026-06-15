@@ -122,7 +122,7 @@ const P = [
   {id:86,c:"Diluents",      n:"Water",           s:"10ml",  R1:6.99,R2:6.49,R3:5.99,T1:4.5,T2:4.5,T3:4.5,T4:4.5,T5:4.5,   hot:0},
   {id:87,c:"Capsules",      n:"BPC-157",         s:"500mcg / 60ct", R1:0,R2:0,R3:0,T1:0,T2:0,T3:0,T4:0,T5:0, hot:0},
   {id:88,c:"Capsules",      n:"BPC-157",         s:"1mg / 60ct",    R1:0,R2:0,R3:0,T1:0,T2:0,T3:0,T4:0,T5:0, hot:0},
-  {id:89,c:"Capsules",      n:"TB-500",          s:"5mg / 30ct",    R1:0,R2:0,R3:0,T1:0,T2:0,T3:0,T4:0,T5:0, hot:0},
+  {id:89,c:"Capsules",      n:"TB-500",          s:"5mg / 60ct",    R1:0,R2:0,R3:0,T1:0,T2:0,T3:0,T4:0,T5:0, hot:0},
   {id:90,c:"Capsules",      n:"NAD+",            s:"250mg / 60ct",  R1:0,R2:0,R3:0,T1:0,T2:0,T3:0,T4:0,T5:0, hot:0},
   {id:91,c:"Capsules",      n:"NAD+",            s:"500mg / 60ct",  R1:0,R2:0,R3:0,T1:0,T2:0,T3:0,T4:0,T5:0, hot:0},
   {id:92,c:"Capsules",      n:"NMN",             s:"250mg / 60ct",  R1:0,R2:0,R3:0,T1:0,T2:0,T3:0,T4:0,T5:0, hot:0},
@@ -131,7 +131,7 @@ const P = [
   {id:95,c:"Capsules",      n:"LDN",             s:"1.5mg / 60ct",  R1:0,R2:0,R3:0,T1:0,T2:0,T3:0,T4:0,T5:0, hot:0},
   {id:96,c:"Capsules",      n:"LDN",             s:"4.5mg / 60ct",  R1:0,R2:0,R3:0,T1:0,T2:0,T3:0,T4:0,T5:0, hot:0},
   {id:97,c:"Capsules",      n:"Berberine HCl",   s:"500mg / 60ct",  R1:0,R2:0,R3:0,T1:0,T2:0,T3:0,T4:0,T5:0, hot:0},
-  {id:98,c:"Capsules",      n:"Rapamycin",       s:"1mg / 30ct",    R1:0,R2:0,R3:0,T1:0,T2:0,T3:0,T4:0,T5:0, hot:0},
+  {id:98,c:"Capsules",      n:"Rapamycin",       s:"1mg / 60ct",    R1:0,R2:0,R3:0,T1:0,T2:0,T3:0,T4:0,T5:0, hot:0},
   {id:99,c:"Capsules",      n:"Metformin",       s:"500mg / 60ct",  R1:0,R2:0,R3:0,T1:0,T2:0,T3:0,T4:0,T5:0, hot:0},
 ];
 
