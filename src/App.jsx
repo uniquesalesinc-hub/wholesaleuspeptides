@@ -7,7 +7,7 @@ const C = {
 };
 
 const TIERS = [
-  {id:"R1",lbl:"5-20/SKU",   min:5,  max:20,  grp:"retail"},
+  {id:"R1",lbl:"10-20/SKU",  min:10, max:20,  grp:"retail"},
   {id:"R2",lbl:"21-40/SKU",  min:21, max:40,  grp:"retail"},
   {id:"R3",lbl:"41-60/SKU",  min:41, max:60,  grp:"retail"},
   {id:"T1",lbl:"61-199/SKU", min:61, max:199, grp:"wholesale"},
@@ -18,7 +18,7 @@ const TIERS = [
 ];
 
 function tierForQty(qty) {
-  const q = Math.max(5, qty || 5);
+  const q = Math.max(10, qty || 10);
   for (const t of TIERS) {
     if (q >= t.min && (t.max === null || q <= t.max)) return t.id;
   }
@@ -225,7 +225,7 @@ function LogoVial() {
 // ── PRODUCT CARD ──────────────────────────────────────────────────────────────
 function ProdCard({ p, onAdd }) {
   const [hov, setHov] = useState(false);
-  const [qty, setQty] = useState(5);
+  const [qty, setQty] = useState(10);
   const t = tierForQty(qty);
   const price = p[t] || 0;
   return (
