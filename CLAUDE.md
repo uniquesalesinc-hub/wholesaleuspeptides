@@ -47,7 +47,7 @@
 - Ship after payment clears
 
 ## Pricing & Order Standards
-- **Minimum 10 bottles per SKU** — enforce everywhere
+- **Minimum 10 units per SKU** — enforce everywhere
 - Wholesale buyers only
 - All pricing tiers visible publicly
 - 50% deposit required to initiate production
