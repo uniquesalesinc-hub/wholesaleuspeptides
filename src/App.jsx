@@ -541,9 +541,11 @@ function HomeSections({ setPage }) {
 
 // ── WHITE LABEL PAGE ──────────────────────────────────────────────────────────
 function WLPage({ setPage }) {
-  const [step, setStep] = useState(1);
-  const [bsz, setBsz]   = useState(null);
-  const [fm, setFm]     = useState({co:"",cn:"",em:"",ph:"",br:"",sk:"",nt:""});
+  const [step, setStep]           = useState(1);
+  const [bsz, setBsz]             = useState(null);
+  const [fm, setFm]               = useState({co:"",cn:"",em:"",ph:"",br:"",sk:"",nt:""});
+  const [logoFile, setLogoFile]       = useState(null);
+  const [stickerFile, setStickerFile] = useState(null);
   const steps = ["Overview","Bottle Spec","Order Details","Confirmation"];
   const SZ = {
     "3ml": {d:"16mm x 45mm",la:"40mm x 25mm",ca:"44mm x 29mm",qr:"8mm x 8mm"},
@@ -660,6 +662,31 @@ function WLPage({ setPage }) {
               <div style={{fontSize:9,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:4}}>Additional Notes</div>
               <textarea value={fm.nt||""} onChange={e=>setFm(f=>({...f,nt:e.target.value}))} placeholder="QR placement, bottle size, shipping requirements..."
                 style={{width:"100%",padding:"9px 12px",border:"1px solid "+C.mist,background:C.white,fontSize:12,color:C.navy,outline:"none",height:60,resize:"vertical",boxSizing:"border-box",fontFamily:"'Inter',sans-serif"}}></textarea>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
+              {[
+                {label:"Logo File",desc:"Upload your brand logo for label printing",file:logoFile,set:setLogoFile,id:"logo-upload"},
+                {label:"Sticker File",desc:"Upload your sticker artwork for white labeling",file:stickerFile,set:setStickerFile,id:"sticker-upload"},
+              ].map(({label,desc,file,set,id})=>(
+                <div key={id}>
+                  <div style={{fontSize:9,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:4}}>{label}</div>
+                  <label htmlFor={id} style={{display:"block",border:"1px dashed "+(file?C.gold:C.mist),background:file?"rgba(201,168,76,0.04)":C.white,padding:"14px 14px",cursor:"pointer",textAlign:"center"}}>
+                    <input id={id} type="file" accept=".pdf,.jpg,.jpeg,.png" style={{display:"none"}} onChange={e=>set(e.target.files[0]||null)}/>
+                    {file ? (
+                      <div>
+                        <div style={{fontSize:10,fontWeight:700,color:C.navy,marginBottom:3,wordBreak:"break-all"}}>{file.name}</div>
+                        <div style={{fontSize:9,color:C.stone}}>{(file.size/1024).toFixed(1)} KB — click to replace</div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{fontSize:11,color:C.stone,marginBottom:3}}>Click to upload</div>
+                        <div style={{fontSize:9,color:"#9B8F7F"}}>PDF, JPEG, or PNG</div>
+                      </div>
+                    )}
+                  </label>
+                  <div style={{fontSize:9,color:C.stone,marginTop:4,lineHeight:1.5}}>{desc}</div>
+                </div>
+              ))}
             </div>
             <div style={{display:"flex",gap:10}}>
               <button onClick={()=>setStep(2)} style={{padding:"10px 18px",background:"transparent",border:"1px solid "+C.mist,color:C.stone,fontSize:11,cursor:"pointer"}}>Back</button>
