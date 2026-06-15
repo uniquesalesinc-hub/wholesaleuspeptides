@@ -128,7 +128,7 @@ function Hero({ setPage }) {
       <div style={{maxWidth:1200,margin:"0 auto"}}>
         <div style={{display:"inline-flex",alignItems:"center",gap:10,marginBottom:24,padding:"6px 14px",border:"1px solid rgba(201,168,76,0.3)",background:"rgba(201,168,76,0.06)"}}>
           <div style={{width:6,height:6,borderRadius:"50%",background:C.gold}}/>
-          <span style={{fontSize:9,letterSpacing:3.5,color:C.gold,textTransform:"uppercase",fontWeight:700}}>Wholesale Manufacturing Platform — Minimum 5 Units Per SKU</span>
+          <span style={{fontSize:9,letterSpacing:3.5,color:C.gold,textTransform:"uppercase",fontWeight:700}}>Wholesale Manufacturing Platform — Minimum 10 Units Per SKU</span>
         </div>
         <h1 style={{fontSize:52,fontWeight:800,color:C.white,lineHeight:1.12,marginBottom:18,letterSpacing:-1.5,fontFamily:"Georgia,serif",maxWidth:720}}>
           Wholesale Peptide Manufacturing<br/>
@@ -299,7 +299,7 @@ function Catalog({ addToCart }) {
         <div style={{maxWidth:1280,margin:"0 auto"}}>
           <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:10}}>Wholesale Catalog</div>
           <h1 style={{fontSize:30,fontWeight:700,color:C.white,fontFamily:"Georgia,serif",marginBottom:5}}>Research Compound Catalog</h1>
-          <p style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>Research Use Only — American Manufacturing — Independent testing per lot — Minimum 5 units per SKU</p>
+          <p style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>Research Use Only — American Manufacturing — Independent testing per lot — Minimum 10 units per SKU</p>
         </div>
       </div>
       <div style={{maxWidth:1280,margin:"0 auto",padding:"24px 40px 72px"}}>
@@ -412,7 +412,7 @@ function HomeSections({ setPage }) {
                   <div style={{fontSize:14,fontWeight:700,color:C.navy,marginBottom:3,fontFamily:"Georgia,serif"}}>{item.n}</div>
                   <div style={{fontSize:11,color:C.stone,marginBottom:12}}>{item.s}</div>
                   <div style={{display:"flex",flexDirection:"column",gap:5,marginBottom:14}}>
-                    {["Minimum Order: 5 Units","White Label Available","COA Available"].map(f=>(
+                    {["Minimum Order: 10 Units","White Label Available","COA Available"].map(f=>(
                       <div key={f} style={{display:"flex",gap:7,alignItems:"center"}}>
                         <div style={{width:4,height:4,borderRadius:"50%",background:C.green,flexShrink:0}}/>
                         <div style={{fontSize:10,color:C.stone}}>{f}</div>
@@ -541,9 +541,11 @@ function HomeSections({ setPage }) {
 
 // ── WHITE LABEL PAGE ──────────────────────────────────────────────────────────
 function WLPage({ setPage }) {
-  const [step, setStep] = useState(1);
-  const [bsz, setBsz]   = useState(null);
-  const [fm, setFm]     = useState({co:"",cn:"",em:"",ph:"",br:"",sk:"",nt:""});
+  const [step, setStep]           = useState(1);
+  const [bsz, setBsz]             = useState(null);
+  const [fm, setFm]               = useState({co:"",cn:"",em:"",ph:"",br:"",sk:"",nt:""});
+  const [logoFile, setLogoFile]       = useState(null);
+  const [stickerFile, setStickerFile] = useState(null);
   const steps = ["Overview","Bottle Spec","Order Details","Confirmation"];
   const SZ = {
     "3ml": {d:"16mm x 45mm",la:"40mm x 25mm",ca:"44mm x 29mm",qr:"8mm x 8mm"},
@@ -661,6 +663,31 @@ function WLPage({ setPage }) {
               <textarea value={fm.nt||""} onChange={e=>setFm(f=>({...f,nt:e.target.value}))} placeholder="QR placement, bottle size, shipping requirements..."
                 style={{width:"100%",padding:"9px 12px",border:"1px solid "+C.mist,background:C.white,fontSize:12,color:C.navy,outline:"none",height:60,resize:"vertical",boxSizing:"border-box",fontFamily:"'Inter',sans-serif"}}></textarea>
             </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
+              {[
+                {label:"Logo File",desc:"Upload your brand logo for label printing",file:logoFile,set:setLogoFile,id:"logo-upload"},
+                {label:"Sticker File",desc:"Upload your sticker artwork for white labeling",file:stickerFile,set:setStickerFile,id:"sticker-upload"},
+              ].map(({label,desc,file,set,id})=>(
+                <div key={id}>
+                  <div style={{fontSize:9,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:4}}>{label}</div>
+                  <label htmlFor={id} style={{display:"block",border:"1px dashed "+(file?C.gold:C.mist),background:file?"rgba(201,168,76,0.04)":C.white,padding:"14px 14px",cursor:"pointer",textAlign:"center"}}>
+                    <input id={id} type="file" accept=".pdf,.jpg,.jpeg,.png" style={{display:"none"}} onChange={e=>set(e.target.files[0]||null)}/>
+                    {file ? (
+                      <div>
+                        <div style={{fontSize:10,fontWeight:700,color:C.navy,marginBottom:3,wordBreak:"break-all"}}>{file.name}</div>
+                        <div style={{fontSize:9,color:C.stone}}>{(file.size/1024).toFixed(1)} KB — click to replace</div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{fontSize:11,color:C.stone,marginBottom:3}}>Click to upload</div>
+                        <div style={{fontSize:9,color:"#9B8F7F"}}>PDF, JPEG, or PNG</div>
+                      </div>
+                    )}
+                  </label>
+                  <div style={{fontSize:9,color:C.stone,marginTop:4,lineHeight:1.5}}>{desc}</div>
+                </div>
+              ))}
+            </div>
             <div style={{display:"flex",gap:10}}>
               <button onClick={()=>setStep(2)} style={{padding:"10px 18px",background:"transparent",border:"1px solid "+C.mist,color:C.stone,fontSize:11,cursor:"pointer"}}>Back</button>
               <button onClick={()=>setStep(4)} style={{padding:"10px 26px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Submit Application</button>
@@ -707,7 +734,7 @@ function AboutPage() {
           {t:"Three-Panel Independent Testing — Every Lot",      b:"HPLC peptide purity (99%+), endotoxin via LAL assay, and heavy metal screen via ICP-MS. Performed by a U.S. third-party laboratory on every production lot — not averaged, not based on manufacturer-supplied COAs."},
           {t:"Batch-Specific COA for White-Label Partners",      b:"White-label partners receive the full third-party COA document for every lot we fulfill under their brand — delivered as PDF for posting on partner websites. Full traceability from the QR code on the bottle to the independent lab report."},
           {t:"Research Use Only (RUO) — Legal Position",        b:"All products are Research Use Only. Not approved by the U.S. FDA for any clinical, diagnostic, or therapeutic use. Clinical trials for many compounds are ongoing. Not drugs, supplements, or medical devices. Partners and purchasers are responsible for compliance with all applicable federal, state, and local laws."},
-          {t:"ACH Payment Policy",                               b:"WholesaleUSPeptides accepts ACH bank transfer only. No credit cards, debit cards, or other payment methods accepted. All orders are held pending until ACH payment clears. 50% deposit required on all new accounts to initiate production. Net terms are not offered."},
+          {t:"Payment Policy",                                   b:"WholesaleUSPeptides accepts ACH bank transfer, debit cards, and Zelle (debit card and Zelle payments accepted up to $2,500). All orders are held pending until payment clears. 50% deposit required on all new accounts to initiate production. Net terms are not offered."},
         ].map(({t,b})=>(
           <div key={t} style={{marginBottom:24,paddingBottom:24,borderBottom:"1px solid "+C.mist}}>
             <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
@@ -835,7 +862,7 @@ function CartDrawer({ cart, setCart, open, setOpen }) {
         </div>
         <div style={{padding:"10px 22px 0"}}>
           <div style={{padding:"8px 12px",background:"#EDE9DF",border:"1px solid "+C.mist,fontSize:10,color:"#6B5E4A",lineHeight:1.6}}>
-            <strong style={{color:C.red}}>RUO:</strong> Research purposes only. Not FDA approved. ACH payment only. Orders held until payment clears.
+            <strong style={{color:C.red}}>RUO:</strong> Research purposes only. Not FDA approved. ACH, debit card, or Zelle (up to $2,500) payment accepted. Orders held until payment clears.
           </div>
         </div>
         <div style={{flex:1,overflowY:"auto",padding:"12px 22px"}}>
@@ -909,11 +936,11 @@ function CartDrawer({ cart, setCart, open, setOpen }) {
                 <span style={{fontWeight:700,color:C.navy}}>{fmt(total*0.5)}</span>
               </div>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.stone}}>
-                <span>Balance Due on Fulfillment</span>
+                <span>Balance Due on Completion of Manufacturing Prior to Shipping</span>
                 <span style={{fontWeight:700,color:C.navy}}>{fmt(total*0.5)}</span>
               </div>
             </div>
-            <div style={{padding:"7px 12px",background:C.navy,marginBottom:10,fontSize:9,color:C.gold,fontWeight:700,letterSpacing:1,textAlign:"center"}}>ACH Bank Transfer Only — No Credit Cards</div>
+            <div style={{padding:"7px 12px",background:C.navy,marginBottom:10,fontSize:9,color:C.gold,fontWeight:700,letterSpacing:1,textAlign:"center"}}>ACH · Debit Card · Zelle (Debit &amp; Zelle up to $2,500) — No Credit Cards</div>
             <button style={{width:"100%",padding:"12px 0",background:C.navy,border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",marginBottom:7}}>
               Submit Order Request
             </button>
