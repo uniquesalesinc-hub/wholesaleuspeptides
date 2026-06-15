@@ -143,12 +143,15 @@ function Hero({ setPage }) {
           <div style={{width:6,height:6,borderRadius:"50%",background:C.gold}}/>
           <span style={{fontSize:9,letterSpacing:3.5,color:C.gold,textTransform:"uppercase",fontWeight:700}}>Wholesale Manufacturing Platform — Minimum 10 Units Per SKU</span>
         </div>
-        <h1 style={{fontSize:52,fontWeight:800,color:C.white,lineHeight:1.12,marginBottom:18,letterSpacing:-1.5,fontFamily:"Georgia,serif",maxWidth:720}}>
-          Wholesale Peptide Manufacturing<br/>
-          <span style={{color:C.gold}}>&amp; Private Label Solutions</span>
+        <h1 style={{fontSize:52,fontWeight:800,color:C.white,lineHeight:1.12,marginBottom:14,letterSpacing:-1.5,fontFamily:"Georgia,serif",maxWidth:720}}>
+          American Manufacturing.<br/>
+          <span style={{color:C.gold}}>Quality Over Price.</span>
         </h1>
+        <div style={{fontSize:16,fontWeight:300,color:"rgba(255,255,255,0.45)",letterSpacing:1.5,textTransform:"uppercase",marginBottom:16}}>
+          Domestic Manufacturing &nbsp;·&nbsp; Documented Quality &nbsp;·&nbsp; Consistent Results
+        </div>
         <p style={{fontSize:15,color:"rgba(255,255,255,0.55)",lineHeight:1.9,maxWidth:540,marginBottom:32,fontWeight:300}}>
-          Premium peptide solutions for clinics, wellness providers, distributors, and private label brands. American manufacturing, independent batch testing, and full COA documentation on every order.
+          Premium peptide compounds for clinics, researchers, distributors, and private label brands. Independent batch testing and full COA documentation on every order.
         </p>
         <div style={{display:"flex",gap:12,marginBottom:48}}>
           <button onClick={()=>setPage("catalog")} style={{padding:"13px 30px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
