@@ -283,7 +283,7 @@ function ProdCard({ p, onAdd }) {
         {p.variants.length > 1 && (
           <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:14}}>
             {p.variants.map((v,i)=>(
-              <button key={v.id} onClick={()=>setVarIdx(i)}
+              <button key={v.id} onClick={()=>setVarIdx(i)} className="btn-polish"
                 style={{padding:"3px 9px",fontSize:10,fontWeight:600,cursor:"pointer",border:"1px solid "+(i===varIdx?C.navy:C.mist),background:i===varIdx?C.navy:"transparent",color:i===varIdx?C.white:C.stone,transition:"all 0.15s"}}>
                 {v.s}
               </button>
@@ -324,7 +324,7 @@ function ProdCard({ p, onAdd }) {
             </div>
           ))}
         </div>
-        <button onClick={()=>onAdd(p,variant,qty,t)} style={{padding:"9px 0",background:hov?C.navy:"transparent",border:"1px solid "+C.navy,color:hov?C.white:C.navy,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.2s"}}>
+        <button onClick={()=>onAdd(p,variant,qty,t)} className="btn-polish" style={{padding:"9px 0",background:hov?C.navy:"transparent",border:"1px solid "+C.navy,color:hov?C.white:C.navy,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.2s"}}>
           Add to Order
         </button>
       </div>
@@ -374,7 +374,7 @@ function Catalog({ addToCart }) {
         </div>
         <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:9,alignItems:"center"}}>
           {CATS.map(c=>(
-            <button key={c} onClick={()=>setCat(c)} style={{padding:"5px 12px",fontSize:10,fontWeight:600,cursor:"pointer",border:"1px solid "+(cat===c?C.navy:C.mist),background:cat===c?C.navy:"transparent",color:cat===c?C.white:C.stone,transition:"all 0.15s"}}>
+            <button key={c} onClick={()=>setCat(c)} className="btn-polish" style={{padding:"5px 12px",fontSize:10,fontWeight:600,cursor:"pointer",border:"1px solid "+(cat===c?C.navy:C.mist),background:cat===c?C.navy:"transparent",color:cat===c?C.white:C.stone,transition:"all 0.15s"}}>
               {c}
             </button>
           ))}
@@ -525,7 +525,7 @@ function HomeSections({ setPage }) {
               <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:12}}>Featured Compounds</div>
               <h2 style={{fontSize:32,fontWeight:700,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5}}>Most-Requested Products</h2>
             </div>
-            <button onClick={()=>setPage("catalog")} style={{background:"none",border:"1px solid "+C.navy,color:C.navy,padding:"9px 20px",fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>
+            <button onClick={()=>setPage("catalog")} className="btn-polish" style={{background:"none",border:"1px solid "+C.navy,color:C.navy,padding:"9px 20px",fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>
               View Full Catalog
             </button>
           </div>
@@ -547,7 +547,7 @@ function HomeSections({ setPage }) {
                       </div>
                     ))}
                   </div>
-                  <button onClick={()=>setPage("catalog")} style={{marginTop:"auto",padding:"9px 0",background:C.navy,border:"none",color:C.white,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>
+                  <button onClick={()=>setPage("catalog")} className="btn-polish" style={{marginTop:"auto",padding:"9px 0",background:C.navy,border:"none",color:C.white,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>
                     Request Pricing
                   </button>
                 </div>
@@ -638,7 +638,7 @@ function HomeSections({ setPage }) {
               </div>
             ))}
           </div>
-          <button onClick={()=>setPage("wl")} style={{padding:"13px 32px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
+          <button onClick={()=>setPage("wl")} className="btn-polish" style={{padding:"13px 32px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
             Apply For Wholesale Account
           </button>
         </div>
@@ -924,7 +924,7 @@ function COAPage() {
               <div style={{fontSize:10,fontWeight:700,color:C.green}}>99.2%+</div>
               <div style={{fontSize:10,fontWeight:700,color:C.green}}>Pass</div>
               <div style={{fontSize:10,fontWeight:700,color:C.green}}>Pass</div>
-              <button style={{fontSize:9,color:C.gold,background:"none",border:"1px solid rgba(201,168,76,0.35)",padding:"4px 10px",cursor:"pointer",fontWeight:700}}>Download</button>
+              <button className="btn-polish" style={{fontSize:9,color:C.gold,background:"none",border:"1px solid rgba(201,168,76,0.35)",padding:"4px 10px",cursor:"pointer",fontWeight:700}}>Download</button>
             </div>
           ))}
         </div>
@@ -959,10 +959,10 @@ function Gate({ ok }) {
             <p style={{fontSize:12,color:"rgba(255,255,255,0.45)",lineHeight:1.85,marginBottom:26}}>
               All compounds are <strong style={{color:"rgba(255,255,255,0.75)"}}>Research Use Only (RUO)</strong>. Not approved by the FDA. Clinical trials for many of these compounds are still ongoing. Not for human or veterinary use.
             </p>
-            <button onClick={ok} style={{display:"block",width:"100%",padding:"14px 0",marginBottom:10,background:C.gold,border:"none",color:"#05111F",fontSize:11,fontWeight:800,letterSpacing:2.5,textTransform:"uppercase",cursor:"pointer"}}>
+            <button onClick={ok} className="btn-polish" style={{display:"block",width:"100%",padding:"14px 0",marginBottom:10,background:C.gold,border:"none",color:"#05111F",fontSize:11,fontWeight:800,letterSpacing:2.5,textTransform:"uppercase",cursor:"pointer"}}>
               I Confirm — Enter Platform
             </button>
-            <button onClick={()=>setNo(true)} style={{display:"block",width:"100%",padding:"11px 0",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.3)",fontSize:11,cursor:"pointer"}}>
+            <button onClick={()=>setNo(true)} className="btn-polish" style={{display:"block",width:"100%",padding:"11px 0",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.3)",fontSize:11,cursor:"pointer"}}>
               I Do Not Qualify — Exit
             </button>
             <div style={{marginTop:22,fontSize:9,color:"rgba(255,255,255,0.18)",lineHeight:1.8}}>

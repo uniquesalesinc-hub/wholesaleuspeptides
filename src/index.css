@@ -238,3 +238,18 @@
     font-size: 40px !important;
   }
 }
+
+/* ── GLOBAL BUTTON POLISH ──────────────────────────────────────────────────── */
+.btn-polish {
+  border-radius: 8px;
+  transition: transform 250ms ease, box-shadow 250ms ease, background-color 250ms ease, border-color 250ms ease, color 250ms ease;
+}
+
+.btn-polish:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(201,168,76,0.28), 0 2px 6px rgba(5,17,31,0.18);
+}
+
+.btn-polish:active {
+  transform: translateY(0);
+}
