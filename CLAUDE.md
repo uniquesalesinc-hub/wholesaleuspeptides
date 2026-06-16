@@ -1,12 +1,36 @@
-# WholesaleUSPeptides — Claude Code Guidelines
+# WholesaleUSPeptides — Brand Operating System (Source of Truth)
 
-## Brand Bible (Source of Truth — Do Not Deviate)
+> Every design decision should reinforce trust, transparency, and partnership.
+> Do not redesign or drift from this direction without explicit owner approval.
 
-### Brand Positioning
-- **Luxury American Biotech** — this is the non-negotiable aesthetic
-- For researchers who value **quality over price**
-- **B2B manufacturer**, not retail
-- Never redesign or drift from this direction without explicit owner approval
+---
+
+## Brand Positioning
+- **60% American Manufacturing** — lead with domestic production, quality, and compliance
+- **40% White Label Manufacturing Partner** — position as the behind-the-scenes partner for brands
+
+## Audience
+- Clinics
+- Researchers
+- Distributors
+- Private-label brands
+
+## Brand Pillars
+1. American Manufacturing
+2. Documented Quality
+3. White Label Partnerships
+4. Batch Transparency
+5. Long-Term Relationships
+
+---
+
+## Visual Identity
+
+### Aesthetic
+- **Luxury American Biotech** — non-negotiable
+- Subtle flag watermarks where appropriate
+- Premium bottle render imagery
+- Every design element should reinforce trust, transparency, and partnership
 
 ### Brand Colors (use only these)
 | Token | Hex |
@@ -18,25 +42,17 @@
 | Off-white | `#FAFAFA` |
 | Stone (muted text) | `#7D8794` |
 
-### Target Customers
-- Clinics
-- Researchers
-- Distributors
-- Private Label Brands
-
 ### Always Avoid
-- Bodybuilding aesthetic
-- Cheap supplement look
-- Overseas supplier appearance
-- Introducing new color schemes, fonts, or visual styles not in the Brand Bible
+- Bodybuilding aesthetics
+- Supplement store aesthetics
+- Overseas supplier aesthetics
+- New color schemes, fonts, or visual styles not defined above
 
 ---
 
-## Design Direction (Brand Mockups Guide)
-- Luxury American Biotech aesthetic at all times
-- Subtle flag watermarks where appropriate
-- Premium bottle render imagery
-- Hero copy direction: "American Manufacturing. Quality Over Price." + "Domestic Manufacturing · Documented Quality · Consistent Results"
+## Hero Copy Direction
+- Primary: "American Manufacturing. Quality Over Price."
+- Secondary: "Domestic Manufacturing · Documented Quality · Consistent Results"
 
 ---
 
