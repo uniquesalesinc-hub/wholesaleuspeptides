@@ -1039,6 +1039,35 @@ function COAPage() {
         </div>
       </div>
       <div style={{maxWidth:1060,margin:"0 auto",padding:"28px 40px 72px"}}>
+        <div style={{marginBottom:32}}>
+          <div style={{fontSize:9,letterSpacing:3,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:6}}>The Process</div>
+          <h2 style={{fontSize:20,fontWeight:800,color:C.navy,fontFamily:"Georgia,serif",marginBottom:18}}>How Batch Verification Works</h2>
+          <div className="coa-howitworks-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
+            {[
+              {n:"01",t:"Enter Batch Number",b:"Locate the lot number printed on your bottle label or QR code."},
+              {n:"02",t:"Retrieve Laboratory Results",b:"Pull the independent HPLC, LAL, and ICP-MS results for that specific production lot."},
+              {n:"03",t:"Verify Product Authenticity",b:"Confirm the compound, strength, and lot match the original manufacturing record."},
+              {n:"04",t:"Download Certificate of Analysis (COA)",b:"Save or share the batch-specific COA PDF for your records or platform."},
+            ].map(c=>(
+              <div key={c.n} className="coa-howitworks-card" style={{border:"1px solid "+C.mist,background:C.white,padding:"18px 16px"}}>
+                <div style={{fontSize:18,fontWeight:800,color:"rgba(201,168,76,0.4)",fontFamily:"Georgia,serif",marginBottom:10}}>{c.n}</div>
+                <div style={{fontSize:12,fontWeight:700,color:C.navy,marginBottom:6,lineHeight:1.4}}>{c.t}</div>
+                <div style={{fontSize:10.5,color:C.stone,lineHeight:1.6}}>{c.b}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="coa-trust-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:18}}>
+          {["Manufactured in USA","Third Party Tested","Batch Verified","White Label Available"].map((b,i)=>(
+            <div key={i} className="coa-trust-badge" style={{display:"flex",alignItems:"center",gap:6,padding:"8px 10px",background:C.white,border:"1px solid "+C.mist}}>
+              <span style={{color:C.gold,fontSize:11,lineHeight:1}}>✓</span>
+              <span style={{fontSize:9.5,fontWeight:700,letterSpacing:0.3,color:C.navy,textTransform:"uppercase"}}>{b}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{background:"rgba(201,168,76,0.08)",border:"1px solid rgba(201,168,76,0.25)",padding:"12px 16px",marginBottom:20,fontSize:11,color:C.navy,lineHeight:1.7}}>
+          Every production batch is independently tested and archived for verification purposes.
+        </div>
         <div style={{background:"#EDE9DF",border:"1px solid "+C.mist,padding:"9px 14px",marginBottom:20,fontSize:10,color:"#6B5E4A",lineHeight:1.7}}>
           <strong style={{color:C.red}}>RUO Documentation:</strong> COAs support legitimate laboratory research only. They do not constitute FDA approval for any use.
         </div>
