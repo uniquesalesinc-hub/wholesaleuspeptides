@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import TrustBanner from "./components/TrustBanner.jsx";
 
 const C = {
@@ -436,6 +436,17 @@ function WhyPartners() {
 
 // ── STATS STRIP ──────────────────────────────────────────────────────────────
 function StatsStrip() {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setVisible(true); obs.disconnect(); }
+    }, { threshold: 0.2 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
   const stats = [
     {n:"500+",      l:"Qualified Partners"},
     {n:"250+",      l:"SKUs Available"},
@@ -443,11 +454,11 @@ function StatsStrip() {
     {n:"100%",      l:"Batch Traceability"},
   ];
   return (
-    <div style={{background:C.navy,padding:"56px 40px"}}>
+    <div ref={ref} style={{background:C.navy,padding:"56px 40px"}}>
       <div style={{maxWidth:1280,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(4,1fr)"}} className="stats-strip-grid">
         {stats.map((s,i)=>(
-          <div key={i} style={{textAlign:"center",padding:"0 24px",borderRight:i<3?"1px solid rgba(201,168,76,0.18)":"none"}} className="stats-strip-item">
-            <div style={{fontSize:44,fontWeight:800,color:C.gold,fontFamily:"Georgia,serif",letterSpacing:-1,marginBottom:10,lineHeight:1}}>{s.n}</div>
+          <div key={i} style={{textAlign:"center",padding:"0 24px",borderRight:i<3?"1px solid rgba(201,168,76,0.18)":"none",opacity:visible?1:0,transform:visible?"translateY(0)":"translateY(18px)",transition:`opacity 0.6s ease ${i*0.1}s, transform 0.6s ease ${i*0.1}s`}} className="stats-strip-item">
+            <div style={{fontSize:56,fontWeight:800,color:C.gold,fontFamily:"Georgia,serif",letterSpacing:-1,marginBottom:10,lineHeight:1}} className="stats-strip-num">{s.n}</div>
             <div style={{fontSize:11,color:"rgba(255,255,255,0.55)",letterSpacing:1.5,textTransform:"uppercase",fontWeight:600}}>{s.l}</div>
           </div>
         ))}
