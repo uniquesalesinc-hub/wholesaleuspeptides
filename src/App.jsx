@@ -262,7 +262,7 @@ function ProductVisual({ name, strength, cat }) {
 
 
 // ── PRODUCT CARD ──────────────────────────────────────────────────────────────
-function ProdCard({ p, onAdd }) {
+function ProdCard({ p, onAdd, onOpenCart }) {
   const [hov, setHov] = useState(false);
   const [varIdx, setVarIdx] = useState(0);
   const [qty, setQty] = useState(10);
@@ -271,15 +271,15 @@ function ProdCard({ p, onAdd }) {
   const price = variant[t] || 0;
   return (
     <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{background:C.white,border:"1px solid "+(hov?C.gold:C.mist),display:"flex",flexDirection:"column",transition:"all 0.2s",boxShadow:hov?"0 4px 20px rgba(5,17,31,0.1)":"none",minHeight:700}}>
+      style={{background:C.white,border:"1px solid "+(hov?C.gold:C.mist),display:"flex",flexDirection:"column",transition:"all 0.25s ease",boxShadow:hov?"0 12px 32px rgba(5,17,31,0.16)":"0 2px 8px rgba(5,17,31,0.04)",transform:hov?"translateY(-4px)":"translateY(0)"}}>
       <div style={{position:"relative",flexShrink:0,transform:hov?"scale(1.03)":"scale(1)",transition:"transform 0.35s ease",overflow:"hidden"}}>
         <ProductVisual name={p.n} strength={variant.s} cat={p.c}/>
         {p.hot===1 && <div style={{position:"absolute",top:9,left:9,background:C.navy,color:C.gold,fontSize:8,fontWeight:700,letterSpacing:2,textTransform:"uppercase",padding:"3px 8px",zIndex:2}}>Top Seller</div>}
         <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:C.gold,zIndex:2}}/>
       </div>
-      <div style={{padding:"20px 20px 24px",flex:1,display:"flex",flexDirection:"column"}}>
-        <div style={{fontSize:8,letterSpacing:2.5,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:8}}>{p.c}</div>
-        <div style={{fontSize:15,fontWeight:700,color:C.navy,marginBottom:10,fontFamily:"Georgia,serif"}}>{p.n}</div>
+      <div style={{padding:"22px 20px 26px",flex:1,display:"flex",flexDirection:"column"}}>
+        <div style={{fontSize:8,letterSpacing:2.5,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:10}}>{p.c}</div>
+        <div style={{fontSize:16,fontWeight:700,color:C.navy,marginBottom:14,fontFamily:"Georgia,serif",lineHeight:1.3}}>{p.n}</div>
         {p.variants.length > 1 && (
           <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:14}}>
             {p.variants.map((v,i)=>(
@@ -305,7 +305,7 @@ function ProdCard({ p, onAdd }) {
             );
           })}
         </div>
-        <div style={{background:C.off,padding:"12px 14px",marginBottom:14,border:"1px solid "+C.mist}}>
+        <div style={{background:C.off,padding:"12px 14px",marginBottom:16,border:"1px solid "+C.mist}}>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
             <div style={{fontSize:8,color:C.stone,letterSpacing:1,textTransform:"uppercase",fontWeight:700}}>Units</div>
             <input type="number" min="10" value={qty} onChange={e=>setQty(Math.max(10,parseInt(e.target.value)||10))}
@@ -316,7 +316,7 @@ function ProdCard({ p, onAdd }) {
             <div style={{fontSize:13,fontWeight:800,color:C.navy}}>{fmt(price*qty)}</div>
           </div>
         </div>
-        <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:16}}>
+        <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:18}}>
           {["Min. Order: 10 Units","White Label Available","COA Available"].map(f=>(
             <div key={f} style={{display:"flex",gap:7,alignItems:"center"}}>
               <div style={{width:4,height:4,borderRadius:"50%",background:C.green,flexShrink:0}}/>
@@ -324,7 +324,33 @@ function ProdCard({ p, onAdd }) {
             </div>
           ))}
         </div>
-        <button onClick={()=>onAdd(p,variant,qty,t)} className="btn-polish" style={{padding:"9px 0",background:hov?C.navy:"transparent",border:"1px solid "+C.navy,color:hov?C.white:C.navy,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.2s"}}>
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:8,letterSpacing:2,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:8}}>Manufacturing Standards</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
+            {["Manufactured in USA","Third Party Tested","White Label Available","Batch Verified"].map((b,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:5,padding:"5px 7px",background:C.off,border:"1px solid "+C.mist}}>
+                <span style={{color:C.gold,fontSize:9,lineHeight:1,flexShrink:0}}>✓</span>
+                <span style={{fontSize:8,fontWeight:700,color:C.navy,textTransform:"uppercase",letterSpacing:0.2,lineHeight:1.3}}>{b}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{background:C.off,border:"1px solid "+C.mist,padding:"10px 12px",marginBottom:12}}>
+          <div style={{fontSize:9,fontWeight:700,color:C.navy,textTransform:"uppercase",letterSpacing:1.5,marginBottom:7}}>Designed For Professional Buyers</div>
+          <div style={{fontSize:9.5,color:C.stone,marginBottom:5}}>Our products are designed for:</div>
+          {["Med Spas","Wellness Clinics","Telehealth Providers","Research Organizations","Private Label Brands"].map((item,i)=>(
+            <div key={i} style={{display:"flex",gap:6,alignItems:"center",marginTop:4}}>
+              <div style={{width:3,height:3,borderRadius:"50%",background:C.gold,flexShrink:0}}/>
+              <div style={{fontSize:9.5,color:C.stone}}>{item}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{background:C.navy,padding:"12px 14px",marginBottom:16}}>
+          <div style={{fontSize:11,fontWeight:700,color:C.white,fontFamily:"Georgia,serif",marginBottom:5}}>Need Wholesale Pricing?</div>
+          <div style={{fontSize:9.5,color:"rgba(255,255,255,0.5)",lineHeight:1.6,marginBottom:10}}>Submit a Request Pricing application to receive tiered volume pricing and manufacturing consultation.</div>
+          <button onClick={onOpenCart} className="btn-polish" style={{width:"100%",padding:"8px 0",background:C.gold,border:"none",color:C.navy,fontSize:9,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>Request Pricing</button>
+        </div>
+        <button onClick={()=>onAdd(p,variant,qty,t)} className="btn-polish" style={{padding:"9px 0",background:hov?C.navy:"transparent",border:"1px solid "+C.navy,color:hov?C.white:C.navy,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.25s ease"}}>
           Add to Order
         </button>
       </div>
@@ -333,7 +359,7 @@ function ProdCard({ p, onAdd }) {
 }
 
 // ── CATALOG PAGE ──────────────────────────────────────────────────────────────
-function Catalog({ addToCart }) {
+function Catalog({ addToCart, openCart }) {
   const [cat, setCat] = useState("All");
   const [srch, setSrch] = useState("");
   const [toast, setToast] = useState("");
@@ -383,7 +409,7 @@ function Catalog({ addToCart }) {
         </div>
         <div style={{fontSize:10,color:C.stone,marginBottom:16}}>{rows.length} compounds — enter quantity, tier pricing applies automatically</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:1,background:C.mist}}>
-          {rows.map(p=><ProdCard key={p.id} p={p} onAdd={add}/>)}
+          {rows.map(p=><ProdCard key={p.id} p={p} onAdd={add} onOpenCart={openCart}/>)}
         </div>
       </div>
     </div>
@@ -1329,7 +1355,7 @@ export default function App() {
         </button>
       </nav>
       {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage}/></>}
-      {page==="catalog" && <Catalog addToCart={addToCart}/>}
+      {page==="catalog" && <Catalog addToCart={addToCart} openCart={()=>setCopen(true)}/>}
       {page==="wl"      && <WLPage setPage={setPage}/>}
       {page==="about"   && <AboutPage/>}
       {page==="coa"     && <COAPage/>}
