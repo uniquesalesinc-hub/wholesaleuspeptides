@@ -434,6 +434,28 @@ function WhyPartners() {
   );
 }
 
+// ── STATS STRIP ──────────────────────────────────────────────────────────────
+function StatsStrip() {
+  const stats = [
+    {n:"500+",      l:"Qualified Partners"},
+    {n:"250+",      l:"SKUs Available"},
+    {n:"48 Hours",  l:"Average Quote Turnaround"},
+    {n:"100%",      l:"Batch Traceability"},
+  ];
+  return (
+    <div style={{background:C.navy,padding:"56px 40px"}}>
+      <div style={{maxWidth:1280,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(4,1fr)"}} className="stats-strip-grid">
+        {stats.map((s,i)=>(
+          <div key={i} style={{textAlign:"center",padding:"0 24px",borderRight:i<3?"1px solid rgba(201,168,76,0.18)":"none"}} className="stats-strip-item">
+            <div style={{fontSize:44,fontWeight:800,color:C.gold,fontFamily:"Georgia,serif",letterSpacing:-1,marginBottom:10,lineHeight:1}}>{s.n}</div>
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.55)",letterSpacing:1.5,textTransform:"uppercase",fontWeight:600}}>{s.l}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function HomeSections({ setPage }) {
   const cats = [
     {label:"GLP-1 Solutions",      desc:"GLP-S, GLP-T, GLP-R, Tesamorelin, Sermorelin"},
@@ -1100,7 +1122,7 @@ export default function App() {
           {count>0?"Order ("+count+")":"Request Pricing"}
         </button>
       </nav>
-      {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><TrustBanner/><HomeSections setPage={setPage}/></>}
+      {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage}/></>}
       {page==="catalog" && <Catalog addToCart={addToCart}/>}
       {page==="wl"      && <WLPage setPage={setPage}/>}
       {page==="about"   && <AboutPage/>}

@@ -215,3 +215,25 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── STATS STRIP ────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .stats-strip-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    row-gap: 36px;
+  }
+  .stats-strip-item:nth-child(even) {
+    border-right: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-strip-grid {
+    grid-template-columns: 1fr !important;
+    row-gap: 32px;
+  }
+  .stats-strip-item {
+    border-right: none !important;
+    padding: 0 !important;
+  }
+}
