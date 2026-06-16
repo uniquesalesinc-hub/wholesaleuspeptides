@@ -349,11 +349,11 @@ function Catalog({ addToCart }) {
       <div style={{background:C.navy,padding:"40px 40px 32px",borderBottom:"1px solid rgba(201,168,76,0.15)"}}>
         <div style={{maxWidth:1280,margin:"0 auto"}}>
           <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:10}}>Wholesale Catalog</div>
-          <h1 style={{fontSize:30,fontWeight:700,color:C.white,fontFamily:"Georgia,serif",marginBottom:5}}>Research Compound Catalog</h1>
-          <p style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>Research Use Only — American Manufacturing — Independent testing per lot — Minimum 10 units per SKU</p>
+          <h1 style={{fontSize:32,fontWeight:800,lineHeight:1.18,color:C.white,fontFamily:"Georgia,serif",marginBottom:8}}>Research Compound Catalog</h1>
+          <p style={{fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.7}}>Research Use Only — American Manufacturing — Independent testing per lot — Minimum 10 units per SKU</p>
         </div>
       </div>
-      <div style={{maxWidth:1280,margin:"0 auto",padding:"24px 40px 72px"}}>
+      <div style={{maxWidth:1400,margin:"0 auto",padding:"24px 40px 72px"}}>
         <div style={{background:"#EDE9DF",border:"1px solid "+C.mist,padding:"9px 14px",marginBottom:16,fontSize:10,color:"#6B5E4A",lineHeight:1.7}}>
           <strong style={{color:C.red}}>RUO ONLY.</strong> All compounds for legitimate research purposes only. Not FDA approved. Not for human or veterinary use.
         </div>
@@ -454,8 +454,8 @@ function StatsStrip() {
     {n:"100%",      l:"Batch Traceability"},
   ];
   return (
-    <div ref={ref} style={{background:C.navy,padding:"56px 40px"}}>
-      <div style={{maxWidth:1280,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(4,1fr)"}} className="stats-strip-grid">
+    <div ref={ref} style={{background:C.navy,padding:"64px 40px"}}>
+      <div style={{maxWidth:1400,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(4,1fr)"}} className="stats-strip-grid">
         {stats.map((s,i)=>(
           <div key={i} style={{textAlign:"center",padding:"0 24px",borderRight:i<3?"1px solid rgba(201,168,76,0.18)":"none",opacity:visible?1:0,transform:visible?"translateY(0)":"translateY(18px)",transition:`opacity 0.6s ease ${i*0.1}s, transform 0.6s ease ${i*0.1}s`}} className="stats-strip-item">
             <div style={{fontSize:56,fontWeight:800,color:C.gold,fontFamily:"Georgia,serif",letterSpacing:-1,marginBottom:10,lineHeight:1}} className="stats-strip-num">{s.n}</div>
@@ -499,11 +499,11 @@ function HomeSections({ setPage }) {
   return (
     <>
       {/* CATEGORIES */}
-      <div style={{background:C.off,padding:"68px 40px"}}>
-        <div style={{maxWidth:1280,margin:"0 auto"}}>
+      <div style={{background:C.off,padding:"76px 40px"}}>
+        <div style={{maxWidth:1400,margin:"0 auto"}}>
           <div style={{marginBottom:36}}>
             <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:12}}>Product Categories</div>
-            <h2 style={{fontSize:32,fontWeight:700,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5}}>What We Supply</h2>
+            <h2 style={{fontSize:34,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5}}>What We Supply</h2>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:1,background:C.mist}}>
             {cats.map(({label,desc},i)=>(
@@ -518,12 +518,12 @@ function HomeSections({ setPage }) {
       </div>
 
       {/* FEATURED PRODUCTS */}
-      <div style={{background:C.white,padding:"68px 40px"}}>
-        <div style={{maxWidth:1280,margin:"0 auto"}}>
+      <div style={{background:C.white,padding:"76px 40px"}}>
+        <div style={{maxWidth:1400,margin:"0 auto"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:32}}>
             <div>
               <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:12}}>Featured Compounds</div>
-              <h2 style={{fontSize:32,fontWeight:700,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5}}>Most-Requested Products</h2>
+              <h2 style={{fontSize:34,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5}}>Most-Requested Products</h2>
             </div>
             <button onClick={()=>setPage("catalog")} className="btn-polish" style={{background:"none",border:"1px solid "+C.navy,color:C.navy,padding:"9px 20px",fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>
               View Full Catalog
@@ -601,12 +601,12 @@ function HomeSections({ setPage }) {
       </div>
 
       {/* MANUFACTURING */}
-      <div style={{background:C.off,padding:"76px 40px"}}>
-        <div style={{maxWidth:1280,margin:"0 auto"}}>
+      <div style={{background:C.off,padding:"84px 40px"}}>
+        <div style={{maxWidth:1400,margin:"0 auto"}}>
           <div style={{textAlign:"center",marginBottom:44}}>
             <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:14}}>Quality Assurance</div>
-            <h2 style={{fontSize:34,fontWeight:700,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:12}}>Manufacturing Standards</h2>
-            <p style={{fontSize:14,color:C.stone,lineHeight:1.8,maxWidth:540,margin:"0 auto"}}>
+            <h2 style={{fontSize:36,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:12}}>Manufacturing Standards</h2>
+            <p style={{fontSize:14,color:C.stone,lineHeight:1.85,maxWidth:540,margin:"0 auto"}}>
               Every batch produced through qualified domestic manufacturing partners with documented chain-of-custody procedures and lot traceability.
             </p>
           </div>
@@ -623,10 +623,10 @@ function HomeSections({ setPage }) {
       </div>
 
       {/* FLOW + CTA */}
-      <div style={{background:C.navy2,padding:"68px 40px",borderTop:"1px solid rgba(201,168,76,0.12)"}}>
+      <div style={{background:C.navy2,padding:"76px 40px",borderTop:"1px solid rgba(201,168,76,0.12)"}}>
         <div style={{maxWidth:1100,margin:"0 auto",textAlign:"center"}}>
           <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:14}}>How It Works</div>
-          <h2 style={{fontSize:30,fontWeight:700,color:C.white,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:36}}>Account Approval Process</h2>
+          <h2 style={{fontSize:32,fontWeight:800,lineHeight:1.18,color:C.white,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:36}}>Account Approval Process</h2>
           <div style={{display:"flex",alignItems:"center",justifyContent:"center",flexWrap:"wrap",gap:0,marginBottom:40}}>
             {flow.map((step,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center"}}>
@@ -645,8 +645,8 @@ function HomeSections({ setPage }) {
       </div>
 
       {/* FOOTER */}
-      <footer style={{background:C.navy,borderTop:"1px solid rgba(201,168,76,0.12)",padding:"44px 40px 24px"}}>
-        <div style={{maxWidth:1280,margin:"0 auto"}}>
+      <footer style={{background:C.navy,borderTop:"1px solid rgba(201,168,76,0.12)",padding:"52px 40px 24px"}}>
+        <div style={{maxWidth:1400,margin:"0 auto"}}>
           <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:28,marginBottom:32}}>
             <div>
               <div style={{fontSize:13,fontWeight:800,color:C.white,fontFamily:"Georgia,serif",marginBottom:4}}>WholesaleUSPeptides.com</div>
@@ -864,7 +864,7 @@ function AboutPage() {
       <div style={{background:C.navy,padding:"40px 40px 32px",borderBottom:"1px solid rgba(201,168,76,0.15)"}}>
         <div style={{maxWidth:880,margin:"0 auto"}}>
           <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:10}}>Quality & Testing</div>
-          <h1 style={{fontSize:30,fontWeight:700,color:C.white,fontFamily:"Georgia,serif"}}>Manufacturing Standards & Legal Position</h1>
+          <h1 style={{fontSize:32,fontWeight:800,lineHeight:1.2,color:C.white,fontFamily:"Georgia,serif"}}>Manufacturing Standards & Legal Position</h1>
         </div>
       </div>
       <div style={{maxWidth:880,margin:"0 auto",padding:"44px 40px 72px"}}>
@@ -900,8 +900,8 @@ function COAPage() {
       <div style={{background:C.navy,padding:"40px 40px 32px",borderBottom:"1px solid rgba(201,168,76,0.15)"}}>
         <div style={{maxWidth:1060,margin:"0 auto"}}>
           <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:10}}>Documentation</div>
-          <h1 style={{fontSize:30,fontWeight:700,color:C.white,fontFamily:"Georgia,serif",marginBottom:5}}>Batch Verification Center</h1>
-          <p style={{fontSize:12,color:"rgba(255,255,255,0.4)",maxWidth:520}}>Every production lot independently tested. Each COA covers HPLC purity, endotoxin level (LAL), and heavy metal screen (ICP-MS). White-label partners receive batch-specific COA PDFs for their platforms.</p>
+          <h1 style={{fontSize:32,fontWeight:800,lineHeight:1.2,color:C.white,fontFamily:"Georgia,serif",marginBottom:8}}>Batch Verification Center</h1>
+          <p style={{fontSize:12,color:"rgba(255,255,255,0.4)",lineHeight:1.7,maxWidth:520}}>Every production lot independently tested. Each COA covers HPLC purity, endotoxin level (LAL), and heavy metal screen (ICP-MS). White-label partners receive batch-specific COA PDFs for their platforms.</p>
         </div>
       </div>
       <div style={{maxWidth:1060,margin:"0 auto",padding:"28px 40px 72px"}}>
