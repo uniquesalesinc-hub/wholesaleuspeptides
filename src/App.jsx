@@ -1012,7 +1012,7 @@ function Gate({ ok }) {
 }
 
 // ── CART DRAWER ───────────────────────────────────────────────────────────────
-function CartDrawer({ cart, setCart, open, setOpen }) {
+function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
   const total = cart.reduce((s,i) => s + (i.variant[i.tier]||0)*i.qty, 0);
   const units = cart.reduce((s,i) => s + i.qty, 0);
   const upd = (pid, vid, qty) => {
@@ -1037,9 +1037,41 @@ function CartDrawer({ cart, setCart, open, setOpen }) {
         </div>
         <div style={{flex:1,overflowY:"auto",padding:"12px 22px"}}>
           {cart.length===0 ? (
-            <div style={{textAlign:"center",padding:"44px 0"}}>
-              <div style={{fontSize:14,fontFamily:"Georgia,serif",color:C.navy,marginBottom:6}}>No compounds selected</div>
-              <div style={{fontSize:11,color:C.mist}}>Add compounds from the catalog.</div>
+            <div style={{padding:"20px 0 8px"}}>
+              <div style={{textAlign:"center",marginBottom:22}}>
+                <div style={{fontSize:20,fontWeight:800,fontFamily:"Georgia,serif",color:C.navy,marginBottom:8,lineHeight:1.2}}>Request Wholesale Pricing</div>
+                <div style={{fontSize:12,color:C.stone,lineHeight:1.6,maxWidth:300,margin:"0 auto"}}>Receive pricing tiers, MOQ requirements, white label options, and manufacturing timelines.</div>
+              </div>
+
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:18}}>
+                {["Batch Verified","Manufactured in USA","White Label Available","Third-Party Tested"].map((b,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 10px",background:C.off,border:"1px solid "+C.mist}}>
+                    <span style={{color:C.gold,fontSize:11,lineHeight:1}}>✓</span>
+                    <span style={{fontSize:9.5,fontWeight:700,letterSpacing:0.3,color:C.navy,textTransform:"uppercase"}}>{b}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{textAlign:"center",fontSize:11,color:C.gold,fontWeight:600,marginBottom:20}}>
+                We typically respond within 1 business day.
+              </div>
+
+              <div style={{background:C.off,border:"1px solid "+C.mist,padding:"14px 16px",marginBottom:20}}>
+                <div style={{fontSize:10,letterSpacing:1.5,fontWeight:700,color:C.navy,textTransform:"uppercase",marginBottom:10}}>After submission you'll receive:</div>
+                {["Wholesale pricing tiers","Product availability","White label options","Production timelines","Minimum order requirements"].map((t,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"flex-start",gap:8,marginBottom:i<4?7:0}}>
+                    <span style={{color:C.gold,fontSize:11,marginTop:1}}>•</span>
+                    <span style={{fontSize:11.5,color:C.ink,lineHeight:1.5}}>{t}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:11,color:C.mist,marginBottom:10}}>Add compounds from the catalog to begin.</div>
+                {setPage && (
+                  <button onClick={()=>{ setOpen(false); setPage("catalog"); }} className="btn-polish" style={{background:C.navy,color:C.gold,border:"none",padding:"11px 22px",fontSize:11,fontWeight:700,letterSpacing:1,textTransform:"uppercase",cursor:"pointer"}}>Browse Catalog</button>
+                )}
+              </div>
             </div>
           ) : cart.map(({p,variant,qty,tier})=>(
             <div key={p.id+"-"+variant.id} style={{display:"flex",gap:12,paddingBottom:14,marginBottom:14,borderBottom:"1px solid "+C.mist}}>
@@ -1144,7 +1176,7 @@ export default function App() {
 
   return (
     <div style={{fontFamily:"'Inter',sans-serif",background:C.off,minHeight:"100vh"}}>
-      <CartDrawer cart={cart} setCart={setCart} open={copen} setOpen={setCopen}/>
+      <CartDrawer cart={cart} setCart={setCart} open={copen} setOpen={setCopen} setPage={setPage}/>
       <div style={{background:C.navy2,color:C.gold,textAlign:"center",padding:"9px",fontSize:9,letterSpacing:2.5,fontWeight:600,textTransform:"uppercase"}}>
         Wholesale Manufacturing — American Manufacturing — Independent Testing — RUO Only
       </div>
