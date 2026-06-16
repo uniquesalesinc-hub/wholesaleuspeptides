@@ -165,47 +165,56 @@ function Hero({ setPage }) {
           <div key={i} style={{position:"absolute",top:0,bottom:0,left:`${i*7.7}%`,width:"3.8%",background:i%2===0?"rgba(178,34,52,0.04)":"rgba(60,59,110,0.04)"}}/>
         ))}
       </div>
-      <div style={{position:"absolute",top:0,right:0,bottom:0,width:"40%",background:"linear-gradient(to right,rgba(5,17,31,1) 0%,rgba(5,17,31,0) 30%)",pointerEvents:"none"}}/>
-      <div style={{maxWidth:1200,margin:"0 auto",position:"relative"}}>
-        <div style={{display:"inline-flex",alignItems:"center",gap:10,marginBottom:24,padding:"6px 14px",border:"1px solid rgba(201,168,76,0.3)",background:"rgba(201,168,76,0.06)"}}>
-          <div style={{width:6,height:6,borderRadius:"50%",background:C.gold}}/>
-          <span style={{fontSize:9,letterSpacing:3.5,color:C.gold,textTransform:"uppercase",fontWeight:700}}>Wholesale Manufacturing Platform — Minimum 10 Units Per SKU</span>
+      <div style={{maxWidth:1240,margin:"0 auto",position:"relative"}} className="hero-grid">
+        <div className="hero-copy">
+          <div style={{display:"inline-flex",alignItems:"center",gap:10,marginBottom:22,padding:"6px 14px",border:"1px solid rgba(201,168,76,0.3)",background:"rgba(201,168,76,0.06)"}}>
+            <div style={{width:6,height:6,borderRadius:"50%",background:C.gold}}/>
+            <span style={{fontSize:9,letterSpacing:3.5,color:C.gold,textTransform:"uppercase",fontWeight:700}}>Wholesale Manufacturing Platform — Minimum 10 Units Per SKU</span>
+          </div>
+          <div style={{width:56,height:3,background:C.gold,marginBottom:22}}/>
+          <h1 style={{fontSize:48,fontWeight:800,color:C.white,lineHeight:1.16,marginBottom:18,letterSpacing:-1.2,fontFamily:"Georgia,serif",maxWidth:620}}>
+            American Peptide Manufacturing,<br/>
+            <span style={{color:C.gold}}>Built For Private Label Growth.</span>
+          </h1>
+          <p style={{fontSize:15,color:"rgba(255,255,255,0.55)",lineHeight:1.9,maxWidth:540,marginBottom:32,fontWeight:300}}>
+            WholesaleUSPeptides.com supplies research-focused peptide products, white-label packaging, and fulfillment support for clinics, distributors, and qualified partners.
+          </p>
+          <div style={{display:"flex",gap:12,marginBottom:40,flexWrap:"wrap"}}>
+            <button onClick={()=>setPage("catalog")} style={{padding:"13px 30px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
+              Request Wholesale Pricing
+            </button>
+            <button onClick={()=>setPage("catalog")} style={{padding:"13px 28px",background:"transparent",border:"1px solid rgba(201,168,76,0.4)",color:C.gold,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
+              View Product Catalog
+            </button>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:0,borderTop:"1px solid rgba(201,168,76,0.15)",paddingTop:26}} className="hero-trust-row">
+            {[
+              "Made in USA",
+              "Third-Party Tested",
+              "Batch Traceable",
+              "White Label Ready",
+            ].map((t,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:8,paddingRight:14,borderRight:i<3?"1px solid rgba(201,168,76,0.12)":"none",marginRight:i<3?14:0}}>
+                <div style={{width:5,height:5,borderRadius:"50%",background:C.gold,flexShrink:0}}/>
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.55)",lineHeight:1.4}}>{t}</div>
+              </div>
+            ))}
+          </div>
         </div>
-        <h1 style={{fontSize:52,fontWeight:800,color:C.white,lineHeight:1.12,marginBottom:14,letterSpacing:-1.5,fontFamily:"Georgia,serif",maxWidth:720}}>
-          American Manufacturing.<br/>
-          <span style={{color:C.gold}}>Quality Over Price.</span>
-        </h1>
-        <div style={{fontSize:14,fontWeight:300,color:"rgba(255,255,255,0.45)",letterSpacing:2,textTransform:"uppercase",marginBottom:20}}>
-          Domestic Manufacturing &nbsp;·&nbsp; Documented Quality &nbsp;·&nbsp; Consistent Results
-        </div>
-        <p style={{fontSize:15,color:"rgba(255,255,255,0.55)",lineHeight:1.9,maxWidth:560,marginBottom:10,fontWeight:300}}>
-          For researchers who value quality over price. Compounded and lyophilized in the USA. Independent batch testing and full COA documentation on every order.
-        </p>
-        <p style={{fontSize:12,color:"rgba(201,168,76,0.6)",marginBottom:32,letterSpacing:0.5}}>
-          Made in the USA &nbsp;·&nbsp; Wholesale access for licensed clinics, distributors, and private label partners.
-        </p>
-        <div style={{display:"flex",gap:12,marginBottom:48}}>
-          <button onClick={()=>setPage("catalog")} style={{padding:"13px 30px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
-            View Wholesale Pricing
-          </button>
-          <button onClick={()=>setPage("wl")} style={{padding:"13px 28px",background:"transparent",border:"1px solid rgba(201,168,76,0.4)",color:C.gold,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
-            Become a Partner
-          </button>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:0,borderTop:"1px solid rgba(201,168,76,0.15)",paddingTop:28}}>
-          {[
-            "Made in the USA",
-            "Independently Tested",
-            "Batch Traceability",
-            "White Label Ready",
-            "Clinic & Distributor Accounts",
-            "10 Unit Minimum Per SKU",
-          ].map((t,i)=>(
-            <div key={i} style={{display:"flex",alignItems:"center",gap:8,paddingRight:16,borderRight:i<5?"1px solid rgba(201,168,76,0.12)":"none",marginRight:i<5?16:0}}>
-              <div style={{width:5,height:5,borderRadius:"50%",background:C.gold,flexShrink:0}}/>
-              <div style={{fontSize:10,color:"rgba(255,255,255,0.55)",lineHeight:1.4}}>{t}</div>
-            </div>
-          ))}
+        <div className="hero-visual">
+          <div className="hero-visual-glow"/>
+          <div className="hero-visual-item hero-visual-cream">
+            <img src="/images/master/master-cream-pump.png" alt="Topical cream pump" onError={e=>{e.target.parentElement.style.visibility="hidden";}}/>
+          </div>
+          <div className="hero-visual-item hero-visual-spray">
+            <img src="/images/master/master-spray.png" alt="Nasal spray bottle" onError={e=>{e.target.parentElement.style.visibility="hidden";}}/>
+          </div>
+          <div className="hero-visual-item hero-visual-capsule">
+            <img src="/images/master/master-capsule.png" alt="Capsule bottle" onError={e=>{e.target.parentElement.style.visibility="hidden";}}/>
+          </div>
+          <div className="hero-visual-item hero-visual-vial">
+            <img src="/images/master/master-vial.png" alt="Injectable vial" onError={e=>{e.target.parentElement.style.visibility="hidden";}}/>
+          </div>
         </div>
       </div>
     </div>
