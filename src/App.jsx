@@ -222,10 +222,14 @@ function productImg(name, cat) {
   return `/images/bottles/${slug}.png`;
 }
 
-function VialSVG({ name, strength, cat }) {
+function VialSVG({ name, cat }) {
   const [err, setErr] = useState(false);
   const src = productImg(name, cat);
-  if (err) return <LogoVial/>;
+  if (err) return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",height:"260px",background:"#F8F7F3"}}>
+      <span style={{fontSize:9,color:"#7D8794",letterSpacing:1.5,textTransform:"uppercase"}}>Image Unavailable</span>
+    </div>
+  );
   return (
     <img
       src={src}
@@ -245,40 +249,6 @@ function VialSVG({ name, strength, cat }) {
 }
 
 
-// ── LOGO VIAL — homepage use only, shows YOUR LOGO HERE ──────────────────────
-function LogoVial() {
-  return (
-    <div style={{position:"relative",width:"100%",height:"100%",overflow:"hidden",background:C.navy,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
-      {/* Gold top rule */}
-      <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:C.gold}}/>
-      {/* Vial silhouette */}
-      <svg width="110" height="220" viewBox="0 0 110 220" style={{marginBottom:12}}>
-        {/* Cap */}
-        <rect x="28" y="0" width="54" height="36" rx="10" fill={C.navy} stroke={C.gold} strokeWidth="1.5"/>
-        {/* Gold ring */}
-        <rect x="28" y="30" width="54" height="5" fill={C.gold}/>
-        {/* Body */}
-        <rect x="18" y="35" width="74" height="170" rx="8" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.12)" strokeWidth="1"/>
-        {/* Label area */}
-        <rect x="26" y="52" width="58" height="110" rx="2" fill="rgba(255,255,255,0.05)" stroke="rgba(201,168,76,0.25)" strokeWidth="0.8"/>
-        {/* Hex outline */}
-        <polygon points="55,72 76,83 76,105 55,116 34,105 34,83" fill="none" stroke="rgba(201,168,76,0.45)" strokeWidth="1.2"/>
-        {/* YOUR LOGO HERE */}
-        <text x="55" y="90" textAnchor="middle" fontSize="6.5" fontFamily="Arial" fontWeight="700" fill="rgba(201,168,76,0.75)" letterSpacing="0.5">YOUR</text>
-        <text x="55" y="100" textAnchor="middle" fontSize="6.5" fontFamily="Arial" fontWeight="700" fill="rgba(201,168,76,0.75)" letterSpacing="0.5">LOGO</text>
-        <text x="55" y="110" textAnchor="middle" fontSize="6.5" fontFamily="Arial" fontWeight="700" fill="rgba(201,168,76,0.75)" letterSpacing="0.5">HERE</text>
-        {/* Bottom gold rule */}
-        <rect x="26" y="157" width="58" height="3" fill={C.gold}/>
-        {/* Glass sheen */}
-        <rect x="22" y="38" width="10" height="162" rx="4" fill="rgba(255,255,255,0.06)"/>
-      </svg>
-      {/* Brand text */}
-      <div style={{fontSize:7,letterSpacing:3,color:"rgba(201,168,76,0.55)",textTransform:"uppercase",fontWeight:700}}>WholesaleUSPeptides</div>
-      {/* RUO badge */}
-      <div style={{position:"absolute",top:10,right:10,fontSize:7,letterSpacing:2,fontWeight:700,color:"rgba(255,255,255,0.7)",background:"rgba(5,17,31,0.65)",padding:"3px 7px",border:"1px solid rgba(201,168,76,0.3)"}}>RUO</div>
-    </div>
-  );
-}
 
 
 // ── PRODUCT CARD ──────────────────────────────────────────────────────────────
@@ -476,8 +446,10 @@ function HomeSections({ setPage }) {
           <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:1,background:C.mist}}>
             {featured.map((item,i)=>(
               <div key={i} style={{background:C.white,display:"flex",flexDirection:"column"}}>
-                <div style={{height:210,background:C.off}}>
-                  <LogoVial/>
+                <div style={{height:210,background:C.off,overflow:"hidden"}}>
+                  <img src={productImg(item.n,item.c)} alt={item.n}
+                    onError={e=>{e.target.style.visibility="hidden";}}
+                    style={{width:"100%",height:"210px",objectFit:"contain",padding:"16px",boxSizing:"border-box"}}/>
                 </div>
                 <div style={{padding:"16px 18px 20px",flex:1,display:"flex",flexDirection:"column"}}>
                   <div style={{fontSize:8,letterSpacing:2.5,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:5}}>{item.c}</div>
@@ -524,9 +496,11 @@ function HomeSections({ setPage }) {
             </button>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            {[{n:"S",s:"10mg"},{n:"T",s:"20mg"},{n:"BPC-157",s:"5mg"},{n:"NAD+",s:"500mg"}].map((item,i)=>(
-              <div key={i} style={{background:"rgba(10,30,48,0.8)",border:"1px solid rgba(201,168,76,0.15)",padding:6,aspectRatio:"1/1.15"}}>
-                <LogoVial/>
+            {["bpc-157","tb-500","ghk-cu","nad"].map((slug,i)=>(
+              <div key={i} style={{background:"rgba(10,30,48,0.8)",border:"1px solid rgba(201,168,76,0.15)",padding:6,aspectRatio:"1/1.15",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <img src={`/images/bottles/${slug}.png`} alt={slug}
+                  onError={e=>{e.target.style.visibility="hidden";}}
+                  style={{width:"100%",height:"100%",objectFit:"contain",padding:"8px",boxSizing:"border-box"}}/>
               </div>
             ))}
           </div>
