@@ -247,8 +247,8 @@ function ProdCard({ p, onAdd }) {
   return (
     <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{background:C.white,border:"1px solid "+(hov?C.gold:C.mist),display:"flex",flexDirection:"column",transition:"all 0.2s",boxShadow:hov?"0 4px 20px rgba(5,17,31,0.1)":"none",minHeight:700}}>
-      <div style={{position:"relative",flexShrink:0,transform:hov?"scale(1.03)":"scale(1)",transition:"transform 0.35s ease",overflow:"hidden"}}>
-        <VialSVG name={p.n} strength={variant.s} cat={p.c}/>
+      <div style={{position:"relative",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",transform:hov?"scale(1.03)":"scale(1)",transition:"transform 0.35s ease",overflow:"hidden",background:"#F8F7F3"}}>
+        <VialSVG name={p.n} cat={p.c}/>
         {p.hot===1 && <div style={{position:"absolute",top:9,left:9,background:C.navy,color:C.gold,fontSize:8,fontWeight:700,letterSpacing:2,textTransform:"uppercase",padding:"3px 8px",zIndex:2}}>Top Seller</div>}
         <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:C.gold,zIndex:2}}/>
       </div>
