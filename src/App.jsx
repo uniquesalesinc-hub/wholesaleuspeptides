@@ -496,16 +496,17 @@ function HomeSections({ setPage }) {
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:22}}>
             {[
-              {src:"/images/master/master-vial.png",        label:"Injectables"},
-              {src:"/images/master/master-capsule.png",      label:"Capsules"},
-              {src:"/images/master/master-spray.png",        label:"Nasal Sprays"},
-              {src:"/images/master/master-cream-pump.png",   label:"Topicals"},
+              {src:"/images/master/master-vial.png",        label:"Injectables",  scale:1.5},
+              {src:"/images/master/master-capsule.png",      label:"Capsules",     scale:1.5},
+              {src:"/images/master/master-spray.png",        label:"Nasal Sprays", scale:1.62},
+              {src:"/images/master/master-cream-pump.png",   label:"Topicals",     scale:1.62},
             ].map((item,i)=>(
               <div key={i} className="wl-asset-card">
                 <div className="wl-asset-imgwrap">
                   <img src={item.src} alt={item.label}
                     onError={e=>{e.target.style.visibility="hidden";}}
-                    className="wl-asset-img"/>
+                    className="wl-asset-img"
+                    style={{transform:`scale(${item.scale})`}}/>
                 </div>
                 <div className="wl-asset-label">{item.label}</div>
               </div>
