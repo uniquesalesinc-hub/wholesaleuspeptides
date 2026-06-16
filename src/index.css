@@ -270,3 +270,17 @@
 .btn-polish:active {
   transform: translateY(0);
 }
+
+/* ── WHITE LABEL APPLICATION FLOW ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .wl-grid2 { grid-template-columns: 1fr !important; }
+  .wl-interest-grid { grid-template-columns: 1fr !important; }
+  .wl-volume-grid { grid-template-columns: 1fr !important; }
+  .wl-timeline { grid-template-columns: 1fr 1fr !important; row-gap: 16px; }
+  .wl-stepper-label { display: none; }
+}
+
+@media (max-width: 480px) {
+  .wl-trust-grid { grid-template-columns: 1fr 1fr !important; }
+  .wl-timeline { grid-template-columns: 1fr !important; }
+}
