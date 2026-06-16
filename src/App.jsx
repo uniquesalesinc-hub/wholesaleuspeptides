@@ -221,7 +221,7 @@ function VialSVG({ name, strength, cat }) {
       {/* Label */}
       <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"20px 14px 13px"}}>
         <div style={{fontSize:8,letterSpacing:2.5,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:4,opacity:0.9}}>{cat}</div>
-        <div style={{fontSize:15,fontWeight:800,color:C.white,letterSpacing:0.2,lineHeight:1.2,marginBottom:4}}>{name}</div>
+        <div style={{fontSize:10,fontWeight:700,color:"rgba(201,168,76,0.6)",letterSpacing:2,textTransform:"uppercase",marginBottom:4,fontStyle:"italic"}}>Your Logo Here</div>
         <div style={{fontSize:10,color:"rgba(255,255,255,0.6)",letterSpacing:0.5}}>{strength}</div>
         <div style={{width:24,height:1,background:C.gold,marginTop:8,opacity:0.7}}/>
       </div>
