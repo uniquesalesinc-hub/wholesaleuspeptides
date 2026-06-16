@@ -345,11 +345,6 @@ function ProdCard({ p, onAdd, onOpenCart }) {
             </div>
           ))}
         </div>
-        <div style={{background:C.navy,padding:"12px 14px",marginBottom:16}}>
-          <div style={{fontSize:11,fontWeight:700,color:C.white,fontFamily:"Georgia,serif",marginBottom:5}}>Need Wholesale Pricing?</div>
-          <div style={{fontSize:9.5,color:"rgba(255,255,255,0.5)",lineHeight:1.6,marginBottom:10}}>Submit a Request Pricing application to receive tiered volume pricing and manufacturing consultation.</div>
-          <button onClick={onOpenCart} className="btn-polish" style={{width:"100%",padding:"8px 0",background:C.gold,border:"none",color:C.navy,fontSize:9,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>Request Pricing</button>
-        </div>
         <button onClick={()=>onAdd(p,variant,qty,t)} className="btn-polish" style={{padding:"9px 0",background:hov?C.navy:"transparent",border:"1px solid "+C.navy,color:hov?C.white:C.navy,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.25s ease"}}>
           Add to Order
         </button>
