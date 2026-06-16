@@ -343,33 +343,104 @@ function generateCream(name, filename) {
 }
 
 // ── PRODUCT LISTS ─────────────────────────────────────────────────────────────
+// Matches the live catalog in src/App.jsx exactly.
+// [ name, filename, subtitle (optional) ] — filename must match productImg() output.
 const BOTTLES = [
-  '5-Amino-1MQ','AOD-9604','Tesamorelin','CJC-1295 No DAC','CJC-1295 DAC',
-  'Ipamorelin','Sermorelin','MOTS-C','BPC-157','TB-500','KPV','GHK-Cu',
-  'Dihexa','Semax','Selank','Epitalon','PT-141','Melanotan II','IGF-1 LR3',
-  'PEG-MGF','NAD+','SS-31','MT-2','GHRP-6','GHRP-2','Cagrilintide',
-  'Hexarelin','Thymosin Alpha-1','Thymosin Beta-4','LL-37',
-  'Acetic Acid','Bacteriostatic Water','Benzyl Alcohol',
-  'PCSK9','MK-677','SR-9009','YK-11',
+  // Peptides
+  ['BPC-157',            'bpc-157'],
+  ['TB-500',              'tb-500'],
+  ['Ipamorelin',          'ipamorelin'],
+  ['AOD-9604',            'aod-9604'],
+  ['CJC-1295 W DAC',      'cjc-1295-w-dac'],
+  ['CJC-1295',            'cjc-1295'],
+  ['Epithalon',           'epithalon'],
+  ['GHK-Cu',              'ghk-cu'],
+  ['Melanotan-II',        'melanotan-ii'],
+  ['FOXO4-DRI',           'foxo4-dri'],
+  ['KPV',                 'kpv'],
+  ['VIP',                 'vip'],
+  ['GHRP-2',              'ghrp-2'],
+  ['GHRP-6',              'ghrp-6'],
+  ['SNAP-8',              'snap-8'],
+  ['MOTS-C',              'mots-c'],
+  ['IGF-1 LR3',           'igf-1-lr3'],
+  ['Dihexa',              'dihexa'],
+  ['Oxytocin',            'oxytocin'],
+  ['PT-141',              'pt-141'],
+  ['Thymosin Alpha-1',    'thymosin-alpha-1'],
+  ['Gonadorelin',         'gonadorelin'],
+  ['Semax',               'semax'],
+  ['Selank',              'selank'],
+  ['NAD+',                'nad'],
+  ['LL-37',               'll-37'],
+  ['ARA-290',             'ara-290'],
+  ['SS-31',               'ss-31'],
+  ['HGH Frag 176-191',    'hgh-frag-176-191'],
+  // GLP
+  ['GLP-S',               'glp-s', '5mg – 20mg'],
+  ['GLP-T',               'glp-t', '10mg – 40mg'],
+  ['GLP-R',               'glp-r', '10mg – 30mg'],
+  ['Tesamorelin',         'tesamorelin'],
+  ['Sermorelin',          'sermorelin'],
+  // Bio Regulators
+  ['Pinealon',            'pinealon'],
+  ['Ovagen',              'ovagen'],
+  ['Chonluten',           'chonluten'],
+  ['Thymalin',            'thymalin'],
+  ['Cardiogen',           'cardiogen'],
+  ['Vesugen',             'vesugen'],
+  ['Testagen',            'testagen'],
+  ['Vilon',               'vilon'],
+  ['Crystagen',           'crystagen'],
+  ['Bronchogen',          'bronchogen'],
+  // Blends
+  ['BPC-TB Blend',        'bpc-tb'],
+  ['Ipa/CJC Blend',       'ipa-cjc'],
+  ['GLOW Blend',          'glow'],
+  ['KLOW Blend',          'klow'],
+  ['Semax/Selank',        'semax-selank'],
+  ['AOD/Tesa Blend',      'aod-tesa'],
+  // Diluents
+  ['Water',               'water'],
 ];
 const CAPSULES = [
-  '5-Amino-1MQ','BPC-157','Dihexa','GHK-Cu','Epitalon',
-  'Selank','Semax','KPV','NAD+','TB-500',
+  ['BPC-157',          'bpc-157'],
+  ['TB-500',           'tb-500'],
+  ['NAD+',             'nad'],
+  ['NMN',              'nmn'],
+  ['Methylene Blue',   'methylene-blue'],
+  ['LDN',              'ldn'],
+  ['Berberine HCl',    'berberine-hcl'],
+  ['Rapamycin',        'rapamycin'],
+  ['Metformin',        'metformin'],
 ];
-const SPRAYS = ['BPC-157','Dihexa','MT-2','NAD+','PT-141','GHK-Cu','TB-500'];
-const CREAMS = ['Repair','Smooth','Tan','Revive','Restore'];
+
+const SPRAYS = [
+  ['BPC-157', 'bpc-157'],
+  ['NAD+',    'nad'],
+  ['Semax',   'semax'],
+  ['Selank',  'selank'],
+  ['PT-141',  'pt-141'],
+  ['TB500',   'tb500'],
+];
+
+const CREAMS = [
+  ['Repair', 'repair'],
+  ['Smooth', 'smooth'],
+  ['Tan',    'tan'],
+];
 
 console.log('\n── Bottles (' + BOTTLES.length + ') ──');
-BOTTLES.forEach(n => generateBottle(n, slug(n)));
+BOTTLES.forEach(([n, fn, sub]) => generateBottle(n, fn, sub));
 
 console.log('\n── Capsules (' + CAPSULES.length + ') ──');
-CAPSULES.forEach(n => generateCapsule(n, slug(n)));
+CAPSULES.forEach(([n, fn]) => generateCapsule(n, fn));
 
 console.log('\n── Sprays (' + SPRAYS.length + ') ──');
-SPRAYS.forEach(n => generateSpray(n, slug(n)));
+SPRAYS.forEach(([n, fn]) => generateSpray(n, fn));
 
 console.log('\n── Creams (' + CREAMS.length + ') ──');
-CREAMS.forEach(n => generateCream(n, slug(n)));
+CREAMS.forEach(([n, fn]) => generateCream(n, fn));
 
 const total = BOTTLES.length + CAPSULES.length + SPRAYS.length + CREAMS.length;
 console.log(`\n✓ ${total} product images generated.\n`);
