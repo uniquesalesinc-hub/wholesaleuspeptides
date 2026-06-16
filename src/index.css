@@ -229,11 +229,12 @@
 
 @media (max-width: 480px) {
   .stats-strip-grid {
-    grid-template-columns: 1fr !important;
-    row-gap: 32px;
+    row-gap: 28px;
   }
   .stats-strip-item {
-    border-right: none !important;
-    padding: 0 !important;
+    padding: 0 12px !important;
+  }
+  .stats-strip-num {
+    font-size: 40px !important;
   }
 }
