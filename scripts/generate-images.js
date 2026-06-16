@@ -2,6 +2,7 @@
 // Produces individual 1000x1000 PNG files per SKU
 // Brand: Navy #05111F · Gold #C9A84C · White #FFFFFF
 // All images: transparent background, soft lab shadows, premium clinical aesthetic
+// Product container fills 70-80% of canvas height — large, clear, centered.
 
 const { createCanvas } = require('canvas');
 const fs   = require('fs');
@@ -28,7 +29,7 @@ function noShadow(ctx) {
 // ── Shared decorations ────────────────────────────────────────────────────────
 
 function ruoBadge(ctx) {
-  const bw = 280, bh = 32, bx = (W - bw) / 2, by = 36;
+  const bw = 280, bh = 32, bx = (W - bw) / 2, by = 16;
   ctx.fillStyle = NAVY;
   ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 5); ctx.fill();
   ctx.fillStyle = GOLD;
@@ -37,39 +38,39 @@ function ruoBadge(ctx) {
   ctx.fillText('RESEARCH USE ONLY', W / 2, by + 21);
 }
 
-function brandLine(ctx, y) {
-  ctx.fillStyle = hex2rgba(GOLD, 0.35);
-  ctx.font = 'bold 8px Arial';
+function brandLine(ctx, y, size = 8, alpha = 0.35) {
+  ctx.fillStyle = hex2rgba(GOLD, alpha);
+  ctx.font = `bold ${size}px Arial`;
   ctx.textAlign = 'center';
   ctx.fillText('WHOLESALEUSPEPTIDES.COM', W / 2, y);
 }
 
-function logoZone(ctx, cx, cy) {
-  // Hexagon outline
-  const hr = 52;
-  ctx.strokeStyle = hex2rgba(GOLD, 0.28);
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  for (let i = 0; i < 6; i++) {
-    const a = (Math.PI / 3) * i - Math.PI / 6;
-    const px = cx + hr * Math.cos(a), py = cy + hr * Math.sin(a);
-    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-  }
-  ctx.closePath(); ctx.stroke();
+// WholesaleUSPeptides brand mark — used on all catalog product images.
+// ("YOUR LOGO HERE" is reserved for white-label page assets only, not here.)
+function wusMark(ctx, cx, cy, scale = 1) {
+  const r = 46 * scale;
+  ctx.strokeStyle = hex2rgba(GOLD, 0.55);
+  ctx.lineWidth = 2 * scale;
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = hex2rgba(GOLD, 0.25);
+  ctx.lineWidth = 1 * scale;
+  ctx.beginPath(); ctx.arc(cx, cy, r - 7 * scale, 0, Math.PI * 2); ctx.stroke();
 
-  ctx.fillStyle = hex2rgba(GOLD, 0.50);
-  ctx.font = 'bold 10px Arial';
+  ctx.fillStyle = hex2rgba(NAVY, 0.92);
+  ctx.font = `bold ${20 * scale}px Arial`;
   ctx.textAlign = 'center';
-  ctx.fillText('YOUR',      cx, cy - 14);
-  ctx.fillText('LOGO',      cx, cy - 1);
-  ctx.fillText('HERE',      cx, cy + 13);
+  ctx.fillText('WUS', cx, cy + 6 * scale);
+
+  ctx.fillStyle = hex2rgba(GOLD, 0.75);
+  ctx.font = `bold ${8.5 * scale}px Arial`;
+  ctx.fillText('PEPTIDES', cx, cy + 20 * scale);
 }
 
 function productLabel(ctx, name, cx, labelBottom) {
   ctx.fillStyle = hex2rgba(NAVY, 0.92);
-  ctx.font = 'bold 17px Arial';
+  ctx.font = 'bold 30px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText(name.toUpperCase(), cx, labelBottom - 10);
+  ctx.fillText(name.toUpperCase(), cx, labelBottom - 18);
 }
 
 function slug(name) {
@@ -83,261 +84,252 @@ function saveCanvas(canvas, dir, filename) {
 }
 
 // ── BOTTLE ────────────────────────────────────────────────────────────────────
-function generateBottle(name, filename) {
+// Vial fills ~76% of canvas height (760/1000).
+function generateBottle(name, filename, subtitle) {
   const canvas = createCanvas(W, H);
   const ctx    = canvas.getContext('2d');
-  // Transparent base
   ctx.clearRect(0, 0, W, H);
 
-  const cx = W / 2, cy = H / 2 + 10;
-  const vw = 160, vh = 340, vr = 18;
+  const cx = W / 2, cy = H / 2 + 6;
+  const vw = 320, vh = 760, vr = 30;
   const vx = cx - vw / 2, vy = cy - vh / 2;
 
   // Drop shadow
   ctx.shadowColor = 'rgba(5,17,31,0.22)';
-  ctx.shadowBlur  = 60;
-  ctx.shadowOffsetY = 24;
+  ctx.shadowBlur  = 70;
+  ctx.shadowOffsetY = 30;
 
   // Body — frosted white glass
   ctx.fillStyle = '#EEF1F5';
-  ctx.beginPath(); ctx.roundRect(vx, vy + 38, vw, vh - 38, [0, 0, vr, vr]); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(vx, vy + 90, vw, vh - 90, [0, 0, vr, vr]); ctx.fill();
   noShadow(ctx);
 
   // Cap — navy
   ctx.fillStyle = NAVY;
-  ctx.beginPath(); ctx.roundRect(vx + 10, vy, vw - 20, 48, [vr, vr, 6, 6]); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(vx + 18, vy, vw - 36, 110, [vr, vr, 10, 10]); ctx.fill();
 
   // Gold ring under cap
   ctx.fillStyle = GOLD;
-  ctx.fillRect(vx + 10, vy + 42, vw - 20, 4);
+  ctx.fillRect(vx + 18, vy + 96, vw - 36, 8);
 
   // Label background
-  const lx = vx + 10, ly = vy + 72, lw = vw - 20, lh = 188;
+  const lx = vx + 18, ly = vy + 150, lw = vw - 36, lh = 430;
   ctx.fillStyle = WHITE;
   ctx.fillRect(lx, ly, lw, lh);
 
   // Label top navy band
   ctx.fillStyle = NAVY;
-  ctx.fillRect(lx, ly, lw, 22);
-  brandLine(ctx, ly + 15);
+  ctx.fillRect(lx, ly, lw, 48);
+  brandLine(ctx, ly + 31, 13, 0.9);
 
-  // Logo zone center of label
-  logoZone(ctx, cx, ly + lh / 2 - 10);
+  // Brand mark center of label
+  wusMark(ctx, cx, ly + lh / 2 + 10, 1.5);
 
   // Gold bottom rule
   ctx.fillStyle = GOLD;
-  ctx.fillRect(lx, ly + lh - 5, lw, 5);
+  ctx.fillRect(lx, ly + lh - 10, lw, 10);
+
+  if (subtitle) {
+    ctx.fillStyle = hex2rgba(NAVY, 0.6);
+    ctx.font = 'bold 15px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(subtitle, cx, ly + lh - 24);
+  }
 
   // Glass sheen
   ctx.fillStyle = 'rgba(255,255,255,0.20)';
-  ctx.beginPath(); ctx.roundRect(vx + 8, vy + 38, 20, vh - 50, [6,6,6,6]); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(vx + 16, vy + 90, 38, vh - 116, [10,10,10,10]); ctx.fill();
 
   // Product name below bottle
   ruoBadge(ctx);
-  productLabel(ctx, name, cx, vy + vh + 52);
+  productLabel(ctx, name, cx, vy + vh + 90);
 
   saveCanvas(canvas, 'bottles', filename);
 }
 
 // ── CAPSULE ───────────────────────────────────────────────────────────────────
+// Bottle fills ~74% of canvas height (740/1000).
 function generateCapsule(name, filename) {
   const canvas = createCanvas(W, H);
   const ctx    = canvas.getContext('2d');
   ctx.clearRect(0, 0, W, H);
 
-  const cx = W / 2, cy = H / 2 + 5;
-  const bw = 170, bh = 300, br = 24;
+  const cx = W / 2, cy = H / 2 + 4;
+  const bw = 340, bh = 740, br = 42;
   const bx = cx - bw / 2, by = cy - bh / 2;
 
   ctx.shadowColor = 'rgba(5,17,31,0.20)';
-  ctx.shadowBlur  = 55;
-  ctx.shadowOffsetY = 22;
+  ctx.shadowBlur  = 65;
+  ctx.shadowOffsetY = 26;
 
   // Body
   ctx.fillStyle = '#F0F3F7';
-  ctx.beginPath(); ctx.roundRect(bx, by + 44, bw, bh - 44, [6,6,br,br]); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(bx, by + 100, bw, bh - 100, [10,10,br,br]); ctx.fill();
   noShadow(ctx);
 
   // Cap
   ctx.fillStyle = NAVY;
-  ctx.beginPath(); ctx.roundRect(bx + 4, by, bw - 8, 56, [br,br,8,8]); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(bx + 10, by, bw - 20, 122, [br,br,14,14]); ctx.fill();
 
   // Gold ring
   ctx.fillStyle = GOLD;
-  ctx.fillRect(bx + 4, by + 50, bw - 8, 5);
+  ctx.fillRect(bx + 10, by + 106, bw - 20, 9);
 
   // Brand text on cap
-  brandLine(ctx, by + 34);
+  brandLine(ctx, by + 68, 12, 0.9);
 
   // Label
-  const lx = bx + 8, ly = by + 74, lw = bw - 16, lh = 148;
+  const lx = bx + 16, ly = by + 156, lw = bw - 32, lh = 330;
   ctx.fillStyle = WHITE;
   ctx.fillRect(lx, ly, lw, lh);
   ctx.fillStyle = NAVY;
-  ctx.fillRect(lx, ly, lw, 18);
+  ctx.fillRect(lx, ly, lw, 36);
   ctx.fillStyle = GOLD;
-  ctx.font = 'bold 6px Arial';
+  ctx.font = 'bold 12px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('WHOLESALEUSPEPTIDES', cx, ly + 13);
+  ctx.fillText('WHOLESALEUSPEPTIDES', cx, ly + 25);
 
-  logoZone(ctx, cx, ly + lh / 2 + 2);
+  wusMark(ctx, cx, ly + lh / 2 + 8, 1.3);
 
   ctx.fillStyle = GOLD;
-  ctx.fillRect(lx, ly + lh - 4, lw, 4);
+  ctx.fillRect(lx, ly + lh - 8, lw, 8);
 
   // Count tag
   ctx.fillStyle = hex2rgba(NAVY, 0.08);
-  ctx.beginPath(); ctx.roundRect(cx - 38, by + bh + 8, 76, 22, 4); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(cx - 80, by + bh + 14, 160, 44, 8); ctx.fill();
   ctx.fillStyle = NAVY;
-  ctx.font = 'bold 9px Arial';
+  ctx.font = 'bold 18px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('60 CAPSULES', cx, by + bh + 23);
+  ctx.fillText('60 CAPSULES', cx, by + bh + 43);
 
   ruoBadge(ctx);
-  productLabel(ctx, name, cx, by + bh + 58);
+  productLabel(ctx, name, cx, by + bh + 112);
 
   saveCanvas(canvas, 'capsules', filename);
 }
 
 // ── SPRAY ─────────────────────────────────────────────────────────────────────
+// Bottle fills ~74% of canvas height (740/1000).
 function generateSpray(name, filename) {
   const canvas = createCanvas(W, H);
   const ctx    = canvas.getContext('2d');
   ctx.clearRect(0, 0, W, H);
 
-  const cx = W / 2, cy = H / 2 + 15;
-  const bw = 100, bh = 320;
+  const cx = W / 2, cy = H / 2 + 8;
+  const bw = 220, bh = 740;
   const bx = cx - bw / 2, by = cy - bh / 2;
 
   ctx.shadowColor = 'rgba(5,17,31,0.18)';
-  ctx.shadowBlur  = 50;
-  ctx.shadowOffsetY = 20;
+  ctx.shadowBlur  = 60;
+  ctx.shadowOffsetY = 24;
 
   // Body
   ctx.fillStyle = '#E8EDF2';
-  ctx.beginPath(); ctx.roundRect(bx, by + 90, bw, bh - 90, [4,4,14,14]); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(bx, by + 200, bw, bh - 200, [8,8,28,28]); ctx.fill();
   noShadow(ctx);
 
   // Neck
   ctx.fillStyle = '#D4D9DF';
-  ctx.beginPath(); ctx.roundRect(cx - 20, by + 50, 40, 50, [4,4,2,2]); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(cx - 42, by + 112, 84, 110, [8,8,4,4]); ctx.fill();
 
   // Pump head
   ctx.fillStyle = NAVY;
-  ctx.beginPath(); ctx.roundRect(cx - 32, by + 28, 64, 32, [10,10,6,6]); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(cx - 68, by + 60, 136, 70, [22,22,12,12]); ctx.fill();
 
   // Nozzle
   ctx.fillStyle = NAVY;
-  ctx.beginPath(); ctx.roundRect(cx + 16, by + 32, 32, 14, [7,7,7,7]); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(cx + 34, by + 70, 68, 30, [15,15,15,15]); ctx.fill();
 
   // Gold separator
   ctx.fillStyle = GOLD;
-  ctx.fillRect(bx, by + 96, bw, 4);
+  ctx.fillRect(bx, by + 212, bw, 8);
 
   // Label
-  const lx = bx + 4, ly = by + 108, lw = bw - 8, lh = 130;
+  const lx = bx + 10, ly = by + 240, lw = bw - 20, lh = 290;
   ctx.fillStyle = WHITE;
   ctx.fillRect(lx, ly, lw, lh);
   ctx.fillStyle = NAVY;
-  ctx.fillRect(lx, ly, lw, 17);
+  ctx.fillRect(lx, ly, lw, 34);
   ctx.fillStyle = GOLD;
-  ctx.font = 'bold 5px Arial';
+  ctx.font = 'bold 10px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('WUSPEPTIDES', cx, ly + 12);
+  ctx.fillText('WUSPEPTIDES', cx, ly + 23);
 
-  // Smaller hex zone for narrower bottle
-  const hr = 28;
-  ctx.strokeStyle = hex2rgba(GOLD, 0.28);
-  ctx.lineWidth = 1.2;
-  ctx.beginPath();
-  for (let i = 0; i < 6; i++) {
-    const a = (Math.PI / 3) * i - Math.PI / 6;
-    ctx.lineTo(cx + hr * Math.cos(a), ly + lh/2 + hr * Math.sin(a));
-  }
-  ctx.closePath(); ctx.stroke();
-
-  ctx.fillStyle = hex2rgba(GOLD, 0.50);
-  ctx.font = 'bold 6px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('YOUR',  cx, ly + lh/2 - 8);
-  ctx.fillText('LOGO',  cx, ly + lh/2 + 2);
-  ctx.fillText('HERE',  cx, ly + lh/2 + 12);
+  wusMark(ctx, cx, ly + lh / 2 + 10, 1.0);
 
   ctx.fillStyle = GOLD;
-  ctx.fillRect(lx, ly + lh - 4, lw, 4);
+  ctx.fillRect(lx, ly + lh - 8, lw, 8);
 
   // Volume tag
   ctx.fillStyle = hex2rgba(NAVY, 0.07);
-  ctx.beginPath(); ctx.roundRect(cx - 24, by + bh + 6, 48, 18, 3); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(cx - 54, by + bh + 14, 108, 38, 6); ctx.fill();
   ctx.fillStyle = NAVY;
-  ctx.font = 'bold 8px Arial';
+  ctx.font = 'bold 17px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('30 ml', cx, by + bh + 19);
+  ctx.fillText('30 ml', cx, by + bh + 40);
 
   ruoBadge(ctx);
-  productLabel(ctx, name, cx, by + bh + 52);
+  productLabel(ctx, name, cx, by + bh + 108);
 
   saveCanvas(canvas, 'sprays', filename);
 }
 
 // ── CREAM ─────────────────────────────────────────────────────────────────────
+// Jar fills ~73% of canvas height (730/1000).
 function generateCream(name, filename) {
   const canvas = createCanvas(W, H);
   const ctx    = canvas.getContext('2d');
   ctx.clearRect(0, 0, W, H);
 
-  const cx = W / 2, cy = H / 2 + 20;
-  const jw = 220, jh = 105, jr = 18;
+  const cx = W / 2, cy = H / 2 + 14;
+  const jw = 520, jh = 540, jr = 36;
   const jx = cx - jw / 2, jy = cy - jh / 2;
 
   ctx.shadowColor = 'rgba(5,17,31,0.18)';
-  ctx.shadowBlur  = 55;
-  ctx.shadowOffsetY = 28;
+  ctx.shadowBlur  = 65;
+  ctx.shadowOffsetY = 32;
 
   // Body
   ctx.fillStyle = '#EDF0F4';
-  ctx.beginPath(); ctx.roundRect(jx, jy + 14, jw, jh, [4,4,jr,jr]); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(jx, jy + 60, jw, jh - 60, [8,8,jr,jr]); ctx.fill();
   noShadow(ctx);
 
   // Lid
   ctx.shadowColor = 'rgba(5,17,31,0.14)';
-  ctx.shadowBlur  = 14;
-  ctx.shadowOffsetY = -4;
+  ctx.shadowBlur  = 18;
+  ctx.shadowOffsetY = -6;
   ctx.fillStyle = NAVY;
-  ctx.beginPath(); ctx.roundRect(jx - 6, jy - 24, jw + 12, 44, [jr,jr,4,4]); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(jx - 14, jy - 90, jw + 28, 160, [jr,jr,10,10]); ctx.fill();
   noShadow(ctx);
 
   // Gold lid ring
   ctx.fillStyle = GOLD;
-  ctx.fillRect(jx - 6, jy + 14, jw + 12, 4);
+  ctx.fillRect(jx - 14, jy + 58, jw + 28, 10);
 
   // Lid text
-  ctx.fillStyle = hex2rgba(GOLD, 0.7);
-  ctx.font = 'bold 8px Arial';
+  ctx.fillStyle = hex2rgba(GOLD, 0.85);
+  ctx.font = 'bold 16px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('WHOLESALEUSPEPTIDES.COM', cx, jy - 3);
+  ctx.fillText('WHOLESALEUSPEPTIDES.COM', cx, jy - 8);
 
   // Label on jar body
-  const lx = jx + 10, ly = jy + 24, lw = jw - 20, lh = 76;
-  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  const lx = jx + 30, ly = jy + 110, lw = jw - 60, lh = 320;
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
   ctx.fillRect(lx, ly, lw, lh);
 
-  ctx.strokeStyle = hex2rgba(GOLD, 0.25);
-  ctx.lineWidth = 0.8;
-  ctx.strokeRect(lx + 4, ly + 4, lw - 8, lh - 8);
+  ctx.strokeStyle = hex2rgba(GOLD, 0.3);
+  ctx.lineWidth = 2;
+  ctx.strokeRect(lx + 10, ly + 10, lw - 20, lh - 20);
 
-  ctx.fillStyle = hex2rgba(GOLD, 0.50);
-  ctx.font = 'bold 9px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('YOUR LOGO HERE', cx, ly + lh / 2 + 4);
+  wusMark(ctx, cx, ly + lh / 2, 1.6);
 
   ruoBadge(ctx);
-  productLabel(ctx, name, cx, jy + jh + 66);
+  productLabel(ctx, name, cx, jy + jh + 130);
 
-  ctx.fillStyle = hex2rgba(STONE, 0.7);
-  ctx.font = '11px Arial';
+  ctx.fillStyle = hex2rgba(STONE, 0.8);
+  ctx.font = '20px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('50ml Cream', cx, jy + jh + 83);
+  ctx.fillText('50ml Cream', cx, jy + jh + 168);
 
   saveCanvas(canvas, 'creams', filename);
 }
