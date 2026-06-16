@@ -284,3 +284,32 @@
   .wl-trust-grid { grid-template-columns: 1fr 1fr !important; }
   .wl-timeline { grid-template-columns: 1fr !important; }
 }
+
+/* ── BATCH VERIFICATION PAGE ───────────────────────────────────────────────── */
+.coa-howitworks-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.coa-howitworks-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(5,17,31,0.1);
+  border-color: rgba(201,168,76,0.4);
+}
+
+.coa-trust-badge {
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+
+.coa-trust-badge:hover {
+  border-color: rgba(201,168,76,0.4);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .coa-howitworks-grid { grid-template-columns: 1fr 1fr !important; }
+}
+
+@media (max-width: 480px) {
+  .coa-howitworks-grid { grid-template-columns: 1fr !important; }
+  .coa-trust-grid { grid-template-columns: 1fr 1fr !important; }
+}
