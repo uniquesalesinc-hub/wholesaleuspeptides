@@ -711,12 +711,15 @@ function HomeSections({ setPage }) {
 
 // ── WHITE LABEL PAGE ──────────────────────────────────────────────────────────
 function WLPage({ setPage }) {
+  // step: 1=Overview, 2=Company Info, 3=Product Interest, 4=Monthly Volume, 5=Review & Submit, 6=Confirmation
   const [step, setStep]           = useState(1);
   const [bsz, setBsz]             = useState(null);
-  const [fm, setFm]               = useState({co:"",cn:"",em:"",ph:"",br:"",sk:"",nt:""});
+  const [interests, setInterests] = useState([]);
+  const [volume, setVolume]       = useState(null);
+  const [fm, setFm]               = useState({co:"",cn:"",em:"",ph:"",web:"",br:"",sk:"",nt:""});
   const [logoFile, setLogoFile]       = useState(null);
   const [stickerFile, setStickerFile] = useState(null);
-  const steps = ["Overview","Bottle Spec","Order Details","Confirmation"];
+  const onboardingSteps = ["Company Info","Product Interest","Monthly Volume","Review & Submit"];
   const SZ = {
     "3ml": {d:"16mm x 45mm",la:"40mm x 25mm",ca:"44mm x 29mm",qr:"8mm x 8mm"},
     "10ml":{d:"24mm x 55mm",la:"68mm x 35mm",ca:"72mm x 39mm",qr:"12mm x 12mm"},
@@ -728,6 +731,8 @@ function WLPage({ setPage }) {
         style={{width:"100%",padding:"9px 12px",border:"1px solid "+C.mist,background:C.white,fontSize:12,color:C.navy,outline:"none",boxSizing:"border-box"}}/>
     </div>
   );
+  const toggleInterest = cat => setInterests(arr => arr.includes(cat) ? arr.filter(c=>c!==cat) : [...arr, cat]);
+  const canCompanyInfo = fm.co && fm.cn && fm.em;
   return (
     <div style={{background:C.off,minHeight:"100vh"}}>
       <div style={{background:C.navy,padding:"40px 40px 32px",borderBottom:"1px solid rgba(201,168,76,0.15)"}}>
@@ -738,18 +743,23 @@ function WLPage({ setPage }) {
         </div>
       </div>
       <div style={{maxWidth:960,margin:"0 auto",padding:"32px 40px 72px"}}>
-        <div style={{display:"flex",marginBottom:28,borderBottom:"1px solid "+C.mist}}>
-          {steps.map((s,i)=>(
-            <button key={i} onClick={()=>setStep(i+1)} style={{flex:1,padding:"10px 4px",background:"none",border:"none",borderBottom:"2px solid "+(step===i+1?C.gold:"transparent"),cursor:"pointer",textAlign:"center"}}>
-              <div style={{fontSize:8,letterSpacing:2,color:step===i+1?C.gold:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:2}}>0{i+1}</div>
-              <div style={{fontSize:10,color:step===i+1?C.navy:C.stone,fontWeight:step===i+1?700:400}}>{s}</div>
-            </button>
-          ))}
-        </div>
+        {step>=2 && step<=5 && (
+          <div style={{display:"flex",marginBottom:28,borderBottom:"1px solid "+C.mist}} className="wl-stepper">
+            {onboardingSteps.map((s,i)=>{
+              const n=i+2; const active=step===n; const done=step>n;
+              return (
+                <div key={i} style={{flex:1,padding:"10px 4px",borderBottom:"2px solid "+(active?C.gold:done?"rgba(201,168,76,0.4)":"transparent"),textAlign:"center"}}>
+                  <div style={{fontSize:8,letterSpacing:2,color:active?C.gold:done?C.navy:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:2}}>STEP 0{i+1}</div>
+                  <div className="wl-stepper-label" style={{fontSize:10,color:active?C.navy:C.stone,fontWeight:active?700:400}}>{s}</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {step===1 && (
           <div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18,marginBottom:20}}>
+            <div className="wl-grid2" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18,marginBottom:20}}>
               <div style={{background:C.navy,padding:"28px 24px"}}>
                 <div style={{width:22,height:2,background:C.gold,marginBottom:14}}/>
                 <div style={{fontSize:9,letterSpacing:3,color:C.gold,textTransform:"uppercase",marginBottom:9}}>Signature Feature</div>
@@ -773,17 +783,48 @@ function WLPage({ setPage }) {
               </div>
             </div>
             <div style={{display:"flex",gap:10}}>
-              <button onClick={()=>setStep(2)} style={{padding:"12px 26px",background:C.navy,border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Start Application</button>
-              <button onClick={()=>setPage("catalog")} style={{padding:"12px 20px",background:"transparent",border:"1px solid "+C.mist,color:C.stone,fontSize:11,cursor:"pointer"}}>View Pricing</button>
+              <button onClick={()=>setStep(2)} className="btn-polish" style={{padding:"12px 26px",background:C.navy,border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Start Application</button>
+              <button onClick={()=>setPage("catalog")} className="btn-polish" style={{padding:"12px 20px",background:"transparent",border:"1px solid "+C.mist,color:C.stone,fontSize:11,cursor:"pointer"}}>View Pricing</button>
             </div>
           </div>
         )}
 
         {step===2 && (
           <div>
-            <h2 style={{fontSize:19,fontWeight:700,fontFamily:"Georgia,serif",marginBottom:7}}>Select Bottle Format</h2>
-            <p style={{fontSize:12,color:C.stone,marginBottom:18}}>Select the bottle size(s) you require. You may select both formats.</p>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:18}}>
+            <h2 style={{fontSize:19,fontWeight:700,fontFamily:"Georgia,serif",marginBottom:7}}>Company Information</h2>
+            <p style={{fontSize:12,color:C.stone,marginBottom:18}}>Tell us about your company so we can tailor your white label proposal.</p>
+            <div className="wl-grid2" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
+              {inp("co","Company Name","e.g. Apex Research LLC")}
+              {inp("web","Website","yourcompany.com")}
+              {inp("cn","Contact Name","Full name")}
+              {inp("em","Email","you@company.com")}
+              {inp("ph","Phone","Include country code")}
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={()=>setStep(1)} className="btn-polish" style={{padding:"10px 18px",background:"transparent",border:"1px solid "+C.mist,color:C.stone,fontSize:11,cursor:"pointer"}}>Back</button>
+              <button onClick={()=>canCompanyInfo&&setStep(3)} className="btn-polish" style={{padding:"10px 24px",background:canCompanyInfo?C.navy:"#C8C0B4",border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:canCompanyInfo?"pointer":"not-allowed"}}>Continue</button>
+            </div>
+          </div>
+        )}
+
+        {step===3 && (
+          <div>
+            <h2 style={{fontSize:19,fontWeight:700,fontFamily:"Georgia,serif",marginBottom:7}}>Product Interest</h2>
+            <p style={{fontSize:12,color:C.stone,marginBottom:18}}>Select all product formats you're interested in white labeling.</p>
+            <div className="wl-interest-grid" style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:22}}>
+              {["Injectables","Capsules","Nasal Sprays","Topicals","Custom Products"].map(cat=>{
+                const sel = interests.includes(cat);
+                return (
+                  <div key={cat} onClick={()=>toggleInterest(cat)} style={{border:"2px solid "+(sel?C.gold:C.mist),padding:"14px 16px",cursor:"pointer",background:sel?"rgba(201,168,76,0.04)":C.white,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                    <span style={{fontSize:12,fontWeight:700,color:C.navy}}>{cat}</span>
+                    <span style={{width:16,height:16,borderRadius:3,border:"1.5px solid "+(sel?C.gold:C.mist),background:sel?C.gold:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:C.navy,fontWeight:800,flexShrink:0}}>{sel?"✓":""}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{fontSize:10,fontWeight:700,color:C.navy,letterSpacing:1,textTransform:"uppercase",marginBottom:10}}>Bottle Format (if applicable)</div>
+            <div className="wl-grid2" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:18}}>
               {["3ml","10ml"].map(sz=>{
                 const info=SZ[sz]; const sel=bsz===sz;
                 return (
@@ -801,39 +842,101 @@ function WLPage({ setPage }) {
                 );
               })}
             </div>
-            <div style={{padding:"10px 14px",background:"#EDE9DF",border:"1px solid "+C.mist,marginBottom:18,fontSize:10,color:"#6B5E4A",lineHeight:1.7}}>
-              Accepted: Adobe Illustrator (.ai), print-ready PDF (CMYK 300dpi+), high-resolution PNG. Labels must include compound name, lot number placeholder, and clear QR zone. No therapeutic or human-use claims permitted.
-            </div>
-            <div style={{display:"flex",gap:10}}>
-              <button onClick={()=>setStep(1)} style={{padding:"10px 18px",background:"transparent",border:"1px solid "+C.mist,color:C.stone,fontSize:11,cursor:"pointer"}}>Back</button>
-              <button onClick={()=>bsz&&setStep(3)} style={{padding:"10px 24px",background:bsz?C.navy:"#C8C0B4",border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:bsz?"pointer":"not-allowed"}}>Continue</button>
-            </div>
-          </div>
-        )}
 
-        {step===3 && (
-          <div>
-            <h2 style={{fontSize:19,fontWeight:700,fontFamily:"Georgia,serif",marginBottom:7}}>Order Details</h2>
-            <p style={{fontSize:12,color:C.stone,marginBottom:18}}>Our team will contact you within 2 business days with specifications and a formal quote.</p>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-              {inp("co","Company Name","e.g. Apex Research LLC")}
-              {inp("cn","Contact Name","Full name")}
-              {inp("em","Business Email","you@company.com")}
-              {inp("ph","Phone","Include country code")}
-              {inp("br","White-Label Brand Name","Name for labels")}
-              {inp("qty","Units Per SKU (estimate)","e.g. 50")}
-            </div>
             <div style={{marginBottom:11}}>
               <div style={{fontSize:9,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:4}}>Compounds Required</div>
               <textarea value={fm.sk||""} onChange={e=>setFm(f=>({...f,sk:e.target.value}))} placeholder={"BPC-157 5mg - 50 units\nS 10mg - 50 units"}
                 style={{width:"100%",padding:"9px 12px",border:"1px solid "+C.mist,background:C.white,fontSize:12,color:C.navy,outline:"none",height:80,resize:"vertical",boxSizing:"border-box",fontFamily:"'Inter',sans-serif"}}></textarea>
             </div>
             <div style={{marginBottom:18}}>
+              {inp("br","White-Label Brand Name","Name for labels")}
+            </div>
+            <div style={{padding:"10px 14px",background:"#EDE9DF",border:"1px solid "+C.mist,marginBottom:18,fontSize:10,color:"#6B5E4A",lineHeight:1.7}}>
+              Accepted: Adobe Illustrator (.ai), print-ready PDF (CMYK 300dpi+), high-resolution PNG. Labels must include compound name, lot number placeholder, and clear QR zone. No therapeutic or human-use claims permitted.
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={()=>setStep(2)} className="btn-polish" style={{padding:"10px 18px",background:"transparent",border:"1px solid "+C.mist,color:C.stone,fontSize:11,cursor:"pointer"}}>Back</button>
+              <button onClick={()=>interests.length>0&&setStep(4)} className="btn-polish" style={{padding:"10px 24px",background:interests.length>0?C.navy:"#C8C0B4",border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:interests.length>0?"pointer":"not-allowed"}}>Continue</button>
+            </div>
+          </div>
+        )}
+
+        {step===4 && (
+          <div>
+            <h2 style={{fontSize:19,fontWeight:700,fontFamily:"Georgia,serif",marginBottom:7}}>Monthly Volume</h2>
+            <p style={{fontSize:12,color:C.stone,marginBottom:18}}>Select your estimated monthly volume across all SKUs.</p>
+            <div className="wl-volume-grid" style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:22}}>
+              {["10-50 units","50-100 units","100-500 units","500+ units"].map(v=>{
+                const sel = volume===v;
+                return (
+                  <div key={v} onClick={()=>setVolume(v)} style={{border:"2px solid "+(sel?C.gold:C.mist),padding:"20px",cursor:"pointer",background:sel?"rgba(201,168,76,0.04)":C.white,textAlign:"center",position:"relative"}}>
+                    {sel && <div style={{position:"absolute",top:9,right:9,background:C.gold,color:C.navy,fontSize:8,fontWeight:700,padding:"2px 8px"}}>SELECTED</div>}
+                    <div style={{fontSize:16,fontWeight:700,fontFamily:"Georgia,serif",color:C.navy}}>{v}</div>
+                    <div style={{fontSize:10,color:C.stone,marginTop:4}}>per month, estimated</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={()=>setStep(3)} className="btn-polish" style={{padding:"10px 18px",background:"transparent",border:"1px solid "+C.mist,color:C.stone,fontSize:11,cursor:"pointer"}}>Back</button>
+              <button onClick={()=>volume&&setStep(5)} className="btn-polish" style={{padding:"10px 24px",background:volume?C.navy:"#C8C0B4",border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:volume?"pointer":"not-allowed"}}>Continue</button>
+            </div>
+          </div>
+        )}
+
+        {step===5 && (
+          <div>
+            <h2 style={{fontSize:19,fontWeight:700,fontFamily:"Georgia,serif",marginBottom:7}}>Review & Submit</h2>
+            <p style={{fontSize:12,color:C.stone,marginBottom:18}}>Confirm your details below. Our team will contact you within 2 business days with specifications and a formal quote.</p>
+
+            <div style={{background:C.white,border:"1px solid "+C.mist,padding:"18px 20px",marginBottom:22}}>
+              <div style={{fontSize:10,letterSpacing:1.5,fontWeight:700,color:C.navy,textTransform:"uppercase",marginBottom:12}}>Application Summary</div>
+              {[
+                ["Company",fm.co||"—"],
+                ["Website",fm.web||"—"],
+                ["Contact",fm.cn||"—"],
+                ["Email",fm.em||"—"],
+                ["Phone",fm.ph||"—"],
+                ["Product Interest",interests.length?interests.join(", "):"—"],
+                ["Bottle Format",bsz?bsz+" Vial":"—"],
+                ["Monthly Volume",volume||"—"],
+                ["Brand Name",fm.br||"—"],
+              ].map(([k,v])=>(
+                <div key={k} style={{display:"flex",gap:10,padding:"6px 0",borderBottom:"1px solid "+C.mist}}>
+                  <span style={{fontSize:11,fontWeight:700,color:C.navy,minWidth:130,flexShrink:0}}>{k}</span>
+                  <span style={{fontSize:11,color:C.stone}}>{v}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{marginBottom:22}}>
+              <div style={{fontSize:10,letterSpacing:1.5,fontWeight:700,color:C.navy,textTransform:"uppercase",marginBottom:12}}>Onboarding Timeline</div>
+              <div className="wl-timeline" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
+                {[["Week 1","Strategy"],["Week 2","Label Design"],["Week 3","Production"],["Week 4","Fulfillment"]].map(([w,t],i)=>(
+                  <div key={w} style={{textAlign:"center",padding:"14px 10px",background:C.off,border:"1px solid "+C.mist}}>
+                    <div style={{width:24,height:24,borderRadius:"50%",background:C.navy,color:C.gold,fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 8px"}}>{i+1}</div>
+                    <div style={{fontSize:9,letterSpacing:1.5,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:3}}>{w}</div>
+                    <div style={{fontSize:11,fontWeight:700,color:C.navy}}>{t}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="wl-trust-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:22}}>
+              {["Manufactured in USA","Batch Verified","White Label Available","Third Party Tested"].map((b,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"9px 10px",background:C.off,border:"1px solid "+C.mist}}>
+                  <span style={{color:C.gold,fontSize:11}}>✓</span>
+                  <span style={{fontSize:9,fontWeight:700,letterSpacing:0.3,color:C.navy,textTransform:"uppercase"}}>{b}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{marginBottom:18}}>
               <div style={{fontSize:9,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:4}}>Additional Notes</div>
               <textarea value={fm.nt||""} onChange={e=>setFm(f=>({...f,nt:e.target.value}))} placeholder="QR placement, bottle size, shipping requirements..."
                 style={{width:"100%",padding:"9px 12px",border:"1px solid "+C.mist,background:C.white,fontSize:12,color:C.navy,outline:"none",height:60,resize:"vertical",boxSizing:"border-box",fontFamily:"'Inter',sans-serif"}}></textarea>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
+            <div className="wl-grid2" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
               {[
                 {label:"Logo File",desc:"Upload your brand logo for label printing",file:logoFile,set:setLogoFile,id:"logo-upload"},
                 {label:"Sticker File",desc:"Upload your sticker artwork for white labeling",file:stickerFile,set:setStickerFile,id:"sticker-upload"},
@@ -859,13 +962,13 @@ function WLPage({ setPage }) {
               ))}
             </div>
             <div style={{display:"flex",gap:10}}>
-              <button onClick={()=>setStep(2)} style={{padding:"10px 18px",background:"transparent",border:"1px solid "+C.mist,color:C.stone,fontSize:11,cursor:"pointer"}}>Back</button>
-              <button onClick={()=>setStep(4)} style={{padding:"10px 26px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Submit Application</button>
+              <button onClick={()=>setStep(4)} className="btn-polish" style={{padding:"10px 18px",background:"transparent",border:"1px solid "+C.mist,color:C.stone,fontSize:11,cursor:"pointer"}}>Back</button>
+              <button onClick={()=>setStep(6)} className="btn-polish" style={{padding:"10px 26px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Submit Application</button>
             </div>
           </div>
         )}
 
-        {step===4 && (
+        {step===6 && (
           <div style={{textAlign:"center",maxWidth:480,margin:"0 auto",padding:"28px 0"}}>
             <div style={{width:50,height:50,borderRadius:"50%",background:"rgba(46,107,74,0.1)",border:"2px solid "+C.green,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:700,color:C.green,margin:"0 auto 16px"}}>OK</div>
             <div style={{width:30,height:2,background:C.gold,margin:"0 auto 14px"}}/>
@@ -880,7 +983,7 @@ function WLPage({ setPage }) {
               ))}
             </div>
             <div style={{fontSize:11,color:C.stone,marginBottom:16}}>Questions: uniquesalesinc@gmail.com — 602-321-8381</div>
-            <button onClick={()=>setPage("catalog")} style={{padding:"11px 24px",background:C.navy,border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>View Catalog</button>
+            <button onClick={()=>setPage("catalog")} className="btn-polish" style={{padding:"11px 24px",background:C.navy,border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>View Catalog</button>
           </div>
         )}
       </div>
