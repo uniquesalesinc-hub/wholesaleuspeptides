@@ -467,6 +467,64 @@ function StatsStrip() {
   );
 }
 
+// ── FOOTER ──────────────────────────────────────────────────────────────────
+function Footer({ setPage }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setVisible(true); obs.disconnect(); }
+    }, { threshold: 0.15 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  const nav = [
+    {label:"Catalog",           id:"catalog"},
+    {label:"White Label",       id:"wl"},
+    {label:"Standards",         id:"about"},
+    {label:"Batch Verification",id:"coa"},
+  ];
+  const company = [
+    {label:"Request Pricing", id:"catalog"},
+    {label:"Contact",         id:null},
+    {label:"Terms",           id:null},
+    {label:"Privacy",         id:null},
+  ];
+  return (
+    <footer ref={ref} style={{background:C.navy,borderTop:"1px solid "+C.gold,padding:"56px 40px 28px",opacity:visible?1:0,transform:visible?"translateY(0)":"translateY(20px)",transition:"opacity 0.7s ease, transform 0.7s ease"}}>
+      <div style={{maxWidth:1400,margin:"0 auto"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr 1fr",gap:40,marginBottom:36}} className="footer-grid">
+          <div>
+            <div style={{fontSize:15,fontWeight:800,color:C.white,fontFamily:"Georgia,serif",marginBottom:10}}>WholesaleUSPeptides.com</div>
+            <p style={{fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.9,maxWidth:280,marginBottom:14}}>American peptide manufacturing and white-label solutions for qualified partners.</p>
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",lineHeight:1.8}}>uniquesalesinc@gmail.com<br/>602-321-8381</div>
+          </div>
+          <div>
+            <div style={{fontSize:9,letterSpacing:3,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:16,opacity:0.85}}>Navigation</div>
+            {nav.map(({label,id})=>(
+              <div key={label} onClick={()=>setPage(id)} className="footer-link" style={{fontSize:12,marginBottom:11,cursor:"pointer"}}>{label}</div>
+            ))}
+          </div>
+          <div>
+            <div style={{fontSize:9,letterSpacing:3,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:16,opacity:0.85}}>Company</div>
+            {company.map(({label,id})=>(
+              <div key={label} onClick={id?()=>setPage(id):undefined} className="footer-link" style={{fontSize:12,marginBottom:11,cursor:id?"pointer":"default"}}>{label}</div>
+            ))}
+          </div>
+        </div>
+        <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:18}}>
+          <div style={{fontSize:9,color:"rgba(255,255,255,0.2)",lineHeight:1.9,marginBottom:9}}>
+            All products are Research Use Only (RUO). Not approved by the U.S. FDA. Clinical trials for many compounds are ongoing. Not for human or veterinary use. Purchasers must be qualified wholesale professionals aged 18+ and are responsible for regulatory compliance in their jurisdiction.
+          </div>
+          <div style={{fontSize:10,color:"rgba(255,255,255,0.3)",letterSpacing:0.3}}>© 2026 WholesaleUSPeptides.com</div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
 function HomeSections({ setPage }) {
   const cats = [
     {label:"GLP-1 Solutions",      desc:"GLP-S, GLP-T, GLP-R, Tesamorelin, Sermorelin"},
@@ -645,34 +703,7 @@ function HomeSections({ setPage }) {
       </div>
 
       {/* FOOTER */}
-      <footer style={{background:C.navy,borderTop:"1px solid rgba(201,168,76,0.12)",padding:"52px 40px 24px"}}>
-        <div style={{maxWidth:1400,margin:"0 auto"}}>
-          <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:28,marginBottom:32}}>
-            <div>
-              <div style={{fontSize:13,fontWeight:800,color:C.white,fontFamily:"Georgia,serif",marginBottom:4}}>WholesaleUSPeptides.com</div>
-              <div style={{fontSize:7,letterSpacing:3,color:C.gold,textTransform:"uppercase",marginBottom:12,opacity:0.8}}>Wholesale Manufacturing & White Label</div>
-              <p style={{fontSize:11,color:"rgba(255,255,255,0.3)",lineHeight:1.85,marginBottom:14,maxWidth:230}}>American-manufactured RUO research compounds. Wholesale, white label, and private label fulfillment for qualified Wholesale partners.</p>
-              <div style={{fontSize:11,color:"rgba(255,255,255,0.35)"}}>uniquesalesinc@gmail.com<br/>602-321-8381</div>
-            </div>
-            {[
-              {title:"Platform",links:["Wholesale Catalog","White Label","Batch Verification","Standards & Legal"]},
-              {title:"Products",links:["GLP-1 Solutions","Wellness Peptides","Performance Peptides","Research Compounds"]},
-              {title:"Legal",   links:["RUO Policy","Partner Agreement","Privacy Policy","Shipping Policy"]},
-            ].map(({title,links})=>(
-              <div key={title}>
-                <div style={{fontSize:8,letterSpacing:3,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:12,opacity:0.8}}>{title}</div>
-                {links.map(l=><div key={l} style={{fontSize:11,color:"rgba(255,255,255,0.3)",marginBottom:7,cursor:"pointer"}}>{l}</div>)}
-              </div>
-            ))}
-          </div>
-          <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:16}}>
-            <div style={{fontSize:9,color:"rgba(255,255,255,0.2)",lineHeight:1.9,marginBottom:7}}>
-              All products are Research Use Only (RUO). Not approved by the U.S. FDA. Clinical trials for many compounds are ongoing. Not for human or veterinary use. Purchasers must be qualified wholesale professionals aged 18+ and are responsible for regulatory compliance in their jurisdiction.
-            </div>
-            <div style={{fontSize:9,color:"rgba(255,255,255,0.15)"}}>2026 WholesaleUSPeptides.com — All Rights Reserved — RUO</div>
-          </div>
-        </div>
-      </footer>
+      <Footer setPage={setPage}/>
     </>
   );
 }
