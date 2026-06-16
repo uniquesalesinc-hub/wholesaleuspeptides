@@ -213,31 +213,39 @@ function Hero({ setPage }) {
 }
 
 
-// ── VIAL PHOTO CARD ───────────────────────────────────────────────────────────
-function productImg(name, cat) {
-  let n = name;
-  if (cat === 'Sprays')   n = n.replace(/\s*Spray$/i, '');
-  if (cat === 'Topicals') n = n.replace(/\s*Cream$/i, '');
-  if (cat === 'Blends')   n = n.replace(/\s*Blend$/i, '');
-  const slug = n.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-  if (cat === 'Topicals') return `/images/creams/${slug}.png`;
-  if (cat === 'Sprays')   return `/images/sprays/${slug}.png`;
-  if (cat === 'Capsules') return `/images/capsules/${slug}.png`;
-  return `/images/bottles/${slug}.png`;
+// ── MASTER ASSET IMAGE SYSTEM ─────────────────────────────────────────────────
+// Every product reuses one of four master container photos. Per-product
+// identity (name / strength) is rendered as a text overlay, not baked into
+// the image, so a single asset serves the entire category.
+const MASTER_ASSET = {
+  Topicals: '/images/master/master-cream-pump.png', // airless cream pump bottle
+  Sprays:   '/images/master/master-spray.png',      // nasal spray bottle
+  Capsules: '/images/master/master-capsule.png',    // capsule bottle
+};
+const MASTER_ASSET_DEFAULT = '/images/master/master-vial.png'; // injectable vial
+
+function masterAssetFor(cat) {
+  return MASTER_ASSET[cat] || MASTER_ASSET_DEFAULT;
 }
 
-function VialSVG({ name, cat }) {
-  const src = productImg(name, cat);
+function ProductVisual({ name, strength, cat }) {
+  const src = masterAssetFor(cat);
   return (
-    <img
-      src={src}
-      alt={name}
-      className="product-img"
-      onError={e => {
-        console.error(`Product image not found: ${name} (${cat}) -> ${src}`);
-        e.target.style.display = 'none';
-      }}
-    />
+    <div className="product-visual">
+      <img
+        src={src}
+        alt={name}
+        className="product-img"
+        onError={e => {
+          console.error(`Master asset not found: ${name} (${cat}) -> ${src}`);
+          e.target.style.display = 'none';
+        }}
+      />
+      <div className="product-label-overlay">
+        <div className="product-label-name">{name}</div>
+        {strength && <div className="product-label-strength">{strength}</div>}
+      </div>
+    </div>
   );
 }
 
@@ -256,7 +264,7 @@ function ProdCard({ p, onAdd }) {
     <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{background:C.white,border:"1px solid "+(hov?C.gold:C.mist),display:"flex",flexDirection:"column",transition:"all 0.2s",boxShadow:hov?"0 4px 20px rgba(5,17,31,0.1)":"none",minHeight:700}}>
       <div style={{position:"relative",flexShrink:0,transform:hov?"scale(1.03)":"scale(1)",transition:"transform 0.35s ease",overflow:"hidden"}}>
-        <VialSVG name={p.n} strength={variant.s} cat={p.c}/>
+        <ProductVisual name={p.n} strength={variant.s} cat={p.c}/>
         {p.hot===1 && <div style={{position:"absolute",top:9,left:9,background:C.navy,color:C.gold,fontSize:8,fontWeight:700,letterSpacing:2,textTransform:"uppercase",padding:"3px 8px",zIndex:2}}>Top Seller</div>}
         <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:C.gold,zIndex:2}}/>
       </div>
@@ -440,7 +448,7 @@ function HomeSections({ setPage }) {
             {featured.map((item,i)=>(
               <div key={i} style={{background:C.white,display:"flex",flexDirection:"column"}}>
                 <div style={{height:210,background:C.off,overflow:"hidden"}}>
-                  <img src={productImg(item.n,item.c)} alt={item.n}
+                  <img src={masterAssetFor(item.c)} alt={item.n}
                     onError={e=>{e.target.style.visibility="hidden";}}
                     style={{width:"100%",height:"210px",objectFit:"contain",padding:"16px",boxSizing:"border-box"}}/>
                 </div>
@@ -913,7 +921,7 @@ function CartDrawer({ cart, setCart, open, setOpen }) {
           ) : cart.map(({p,variant,qty,tier})=>(
             <div key={p.id+"-"+variant.id} style={{display:"flex",gap:12,paddingBottom:14,marginBottom:14,borderBottom:"1px solid "+C.mist}}>
               <div style={{width:54,height:54,background:"#F8F7F3",flexShrink:0,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                <img src={productImg(p.n,p.c)} alt={p.n}
+                <img src={masterAssetFor(p.c)} alt={p.n}
                   onError={e=>{e.target.style.display="none";}}
                   style={{width:"100%",height:"100%",objectFit:"contain",padding:"4px",boxSizing:"border-box"}}/>
               </div>
