@@ -74,18 +74,18 @@ const P = [
   {id:40,c:"Peptides",      n:"ARA-290",         s:"16mg", R1:49,  R2:45.5,R3:42,  T1:39,  T2:36,  T3:32.5,T4:29,  T5:26,  hot:0},
   {id:41,c:"Peptides",      n:"SS-31",           s:"10mg", R1:34,  R2:31.5,R3:29,  T1:27,  T2:25,  T3:22.5,T4:20,  T5:18,  hot:0},
   {id:42,c:"Peptides",      n:"HGH Frag 176-191",s:"5mg",  R1:56,  R2:52.5,R3:49,  T1:45,  T2:38.5,T3:32.5,T4:29,  T5:24,  hot:0},
-  {id:43,c:"GLP",           n:"S",               s:"5mg",  R1:45,  R2:43,  R3:40.5,T1:38.5,T2:36.5,T3:34.5,T4:32,  T5:30,  hot:1},
-  {id:44,c:"GLP",           n:"S",               s:"10mg", R1:55,  R2:53,  R3:50.5,T1:48.5,T2:46.5,T3:44.5,T4:42,  T5:40,  hot:1},
-  {id:45,c:"GLP",           n:"S",               s:"15mg", R1:75,  R2:72,  R3:69.5,T1:66.5,T2:63.5,T3:60.5,T4:58,  T5:55,  hot:0},
-  {id:46,c:"GLP",           n:"S",               s:"20mg", R1:90,  R2:86.5,R3:83,  T1:79.5,T2:75.5,T3:72,  T4:68.5,T5:65,  hot:0},
-  {id:47,c:"GLP",           n:"T",               s:"10mg", R1:48,  R2:46.5,R3:44.5,T1:43,  T2:41,  T3:39.5,T4:37.5,T5:36,  hot:1},
-  {id:48,c:"GLP",           n:"T",               s:"15mg", R1:58,  R2:56,  R3:54.5,T1:52.5,T2:50.5,T3:48.5,T4:47,  T5:45,  hot:0},
-  {id:49,c:"GLP",           n:"T",               s:"20mg", R1:74,  R2:70.5,R3:67.5,T1:64,  T2:61,  T3:57.5,T4:54.5,T5:51,  hot:0},
-  {id:50,c:"GLP",           n:"T",               s:"30mg", R1:80,  R2:78.5,R3:76.5,T1:75,  T2:73,  T3:71.5,T4:69.5,T5:68,  hot:0},
-  {id:51,c:"GLP",           n:"T",               s:"40mg", R1:90,  R2:88.5,R3:86.5,T1:85,  T2:83,  T3:81.5,T4:79.5,T5:78,  hot:0},
-  {id:52,c:"GLP",           n:"R",               s:"10mg", R1:55,  R2:53,  R3:50.5,T1:48.5,T2:46.5,T3:44.5,T4:42,  T5:40,  hot:0},
-  {id:53,c:"GLP",           n:"R",               s:"20mg", R1:90,  R2:88,  R3:85.5,T1:83.5,T2:81.5,T3:79.5,T4:77,  T5:75,  hot:0},
-  {id:54,c:"GLP",           n:"R",               s:"30mg", R1:120, R2:115.5,R3:111.5,T1:107,T2:103,T3:98.5,T4:94.5,T5:90,  hot:0},
+  {id:43,c:"GLP",           n:"GLP-S",              s:"5mg",  R1:45,  R2:43,  R3:40.5,T1:38.5,T2:36.5,T3:34.5,T4:32,  T5:30,  hot:1},
+  {id:44,c:"GLP",           n:"GLP-S",              s:"10mg", R1:55,  R2:53,  R3:50.5,T1:48.5,T2:46.5,T3:44.5,T4:42,  T5:40,  hot:1},
+  {id:45,c:"GLP",           n:"GLP-S",              s:"15mg", R1:75,  R2:72,  R3:69.5,T1:66.5,T2:63.5,T3:60.5,T4:58,  T5:55,  hot:0},
+  {id:46,c:"GLP",           n:"GLP-S",              s:"20mg", R1:90,  R2:86.5,R3:83,  T1:79.5,T2:75.5,T3:72,  T4:68.5,T5:65,  hot:0},
+  {id:47,c:"GLP",           n:"GLP-T",              s:"10mg", R1:48,  R2:46.5,R3:44.5,T1:43,  T2:41,  T3:39.5,T4:37.5,T5:36,  hot:1},
+  {id:48,c:"GLP",           n:"GLP-T",              s:"15mg", R1:58,  R2:56,  R3:54.5,T1:52.5,T2:50.5,T3:48.5,T4:47,  T5:45,  hot:0},
+  {id:49,c:"GLP",           n:"GLP-T",              s:"20mg", R1:74,  R2:70.5,R3:67.5,T1:64,  T2:61,  T3:57.5,T4:54.5,T5:51,  hot:0},
+  {id:50,c:"GLP",           n:"GLP-T",              s:"30mg", R1:80,  R2:78.5,R3:76.5,T1:75,  T2:73,  T3:71.5,T4:69.5,T5:68,  hot:0},
+  {id:51,c:"GLP",           n:"GLP-T",              s:"40mg", R1:90,  R2:88.5,R3:86.5,T1:85,  T2:83,  T3:81.5,T4:79.5,T5:78,  hot:0},
+  {id:52,c:"GLP",           n:"GLP-R",              s:"10mg", R1:55,  R2:53,  R3:50.5,T1:48.5,T2:46.5,T3:44.5,T4:42,  T5:40,  hot:0},
+  {id:53,c:"GLP",           n:"GLP-R",              s:"20mg", R1:90,  R2:88,  R3:85.5,T1:83.5,T2:81.5,T3:79.5,T4:77,  T5:75,  hot:0},
+  {id:54,c:"GLP",           n:"GLP-R",              s:"30mg", R1:120, R2:115.5,R3:111.5,T1:107,T2:103,T3:98.5,T4:94.5,T5:90,  hot:0},
   {id:55,c:"GLP",           n:"Tesamorelin",     s:"5mg",  R1:37.5,R2:35,  R3:32.5,T1:30,  T2:27.5,T3:22.5,T4:18,  T5:16,  hot:0},
   {id:56,c:"GLP",           n:"Tesamorelin",     s:"10mg", R1:60,  R2:56,  R3:52,  T1:48,  T2:44,  T3:40,  T4:36,  T5:32,  hot:0},
   {id:57,c:"GLP",           n:"Tesamorelin",     s:"20mg", R1:135, R2:126, R3:117, T1:108, T2:93.5,T3:85,  T4:72,  T5:64,  hot:0},
@@ -215,7 +215,11 @@ function Hero({ setPage }) {
 
 // ── VIAL PHOTO CARD ───────────────────────────────────────────────────────────
 function productImg(name, cat) {
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+  let n = name;
+  if (cat === 'Sprays')   n = n.replace(/\s*Spray$/i, '');
+  if (cat === 'Topicals') n = n.replace(/\s*Cream$/i, '');
+  if (cat === 'Blends')   n = n.replace(/\s*Blend$/i, '');
+  const slug = n.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
   if (cat === 'Topicals') return `/images/creams/${slug}.png`;
   if (cat === 'Sprays')   return `/images/sprays/${slug}.png`;
   if (cat === 'Capsules') return `/images/capsules/${slug}.png`;
@@ -223,12 +227,16 @@ function productImg(name, cat) {
 }
 
 function VialSVG({ name, cat }) {
+  const src = productImg(name, cat);
   return (
     <img
-      src={productImg(name, cat)}
+      src={src}
       alt={name}
       className="product-img"
-      onError={e => { e.target.style.display = 'none'; }}
+      onError={e => {
+        console.error(`Product image not found: ${name} (${cat}) -> ${src}`);
+        e.target.style.display = 'none';
+      }}
     />
   );
 }
@@ -368,7 +376,7 @@ function Catalog({ addToCart }) {
 
 function HomeSections({ setPage }) {
   const cats = [
-    {label:"GLP-1 Solutions",      desc:"S, T, R, Tesamorelin, Sermorelin"},
+    {label:"GLP-1 Solutions",      desc:"GLP-S, GLP-T, GLP-R, Tesamorelin, Sermorelin"},
     {label:"Wellness Peptides",     desc:"BPC-157, TB-500, GHK-Cu, NAD+, MOTS-C, Thymosin Alpha-1"},
     {label:"Performance Peptides",  desc:"Ipamorelin, CJC-1295, GHRP-2, GHRP-6, AOD-9604, IGF-1 LR3"},
     {label:"Research Compounds",    desc:"Bio Regulators, Epithalon, KPV, VIP, PT-141, DSIP, SS-31"},
@@ -376,9 +384,9 @@ function HomeSections({ setPage }) {
     {label:"Custom Formulations",   desc:"Blends, Sprays, Topicals — custom ratios available on request"},
   ];
   const featured = [
-    {n:"S", s:"5mg – 20mg", c:"GLP"},
-    {n:"T", s:"10mg – 40mg",c:"GLP"},
-    {n:"R", s:"10mg – 30mg",c:"GLP"},
+    {n:"GLP-S", s:"5mg – 20mg", c:"GLP"},
+    {n:"GLP-T", s:"10mg – 40mg",c:"GLP"},
+    {n:"GLP-R", s:"10mg – 30mg",c:"GLP"},
     {n:"BPC-157",     s:"5mg – 20mg", c:"Peptides"},
     {n:"TB-500",      s:"5mg – 10mg", c:"Peptides"},
     {n:"GHK-Cu",      s:"50mg – 100mg",c:"Peptides"},
