@@ -627,7 +627,7 @@ function HomeSections({ setPage }) {
                     ))}
                   </div>
                   <button onClick={()=>setPage("catalog")} className="btn-polish" style={{marginTop:"auto",padding:"9px 0",background:C.navy,border:"none",color:C.white,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>
-                    Request Pricing
+                    Start Application
                   </button>
                 </div>
               </div>
@@ -1299,8 +1299,9 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
             </div>
             <div style={{padding:"7px 12px",background:C.navy,marginBottom:10,fontSize:9,color:C.gold,fontWeight:700,letterSpacing:1,textAlign:"center"}}>ACH · Debit Card · Zelle (Debit &amp; Zelle up to $2,500) — No Credit Cards</div>
             <button style={{width:"100%",padding:"12px 0",background:C.navy,border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",marginBottom:7}}>
-              Submit Order Request
+              Submit For Review
             </button>
+            <div style={{fontSize:9,color:C.stone,textAlign:"center",lineHeight:1.6,marginBottom:8}}>Orders are reviewed before fulfillment. Payment initiation does not guarantee approval. Business information, inventory availability, and compliance requirements are verified prior to processing.</div>
             <div style={{fontSize:9,color:C.stone,textAlign:"center",lineHeight:1.6}}>Tax and shipping calculated before final invoice.<br/>Research purposes only. RUO. Not FDA approved.</div>
           </div>
         )}
@@ -1346,7 +1347,7 @@ export default function App() {
           ))}
         </div>
         <button onClick={()=>setCopen(true)} style={{background:C.gold,border:"none",color:C.navy,padding:"9px 18px",fontSize:10,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",flexShrink:0}}>
-          {count>0?"Order ("+count+")":"Request Pricing"}
+          {count>0?"Order ("+count+")":"Start Application"}
         </button>
       </nav>
       {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage}/></>}
