@@ -26,7 +26,7 @@ export default function TrustBanner() {
         </div>
 
         {/* Pillar grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 1, background: 'rgba(201,168,76,0.08)' }}>
+        <div className="trust-pillar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 1, background: 'rgba(201,168,76,0.08)' }}>
           {PILLARS.map(({ icon, label, sub }) => (
             <div
               key={label}

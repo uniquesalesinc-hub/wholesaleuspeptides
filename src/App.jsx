@@ -583,13 +583,13 @@ function HomeSections({ setPage }) {
   return (
     <>
       {/* CATEGORIES */}
-      <div style={{background:C.off,padding:"76px 40px"}}>
+      <div className="home-section-pad" style={{background:C.off,padding:"76px 40px"}}>
         <div style={{maxWidth:1400,margin:"0 auto"}}>
           <div style={{marginBottom:36}}>
             <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:12}}>Product Categories</div>
             <h2 style={{fontSize:34,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5}}>What We Supply</h2>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:1,background:C.mist}}>
+          <div className="home-cats-grid" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:1,background:C.mist}}>
             {cats.map(({label,desc},i)=>(
               <div key={i} onClick={()=>setPage("catalog")} style={{background:C.white,padding:"26px 22px",cursor:"pointer"}}>
                 <div style={{width:22,height:2,background:C.gold,marginBottom:14}}/>
@@ -602,9 +602,9 @@ function HomeSections({ setPage }) {
       </div>
 
       {/* FEATURED PRODUCTS */}
-      <div style={{background:C.white,padding:"76px 40px"}}>
+      <div className="home-section-pad" style={{background:C.white,padding:"76px 40px"}}>
         <div style={{maxWidth:1400,margin:"0 auto"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:32}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:32,flexWrap:"wrap",gap:12}}>
             <div>
               <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:12}}>Featured Compounds</div>
               <h2 style={{fontSize:34,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5}}>Most-Requested Products</h2>
@@ -613,7 +613,7 @@ function HomeSections({ setPage }) {
               View Full Catalog
             </button>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:1,background:C.mist}}>
+          <div className="home-featured-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:1,background:C.mist}}>
             {featured.map((item,i)=>(
               <div key={i} style={{background:C.white,display:"flex",flexDirection:"column"}}>
                 <div style={{height:210,background:C.off,overflow:"hidden"}}>
@@ -642,8 +642,8 @@ function HomeSections({ setPage }) {
       </div>
 
       {/* WHITE LABEL */}
-      <div style={{background:C.navy,padding:"76px 40px"}}>
-        <div style={{maxWidth:1280,margin:"0 auto",display:"grid",gridTemplateColumns:"0.85fr 1.15fr",gap:56,alignItems:"center"}}>
+      <div className="home-section-pad" style={{background:C.navy,padding:"76px 40px"}}>
+        <div className="home-wl-outer" style={{maxWidth:1280,margin:"0 auto",display:"grid",gridTemplateColumns:"0.85fr 1.15fr",gap:56,alignItems:"center"}}>
           <div>
             <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:16}}>White Label Program</div>
             <h2 style={{fontSize:36,fontWeight:700,color:C.white,fontFamily:"Georgia,serif",lineHeight:1.2,letterSpacing:-0.5,marginBottom:16}}>
@@ -685,7 +685,7 @@ function HomeSections({ setPage }) {
       </div>
 
       {/* MANUFACTURING */}
-      <div style={{background:C.off,padding:"84px 40px"}}>
+      <div className="home-section-pad" style={{background:C.off,padding:"84px 40px"}}>
         <div style={{maxWidth:1400,margin:"0 auto"}}>
           <div style={{textAlign:"center",marginBottom:44}}>
             <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:14}}>Quality Assurance</div>
@@ -694,7 +694,7 @@ function HomeSections({ setPage }) {
               Every batch produced through qualified domestic manufacturing partners with documented chain-of-custody procedures and lot traceability.
             </p>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:1,background:C.mist}}>
+          <div className="home-mfg-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:1,background:C.mist}}>
             {mfg.map(({t,b},i)=>(
               <div key={i} style={{background:C.white,padding:"30px 26px"}}>
                 <div style={{width:26,height:3,background:C.gold,marginBottom:16}}/>
@@ -1338,19 +1338,19 @@ export default function App() {
       <div style={{background:C.navy2,color:C.gold,textAlign:"center",padding:"9px",fontSize:9,letterSpacing:2.5,fontWeight:600,textTransform:"uppercase"}}>
         Wholesale Manufacturing — American Manufacturing — Independent Testing — RUO Only
       </div>
-      <nav style={{background:C.navy,padding:"0 40px",display:"flex",alignItems:"center",justifyContent:"space-between",height:62,position:"sticky",top:0,zIndex:700,borderBottom:"1px solid rgba(201,168,76,0.15)"}}>
-        <button onClick={()=>setPage("home")} style={{background:"none",border:"none",cursor:"pointer",textAlign:"left"}}>
+      <nav className="site-nav" style={{background:C.navy,padding:"0 40px",display:"flex",alignItems:"center",justifyContent:"space-between",height:62,position:"sticky",top:0,zIndex:700,borderBottom:"1px solid rgba(201,168,76,0.15)"}}>
+        <button onClick={()=>setPage("home")} style={{background:"none",border:"none",cursor:"pointer",textAlign:"left",flexShrink:0}}>
           <div style={{fontSize:14,fontWeight:800,color:C.white,fontFamily:"Georgia,serif"}}>WholesaleUSPeptides.com</div>
           <div style={{fontSize:7,letterSpacing:3,color:C.gold,textTransform:"uppercase",marginTop:2,opacity:0.8}}>Wholesale Manufacturing & White Label</div>
         </button>
-        <div style={{display:"flex"}}>
+        <div className="nav-links" style={{display:"flex"}}>
           {[["home","Home"],["catalog","Catalog"],["wl","White Label"],["about","Standards"],["coa","Batch Verification"]].map(([id,l])=>(
             <button key={id} onClick={()=>setPage(id)} style={{background:"none",border:"none",padding:"0 13px",height:62,fontSize:10,fontWeight:600,color:page===id?C.gold:"rgba(255,255,255,0.5)",borderBottom:page===id?"2px solid "+C.gold:"2px solid transparent",cursor:"pointer",whiteSpace:"nowrap",letterSpacing:0.3}}>
               {l}
             </button>
           ))}
         </div>
-        <button onClick={()=>setCopen(true)} style={{background:C.gold,border:"none",color:C.navy,padding:"9px 18px",fontSize:10,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>
+        <button onClick={()=>setCopen(true)} style={{background:C.gold,border:"none",color:C.navy,padding:"9px 18px",fontSize:10,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",flexShrink:0}}>
           {count>0?"Order ("+count+")":"Request Pricing"}
         </button>
       </nav>
