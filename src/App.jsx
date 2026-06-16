@@ -225,25 +225,13 @@ function productImg(name, cat) {
 function VialSVG({ name, cat }) {
   const [err, setErr] = useState(false);
   const src = productImg(name, cat);
-  if (err) return (
-    <div style={{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",height:"260px",background:"#F8F7F3"}}>
-      <span style={{fontSize:9,color:"#7D8794",letterSpacing:1.5,textTransform:"uppercase"}}>Image Unavailable</span>
-    </div>
-  );
+  if (err) return <div className="product-img-placeholder"/>;
   return (
     <img
       src={src}
       alt={name}
+      className="product-img"
       onError={()=>setErr(true)}
-      style={{
-        display:"block",
-        width:"100%",
-        height:"260px",
-        objectFit:"contain",
-        padding:"24px",
-        background:"#F8F7F3",
-        boxSizing:"border-box",
-      }}
     />
   );
 }
