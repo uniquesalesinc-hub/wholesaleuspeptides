@@ -448,9 +448,7 @@ function HomeSections({ setPage }) {
             {featured.map((item,i)=>(
               <div key={i} style={{background:C.white,display:"flex",flexDirection:"column"}}>
                 <div style={{height:210,background:C.off,overflow:"hidden"}}>
-                  <img src={masterAssetFor(item.c)} alt={item.n}
-                    onError={e=>{e.target.style.visibility="hidden";}}
-                    style={{width:"100%",height:"210px",objectFit:"contain",padding:"16px",boxSizing:"border-box"}}/>
+                  <ProductVisual name={item.n} strength={item.s} cat={item.c}/>
                 </div>
                 <div style={{padding:"16px 18px 20px",flex:1,display:"flex",flexDirection:"column"}}>
                   <div style={{fontSize:8,letterSpacing:2.5,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:5}}>{item.c}</div>
@@ -499,7 +497,7 @@ function HomeSections({ setPage }) {
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
             {["bpc-157","tb-500","ghk-cu","nad"].map((slug,i)=>(
               <div key={i} style={{background:"rgba(10,30,48,0.8)",border:"1px solid rgba(201,168,76,0.15)",padding:6,aspectRatio:"1/1.15",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                <img src={`/images/bottles/${slug}.png`} alt={slug}
+                <img src={MASTER_ASSET_DEFAULT} alt={slug}
                   onError={e=>{e.target.style.visibility="hidden";}}
                   style={{width:"100%",height:"100%",objectFit:"contain",padding:"8px",boxSizing:"border-box"}}/>
               </div>
