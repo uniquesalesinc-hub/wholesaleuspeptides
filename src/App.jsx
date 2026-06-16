@@ -391,6 +391,49 @@ function Catalog({ addToCart }) {
 }
 
 
+function PartnerCard({ icon, title, items }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{background:C.white,border:"1px solid "+(hov?C.gold:C.mist),padding:"32px 26px",textAlign:"center",transition:"all 0.25s ease",transform:hov?"translateY(-6px)":"translateY(0)",boxShadow:hov?"0 16px 34px rgba(5,17,31,0.16)":"0 6px 18px rgba(5,17,31,0.06)"}}>
+      <div style={{fontSize:30,marginBottom:16}}>{icon}</div>
+      <div style={{fontSize:14,fontWeight:700,color:C.navy,fontFamily:"Georgia,serif",marginBottom:16,letterSpacing:0.3}}>{title}</div>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {items.map(it=>(
+          <div key={it} style={{display:"flex",gap:7,alignItems:"center",justifyContent:"center"}}>
+            <div style={{width:4,height:4,borderRadius:"50%",background:C.gold,flexShrink:0}}/>
+            <div style={{fontSize:11,color:C.stone}}>{it}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── WHY PARTNERS CHOOSE US ──────────────────────────────────────────────────
+function WhyPartners() {
+  const cards = [
+    {icon:"🏭", title:"Manufacturing", items:["cGMP APIs","Made in USA","White Label Support"]},
+    {icon:"🧪", title:"Quality",       items:["Third-Party Tested","COA Available","Batch Traceable"]},
+    {icon:"🚚", title:"Fulfillment",   items:["Inventory Management","Packaging Support","Nationwide Shipping"]},
+    {icon:"🤝", title:"Partnership",   items:["Dedicated Account Support","Bulk Pricing","Custom Solutions"]},
+  ];
+  return (
+    <div style={{background:C.off,padding:"68px 40px"}}>
+      <div style={{maxWidth:1280,margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:44}}>
+          <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:12}}>Why Partners Choose Us</div>
+          <h2 style={{fontSize:32,fontWeight:700,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:14}}>Built For Long-Term Manufacturing Partnerships.</h2>
+          <p style={{fontSize:14,color:C.stone,lineHeight:1.8,maxWidth:620,margin:"0 auto"}}>Everything required to launch and scale a private-label peptide business under one trusted manufacturing partner.</p>
+        </div>
+        <div className="why-partners-grid">
+          {cards.map((c,i)=><PartnerCard key={i} {...c}/>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function HomeSections({ setPage }) {
   const cats = [
     {label:"GLP-1 Solutions",      desc:"GLP-S, GLP-T, GLP-R, Tesamorelin, Sermorelin"},
@@ -1057,7 +1100,7 @@ export default function App() {
           {count>0?"Order ("+count+")":"Request Pricing"}
         </button>
       </nav>
-      {page==="home"    && <><Hero setPage={setPage}/><TrustBanner/><HomeSections setPage={setPage}/></>}
+      {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><TrustBanner/><HomeSections setPage={setPage}/></>}
       {page==="catalog" && <Catalog addToCart={addToCart}/>}
       {page==="wl"      && <WLPage setPage={setPage}/>}
       {page==="about"   && <AboutPage/>}
