@@ -223,15 +223,12 @@ function productImg(name, cat) {
 }
 
 function VialSVG({ name, cat }) {
-  const [err, setErr] = useState(false);
-  const src = productImg(name, cat);
-  if (err) return <div className="product-img-placeholder"/>;
   return (
     <img
-      src={src}
+      src={productImg(name, cat)}
       alt={name}
       className="product-img"
-      onError={()=>setErr(true)}
+      onError={e => { e.target.style.display = 'none'; }}
     />
   );
 }
