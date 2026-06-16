@@ -240,26 +240,33 @@ function VialSVG({ name, strength, cat }) {
 // ── LOGO VIAL — homepage use only, shows YOUR LOGO HERE ──────────────────────
 function LogoVial() {
   return (
-    <div style={{position:"relative",width:"100%",height:"100%",overflow:"hidden",background:"#08182A"}}>
-      <img
-        src={VIAL_IMG}
-        alt="Private label vial"
-        style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center 20%",display:"block",opacity:0.92}}
-      />
-      <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(5,17,31,0.75) 0%,rgba(5,17,31,0.2) 50%,transparent 100%)"}}/>
+    <div style={{position:"relative",width:"100%",height:"100%",overflow:"hidden",background:C.navy,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+      {/* Gold top rule */}
       <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:C.gold}}/>
-      {/* YOUR LOGO HERE hex badge — centered on the vial */}
-      <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-        <div style={{textAlign:"center"}}>
-          <svg width="64" height="56" viewBox="0 0 64 56">
-            <polygon points="32,2 62,18 62,38 32,54 2,38 2,18" fill="none" stroke="rgba(201,168,76,0.7)" strokeWidth="1.5"/>
-            <polygon points="32,8 56,21 56,35 32,48 8,35 8,21" fill="none" stroke="rgba(201,168,76,0.3)" strokeWidth="0.8"/>
-            <text x="32" y="26" textAnchor="middle" fontSize="7" fontFamily="'Inter',sans-serif" fontWeight="700" fill="rgba(201,168,76,0.9)" letterSpacing="0.5">YOUR</text>
-            <text x="32" y="35" textAnchor="middle" fontSize="7" fontFamily="'Inter',sans-serif" fontWeight="700" fill="rgba(201,168,76,0.9)" letterSpacing="0.5">LOGO</text>
-            <text x="32" y="44" textAnchor="middle" fontSize="7" fontFamily="'Inter',sans-serif" fontWeight="700" fill="rgba(201,168,76,0.9)" letterSpacing="0.5">HERE</text>
-          </svg>
-        </div>
-      </div>
+      {/* Vial silhouette */}
+      <svg width="110" height="220" viewBox="0 0 110 220" style={{marginBottom:12}}>
+        {/* Cap */}
+        <rect x="28" y="0" width="54" height="36" rx="10" fill={C.navy} stroke={C.gold} strokeWidth="1.5"/>
+        {/* Gold ring */}
+        <rect x="28" y="30" width="54" height="5" fill={C.gold}/>
+        {/* Body */}
+        <rect x="18" y="35" width="74" height="170" rx="8" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.12)" strokeWidth="1"/>
+        {/* Label area */}
+        <rect x="26" y="52" width="58" height="110" rx="2" fill="rgba(255,255,255,0.05)" stroke="rgba(201,168,76,0.25)" strokeWidth="0.8"/>
+        {/* Hex outline */}
+        <polygon points="55,72 76,83 76,105 55,116 34,105 34,83" fill="none" stroke="rgba(201,168,76,0.45)" strokeWidth="1.2"/>
+        {/* YOUR LOGO HERE */}
+        <text x="55" y="90" textAnchor="middle" fontSize="6.5" fontFamily="Arial" fontWeight="700" fill="rgba(201,168,76,0.75)" letterSpacing="0.5">YOUR</text>
+        <text x="55" y="100" textAnchor="middle" fontSize="6.5" fontFamily="Arial" fontWeight="700" fill="rgba(201,168,76,0.75)" letterSpacing="0.5">LOGO</text>
+        <text x="55" y="110" textAnchor="middle" fontSize="6.5" fontFamily="Arial" fontWeight="700" fill="rgba(201,168,76,0.75)" letterSpacing="0.5">HERE</text>
+        {/* Bottom gold rule */}
+        <rect x="26" y="157" width="58" height="3" fill={C.gold}/>
+        {/* Glass sheen */}
+        <rect x="22" y="38" width="10" height="162" rx="4" fill="rgba(255,255,255,0.06)"/>
+      </svg>
+      {/* Brand text */}
+      <div style={{fontSize:7,letterSpacing:3,color:"rgba(201,168,76,0.55)",textTransform:"uppercase",fontWeight:700}}>WholesaleUSPeptides</div>
+      {/* RUO badge */}
       <div style={{position:"absolute",top:10,right:10,fontSize:7,letterSpacing:2,fontWeight:700,color:"rgba(255,255,255,0.7)",background:"rgba(5,17,31,0.65)",padding:"3px 7px",border:"1px solid rgba(201,168,76,0.3)"}}>RUO</div>
     </div>
   );
