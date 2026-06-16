@@ -169,7 +169,7 @@ function Hero({ setPage }) {
       <div style={{maxWidth:1200,margin:"0 auto",position:"relative"}}>
         <div style={{display:"inline-flex",alignItems:"center",gap:10,marginBottom:24,padding:"6px 14px",border:"1px solid rgba(201,168,76,0.3)",background:"rgba(201,168,76,0.06)"}}>
           <div style={{width:6,height:6,borderRadius:"50%",background:C.gold}}/>
-          <span style={{fontSize:9,letterSpacing:3.5,color:C.gold,textTransform:"uppercase",fontWeight:700}}>Premium U.S. Manufacturer — Wholesale Access for Clinics, Distributors &amp; Private Label Partners</span>
+          <span style={{fontSize:9,letterSpacing:3.5,color:C.gold,textTransform:"uppercase",fontWeight:700}}>Wholesale Manufacturing Platform — Minimum 10 Units Per SKU</span>
         </div>
         <h1 style={{fontSize:52,fontWeight:800,color:C.white,lineHeight:1.12,marginBottom:14,letterSpacing:-1.5,fontFamily:"Georgia,serif",maxWidth:720}}>
           American Manufacturing.<br/>
