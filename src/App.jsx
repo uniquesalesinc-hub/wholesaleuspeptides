@@ -135,6 +135,29 @@ const P = [
   {id:99,c:"Capsules",      n:"Metformin",       s:"500mg / 60ct",  R1:0,R2:0,R3:0,T1:0,T2:0,T3:0,T4:0,T5:0, hot:0},
 ];
 
+function groupProducts(flat) {
+  const map = new Map();
+  for (const item of flat) {
+    const key = item.n + "|||" + item.c;
+    if (!map.has(key)) {
+      map.set(key, {
+        id: item.n.toLowerCase().replace(/[^a-z0-9]+/g,"-") + "-" + item.c.toLowerCase().replace(/[^a-z0-9]+/g,"-"),
+        c: item.c,
+        n: item.n,
+        hot: item.hot,
+        variants: [],
+      });
+    }
+    const grp = map.get(key);
+    if (item.hot === 1) grp.hot = 1;
+    grp.variants.push({ id: item.id, s: item.s, R1:item.R1, R2:item.R2, R3:item.R3, T1:item.T1, T2:item.T2, T3:item.T3, T4:item.T4, T5:item.T5 });
+  }
+  return Array.from(map.values());
+}
+
+const GROUPED = groupProducts(P);
+
+
 function Hero({ setPage }) {
   return (
     <div style={{background:C.navy,padding:"88px 40px 72px",position:"relative"}}>
@@ -241,30 +264,44 @@ function LogoVial() {
 // ── PRODUCT CARD ──────────────────────────────────────────────────────────────
 function ProdCard({ p, onAdd }) {
   const [hov, setHov] = useState(false);
+  const [varIdx, setVarIdx] = useState(0);
   const [qty, setQty] = useState(10);
+  const variant = p.variants[varIdx];
   const t = tierForQty(qty);
-  const price = p[t] || 0;
+  const price = variant[t] || 0;
   return (
     <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{background:C.white,border:"1px solid "+(hov?C.gold:C.mist),display:"flex",flexDirection:"column",transition:"all 0.2s",boxShadow:hov?"0 4px 20px rgba(5,17,31,0.1)":"none"}}>
       <div style={{height:200,background:C.off,position:"relative",overflow:"hidden",flexShrink:0}}>
         <div style={{width:"100%",height:"100%",transform:hov?"scale(1.03)":"scale(1)",transition:"transform 0.35s ease"}}>
-          <VialSVG name={p.n} strength={p.s} cat={p.c}/>
+          <VialSVG name={p.n} strength={variant.s} cat={p.c}/>
         </div>
         {p.hot===1 && <div style={{position:"absolute",top:9,left:9,background:C.navy,color:C.gold,fontSize:8,fontWeight:700,letterSpacing:2,textTransform:"uppercase",padding:"3px 8px",zIndex:2}}>Top Seller</div>}
         <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:C.gold,zIndex:2}}/>
       </div>
       <div style={{padding:"14px 14px 16px",flex:1,display:"flex",flexDirection:"column"}}>
         <div style={{fontSize:8,letterSpacing:2.5,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:5}}>{p.c}</div>
-        <div style={{fontSize:14,fontWeight:700,color:C.navy,marginBottom:2,fontFamily:"Georgia,serif"}}>{p.n}</div>
-        <div style={{fontSize:11,color:C.stone,marginBottom:11}}>{p.s}</div>
+        <div style={{fontSize:14,fontWeight:700,color:C.navy,marginBottom:6,fontFamily:"Georgia,serif"}}>{p.n}</div>
+        {p.variants.length > 1 && (
+          <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:10}}>
+            {p.variants.map((v,i)=>(
+              <button key={v.id} onClick={()=>setVarIdx(i)}
+                style={{padding:"3px 9px",fontSize:10,fontWeight:600,cursor:"pointer",border:"1px solid "+(i===varIdx?C.navy:C.mist),background:i===varIdx?C.navy:"transparent",color:i===varIdx?C.white:C.stone,transition:"all 0.15s"}}>
+                {v.s}
+              </button>
+            ))}
+          </div>
+        )}
+        {p.variants.length === 1 && (
+          <div style={{fontSize:11,color:C.stone,marginBottom:10}}>{variant.s}</div>
+        )}
         <div style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:2,marginBottom:10}}>
           {TIERS.map(tr=>{
             const active = tr.id===t;
             return (
               <div key={tr.id} style={{textAlign:"center",padding:"3px 1px",background:active?"rgba(201,168,76,0.1)":"transparent",border:"1px solid "+(active?C.gold:C.mist)}}>
                 <div style={{fontSize:7.5,color:active?C.navy:C.stone,fontWeight:active?700:400}}>
-                  {p[tr.id]!=null?fmt(p[tr.id]):"—"}
+                  {variant[tr.id]!=null?fmt(variant[tr.id]):"—"}
                 </div>
               </div>
             );
@@ -289,7 +326,7 @@ function ProdCard({ p, onAdd }) {
             </div>
           ))}
         </div>
-        <button onClick={()=>onAdd(p,qty,t)} style={{padding:"9px 0",background:hov?C.navy:"transparent",border:"1px solid "+C.navy,color:hov?C.white:C.navy,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.2s"}}>
+        <button onClick={()=>onAdd(p,variant,qty,t)} style={{padding:"9px 0",background:hov?C.navy:"transparent",border:"1px solid "+C.navy,color:hov?C.white:C.navy,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.2s"}}>
           Add to Order
         </button>
       </div>
@@ -302,9 +339,9 @@ function Catalog({ addToCart }) {
   const [cat, setCat] = useState("All");
   const [srch, setSrch] = useState("");
   const [toast, setToast] = useState("");
-  const rows = P.filter(p=>(cat==="All"||p.c===cat)&&(!srch||p.n.toLowerCase().includes(srch.toLowerCase())));
-  const add = (p,qty,tier) => {
-    if (addToCart) addToCart(p,qty,tier);
+  const rows = GROUPED.filter(p=>(cat==="All"||p.c===cat)&&(!srch||p.n.toLowerCase().includes(srch.toLowerCase())||p.c.toLowerCase().includes(srch.toLowerCase())||p.variants.some(v=>v.s.toLowerCase().includes(srch.toLowerCase()))));
+  const add = (p,variant,qty,tier) => {
+    if (addToCart) addToCart(p,variant,qty,tier);
     setToast(p.n);
     setTimeout(()=>setToast(""),2200);
   };
@@ -860,11 +897,11 @@ function Gate({ ok }) {
 
 // ── CART DRAWER ───────────────────────────────────────────────────────────────
 function CartDrawer({ cart, setCart, open, setOpen }) {
-  const total = cart.reduce((s,i) => s + (i.p[i.tier]||0)*i.qty, 0);
+  const total = cart.reduce((s,i) => s + (i.variant[i.tier]||0)*i.qty, 0);
   const units = cart.reduce((s,i) => s + i.qty, 0);
-  const upd = (id, qty) => {
-    if (qty < 1) setCart(p => p.filter(i => i.p.id !== id));
-    else setCart(p => p.map(i => i.p.id === id ? {...i,qty} : i));
+  const upd = (pid, vid, qty) => {
+    if (qty < 1) setCart(p => p.filter(i => !(i.p.id===pid && i.variant.id===vid)));
+    else setCart(p => p.map(i => (i.p.id===pid && i.variant.id===vid) ? {...i,qty} : i));
   };
   return (
     <>
@@ -888,24 +925,24 @@ function CartDrawer({ cart, setCart, open, setOpen }) {
               <div style={{fontSize:14,fontFamily:"Georgia,serif",color:C.navy,marginBottom:6}}>No compounds selected</div>
               <div style={{fontSize:11,color:C.mist}}>Add compounds from the catalog.</div>
             </div>
-          ) : cart.map(({p,qty,tier})=>(
-            <div key={p.id} style={{display:"flex",gap:12,paddingBottom:14,marginBottom:14,borderBottom:"1px solid "+C.mist}}>
+          ) : cart.map(({p,variant,qty,tier})=>(
+            <div key={p.id+"-"+variant.id} style={{display:"flex",gap:12,paddingBottom:14,marginBottom:14,borderBottom:"1px solid "+C.mist}}>
               <div style={{width:54,height:54,background:C.off,flexShrink:0,overflow:"hidden"}}>
-                <VialSVG name={p.n} strength={p.s} cat={p.c}/>
+                <VialSVG name={p.n} strength={variant.s} cat={p.c}/>
               </div>
               <div style={{flex:1}}>
                 <div style={{fontSize:12,fontWeight:700,color:C.navy}}>{p.n}</div>
-                <div style={{fontSize:10,color:C.stone,marginBottom:6}}>{p.s} — {fmt(p[tier]||0)}/unit</div>
+                <div style={{fontSize:10,color:C.stone,marginBottom:6}}>{variant.s} — {fmt(variant[tier]||0)}/unit</div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                   <div style={{display:"flex",alignItems:"center",gap:5}}>
-                    <button onClick={()=>upd(p.id,qty-1)} style={{width:22,height:22,background:C.off,border:"1px solid "+C.mist,cursor:"pointer",color:C.navy,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>-</button>
+                    <button onClick={()=>upd(p.id,variant.id,qty-1)} style={{width:22,height:22,background:C.off,border:"1px solid "+C.mist,cursor:"pointer",color:C.navy,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>-</button>
                     <span style={{fontSize:12,color:C.navy,minWidth:22,textAlign:"center"}}>{qty}</span>
-                    <button onClick={()=>upd(p.id,qty+1)} style={{width:22,height:22,background:C.off,border:"1px solid "+C.mist,cursor:"pointer",color:C.navy,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+                    <button onClick={()=>upd(p.id,variant.id,qty+1)} style={{width:22,height:22,background:C.off,border:"1px solid "+C.mist,cursor:"pointer",color:C.navy,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
                   </div>
-                  <div style={{fontSize:12,fontWeight:700,color:C.navy}}>{fmt((p[tier]||0)*qty)}</div>
+                  <div style={{fontSize:12,fontWeight:700,color:C.navy}}>{fmt((variant[tier]||0)*qty)}</div>
                 </div>
               </div>
-              <button onClick={()=>setCart(prev=>prev.filter(i=>i.p.id!==p.id))} style={{background:"none",border:"none",color:C.mist,cursor:"pointer",fontSize:18,alignSelf:"flex-start",lineHeight:1}}>x</button>
+              <button onClick={()=>setCart(prev=>prev.filter(i=>!(i.p.id===p.id && i.variant.id===variant.id)))} style={{background:"none",border:"none",color:C.mist,cursor:"pointer",fontSize:18,alignSelf:"flex-start",lineHeight:1}}>x</button>
             </div>
           ))}
         </div>
@@ -913,11 +950,11 @@ function CartDrawer({ cart, setCart, open, setOpen }) {
           <div style={{padding:"16px 22px",borderTop:"1px solid "+C.mist}}>
             {/* Line subtotals */}
             <div style={{marginBottom:14}}>
-              {cart.map(({p,qty,tier})=>{
-                const up=p[tier]||0;
+              {cart.map(({p,variant,qty,tier})=>{
+                const up=variant[tier]||0;
                 return (
-                  <div key={p.id} style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.stone,padding:"4px 0",borderBottom:"1px solid "+C.mist}}>
-                    <span style={{maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.n} {p.s} x{qty}</span>
+                  <div key={p.id+"-"+variant.id} style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.stone,padding:"4px 0",borderBottom:"1px solid "+C.mist}}>
+                    <span style={{maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.n} {variant.s} x{qty}</span>
                     <span style={{fontWeight:600,color:C.navy,flexShrink:0,marginLeft:8}}>{fmt(up*qty)}</span>
                   </div>
                 );
@@ -978,11 +1015,11 @@ export default function App() {
 
   if (gated) return <Gate ok={()=>setGated(false)}/>;
 
-  const addToCart = (p, qty, tier) => {
+  const addToCart = (p, variant, qty, tier) => {
     setCart(prev => {
-      const ex = prev.find(i=>i.p.id===p.id);
-      if (ex) return prev.map(i=>i.p.id===p.id?{...i,qty:i.qty+qty}:i);
-      return [...prev,{p,qty,tier}];
+      const ex = prev.find(i=>i.p.id===p.id && i.variant.id===variant.id);
+      if (ex) return prev.map(i=>(i.p.id===p.id && i.variant.id===variant.id)?{...i,qty:i.qty+qty}:i);
+      return [...prev,{p,variant,qty,tier}];
     });
     setCopen(true);
   };
