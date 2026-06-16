@@ -227,12 +227,16 @@ function productImg(name, cat) {
 }
 
 function VialSVG({ name, cat }) {
+  const src = productImg(name, cat);
   return (
     <img
-      src={productImg(name, cat)}
+      src={src}
       alt={name}
       className="product-img"
-      onError={e => { e.target.style.display = 'none'; }}
+      onError={e => {
+        console.error(`Product image not found: ${name} (${cat}) -> ${src}`);
+        e.target.style.display = 'none';
+      }}
     />
   );
 }
