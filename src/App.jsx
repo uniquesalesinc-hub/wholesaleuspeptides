@@ -535,6 +535,10 @@ function Footer({ setPage }) {
             ))}
           </div>
         </div>
+        <div style={{display:"flex",gap:8,alignItems:"flex-start",maxWidth:700,marginBottom:28}}>
+          <div style={{color:C.gold,fontSize:9,marginTop:3,flexShrink:0,lineHeight:1}}>◆</div>
+          <div style={{fontSize:10,color:"rgba(255,255,255,0.8)",lineHeight:1.8}}>WholesaleUSPeptides supports clinics, wellness providers, telehealth organizations, distributors, research organizations, and private-label brands. All orders are subject to internal review prior to fulfillment. Product availability, inventory, and compliance requirements are verified before processing.</div>
+        </div>
         <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:18}}>
           <div style={{fontSize:9,color:"rgba(255,255,255,0.2)",lineHeight:1.9,marginBottom:9}}>
             All products are Research Use Only (RUO). Not approved by the U.S. FDA. Clinical trials for many compounds are ongoing. Not for human or veterinary use. Purchasers must be qualified wholesale professionals aged 18+ and are responsible for regulatory compliance in their jurisdiction.
@@ -1004,6 +1008,10 @@ function WLPage({ setPage }) {
               ))}
             </div>
             <div style={{fontSize:11,color:C.stone,marginBottom:16}}>Questions: uniquesalesinc@gmail.com — 602-321-8381</div>
+            <div style={{display:"flex",gap:8,alignItems:"flex-start",maxWidth:700,margin:"0 auto 18px",textAlign:"left"}}>
+              <div style={{color:C.gold,fontSize:9,marginTop:2,flexShrink:0,lineHeight:1}}>◆</div>
+              <div style={{fontSize:10,color:C.stone,lineHeight:1.75,opacity:0.8}}>WholesaleUSPeptides supports clinics, wellness providers, telehealth organizations, distributors, research organizations, and private-label brands. All orders are subject to internal review prior to fulfillment. Product availability, inventory, and compliance requirements are verified before processing.</div>
+            </div>
             <button onClick={()=>setPage("catalog")} className="btn-polish" style={{padding:"11px 24px",background:C.navy,border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>View Catalog</button>
           </div>
         )}
@@ -1303,6 +1311,10 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
             </button>
             <div style={{fontSize:9,color:C.stone,textAlign:"center",lineHeight:1.6,marginBottom:8}}>Orders are reviewed before fulfillment. Payment initiation does not guarantee approval. Business information, inventory availability, and compliance requirements are verified prior to processing.</div>
             <div style={{fontSize:9,color:C.stone,textAlign:"center",lineHeight:1.6}}>Tax and shipping calculated before final invoice.<br/>Research purposes only. RUO. Not FDA approved.</div>
+            <div style={{display:"flex",gap:7,alignItems:"flex-start",marginTop:12}}>
+              <div style={{color:C.gold,fontSize:8,marginTop:2,flexShrink:0,lineHeight:1}}>◆</div>
+              <div style={{fontSize:9,color:C.stone,lineHeight:1.7,opacity:0.8}}>WholesaleUSPeptides supports clinics, wellness providers, telehealth organizations, distributors, research organizations, and private-label brands. All orders are subject to internal review prior to fulfillment. Product availability, inventory, and compliance requirements are verified before processing.</div>
+            </div>
           </div>
         )}
       </div>
