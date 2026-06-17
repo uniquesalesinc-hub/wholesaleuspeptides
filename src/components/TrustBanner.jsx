@@ -2,12 +2,12 @@ const NAVY = '#05111F';
 const GOLD = '#C9A84C';
 
 const PILLARS = [
-  { icon: '🇺🇸', label: 'Made in USA',                sub: 'Compounded & lyophilized domestically' },
-  { icon: '🧪', label: 'Independently Tested',         sub: 'HPLC · LAL endotoxin · ICP-MS metals' },
-  { icon: '🏭', label: 'Premium Manufacturing',        sub: 'Licensed U.S. manufacturing partners' },
-  { icon: '📄', label: 'Batch Traceability',           sub: 'Lot-specific COA on every order' },
-  { icon: '🤝', label: 'White Label Ready',            sub: 'Your brand. Our manufacturing.' },
-  { icon: '🏥', label: 'Clinic & Distributor Accounts',sub: 'Wholesale access for qualified partners' },
+  { label: 'Made in USA',                sub: 'Compounded & lyophilized domestically' },
+  { label: 'Independently Tested',         sub: 'HPLC · LAL endotoxin · ICP-MS metals' },
+  { label: 'Premium Manufacturing',        sub: 'Licensed U.S. manufacturing partners' },
+  { label: 'Batch Traceability',           sub: 'Lot-specific COA on every order' },
+  { label: 'White Label Ready',            sub: 'Your brand. Our manufacturing.' },
+  { label: 'Clinic & Distributor Accounts',sub: 'Wholesale access for qualified partners' },
 ];
 
 export default function TrustBanner() {
@@ -27,7 +27,7 @@ export default function TrustBanner() {
 
         {/* Pillar grid */}
         <div className="trust-pillar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 1, background: 'rgba(201,168,76,0.08)' }}>
-          {PILLARS.map(({ icon, label, sub }) => (
+          {PILLARS.map(({ label, sub }) => (
             <div
               key={label}
               style={{
@@ -37,7 +37,7 @@ export default function TrustBanner() {
                 borderRight: '1px solid rgba(201,168,76,0.1)',
               }}
             >
-              <div style={{ fontSize: 20, marginBottom: 8 }}>{icon}</div>
+              <div style={{ width: 20, height: 2, background: GOLD, margin: '0 auto 10px' }}/>
               <div style={{ fontSize: 10, fontWeight: 700, color: GOLD, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 5 }}>
                 {label}
               </div>
