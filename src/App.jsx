@@ -7,6 +7,61 @@ const C = {
   stone:"#8A8680", ink:"#1C2B3A", red:"#8B2E2E", green:"#2E6B4A",
 };
 
+const SITE_URL = "https://wholesaleuspeptides.com";
+
+const PAGES = {
+  home: {
+    path: "/", title: "Home",
+    seoTitle: "Wholesale Peptides | American Peptide Manufacturing & White Label Supplier",
+    description: "Wholesale peptide supplier offering bulk peptides, white label peptide manufacturing, and private label programs. American-made, batch-tested, and built for clinics, distributors, and research organizations.",
+  },
+  catalog: {
+    path: "/catalog", title: "Catalog",
+    seoTitle: "Wholesale Peptides Catalog | Bulk Peptides & Tiered Pricing",
+    description: "Browse our full catalog of wholesale peptides and bulk peptide pricing tiers. Minimum 10 units per SKU. Domestic manufacturing, third-party tested, ready for clinics and distributors.",
+  },
+  wl: {
+    path: "/white-label", title: "White Label",
+    seoTitle: "White Label Peptides & Private Label Manufacturing",
+    description: "Launch your own peptide brand with our white label peptides and private label manufacturing program. American peptide manufacturing, custom labeling, and batch-specific COAs.",
+  },
+  about: {
+    path: "/standards", title: "Standards",
+    seoTitle: "Peptide Manufacturing Standards & Quality Testing",
+    description: "Our peptide manufacturing standards: third-party HPLC, LAL, and ICP-MS testing on domestic compliant facilities, with full batch transparency on every wholesale peptide supplier order.",
+  },
+  coa: {
+    path: "/batch-verification", title: "Batch Verification",
+    seoTitle: "Batch Verification & COA Lookup | Peptide Quality Assurance",
+    description: "Verify your peptide batch with our COA lookup tool. Every wholesale peptide order includes batch-specific third-party lab documentation for full transparency.",
+  },
+};
+
+function pageIdFromPath(path) {
+  const found = Object.entries(PAGES).find(([, v]) => v.path === path);
+  return found ? found[0] : "home";
+}
+
+function upsertMeta(attr, value, content) {
+  let el = document.querySelector(`meta[${attr}="${value}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute(attr, value);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+}
+
+function upsertCanonical(href) {
+  let el = document.querySelector('link[rel="canonical"]');
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", "canonical");
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+}
+
 const TIERS = [
   {id:"R1",lbl:"10-20/SKU",  min:10, max:20,  grp:"retail"},
   {id:"R2",lbl:"21-40/SKU",  min:21, max:40,  grp:"retail"},
@@ -1326,18 +1381,41 @@ export default function App() {
   const [gated, setGated] = useState(true);
   const [cart,  setCart]  = useState([]);
   const [copen, setCopen] = useState(false);
-  const [page,  setPage]  = useState("home");
+  const [page,  setPageState] = useState(() => pageIdFromPath(window.location.pathname));
   const count = cart.reduce((s,i)=>s+i.qty,0);
+
+  const setPage = (id) => {
+    setPageState(id);
+    const path = (PAGES[id] || PAGES.home).path;
+    if (window.location.pathname !== path) window.history.pushState({page:id}, "", path);
+  };
+
+  useEffect(() => {
+    const onPop = () => setPageState(pageIdFromPath(window.location.pathname));
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   useEffect(() => {
     if (typeof window.gtag !== "function") return;
-    const paths  = { home:"/", catalog:"/catalog", wl:"/white-label", about:"/standards", coa:"/batch-verification" };
-    const titles = { home:"Home", catalog:"Catalog", wl:"White Label", about:"Standards", coa:"Batch Verification" };
+    const cfg = PAGES[page] || PAGES.home;
     window.gtag("event", "page_view", {
-      page_path: paths[page] || "/",
-      page_title: titles[page] || "Home",
-      page_location: window.location.origin + (paths[page] || "/"),
+      page_path: cfg.path,
+      page_title: cfg.title,
+      page_location: window.location.origin + cfg.path,
     });
+  }, [page]);
+
+  useEffect(() => {
+    const cfg = PAGES[page] || PAGES.home;
+    const fullTitle = `${cfg.seoTitle} | WholesaleUSPeptides.com`;
+    const url = SITE_URL + (cfg.path === "/" ? "/" : cfg.path);
+    document.title = fullTitle;
+    upsertMeta("name", "description", cfg.description);
+    upsertCanonical(url);
+    upsertMeta("property", "og:title", fullTitle);
+    upsertMeta("property", "og:description", cfg.description);
+    upsertMeta("property", "og:url", url);
   }, [page]);
 
   if (gated) return <Gate ok={()=>setGated(false)}/>;
