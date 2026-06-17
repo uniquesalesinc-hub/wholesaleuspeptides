@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import TrustBanner from "./components/TrustBanner.jsx";
 import PartnerAccessModal from "./components/PartnerAccessModal.jsx";
 import ContactModal from "./components/ContactModal.jsx";
+import QuoteRequestModal from "./components/QuoteRequestModal.jsx";
 import { trackEvent } from "./lib/analytics";
 
 const PARTNER_ACCESS_KEY = "wsp_partner_access";
@@ -674,6 +675,22 @@ function Footer({ setPage, onContactClick }) {
         </div>
       </div>
     </footer>
+  );
+}
+
+// ── PERSISTENT "REQUEST A QUOTE" CTA ─────────────────────────────────────────
+function PersistentQuoteCTA({ onClick }) {
+  return (
+    <>
+      <button onClick={onClick} className="quote-fab btn-polish" style={{position:"fixed",bottom:28,right:28,zIndex:700,padding:"15px 26px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",boxShadow:"0 10px 28px rgba(0,0,0,0.35)"}}>
+        Request a Quote
+      </button>
+      <div className="quote-bar" style={{position:"fixed",bottom:0,left:0,right:0,zIndex:700,background:C.navy,borderTop:"1px solid "+C.gold,padding:"12px 16px"}}>
+        <button onClick={onClick} style={{width:"100%",padding:"14px 0",background:C.gold,border:"none",color:C.navy,fontSize:12,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
+          Request a Quote
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -1498,6 +1515,7 @@ export default function App() {
   });
   const [partnerModalOpen, setPartnerModalOpen] = useState(false);
   const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const partnerUnlocked = !!partnerAccess?.unlocked;
   const unlockPartnerAccess = (lead) => {
     const record = { unlocked: true, lead, unlockedAt: new Date().toISOString() };
@@ -1556,6 +1574,8 @@ export default function App() {
       <CartDrawer cart={cart} setCart={setCart} open={copen} setOpen={setCopen} setPage={setPage}/>
       <PartnerAccessModal open={partnerModalOpen} onClose={()=>setPartnerModalOpen(false)} unlocked={partnerUnlocked} onUnlock={unlockPartnerAccess} setPage={setPage}/>
       <ContactModal open={contactModalOpen} onClose={()=>setContactModalOpen(false)}/>
+      <QuoteRequestModal open={quoteModalOpen} onClose={()=>setQuoteModalOpen(false)}/>
+      <PersistentQuoteCTA onClick={()=>setQuoteModalOpen(true)}/>
       <div style={{background:C.navy2,color:C.gold,textAlign:"center",padding:"9px",fontSize:9,letterSpacing:2.5,fontWeight:600,textTransform:"uppercase"}}>
         Wholesale Manufacturing — American Manufacturing — Independent Testing — RUO Only
       </div>
