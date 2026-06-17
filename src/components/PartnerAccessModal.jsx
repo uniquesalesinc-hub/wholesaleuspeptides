@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { trackEvent } from "../lib/analytics";
 
 const NAVY = "#05111F";
 const GOLD = "#C9A84C";
@@ -94,6 +95,7 @@ export default function PartnerAccessModal({ open, onClose, unlocked, onUnlock, 
     onUnlock(form);
     setSubmitting(false);
     setJustUnlocked(true);
+    trackEvent("partner_access_unlocked", { business_type: form.businessType });
   };
 
   const goTo = (id) => {
@@ -173,7 +175,7 @@ export default function PartnerAccessModal({ open, onClose, unlocked, onUnlock, 
                   );
                   const rowStyle = { display: "block", textAlign: "left", padding: "12px 14px", background: OFF, border: "1px solid " + MIST, cursor: "pointer", textDecoration: "none" };
                   if (r.href) {
-                    return <a key={r.label} href={r.href} download style={rowStyle}>{content}</a>;
+                    return <a key={r.label} href={r.href} download style={rowStyle} onClick={()=>trackEvent("catalog_download")}>{content}</a>;
                   }
                   if (r.mailto) {
                     return <a key={r.label} href={r.mailto} style={rowStyle}>{content}</a>;
