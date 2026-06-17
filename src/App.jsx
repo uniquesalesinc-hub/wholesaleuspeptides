@@ -1329,6 +1329,17 @@ export default function App() {
   const [page,  setPage]  = useState("home");
   const count = cart.reduce((s,i)=>s+i.qty,0);
 
+  useEffect(() => {
+    if (typeof window.gtag !== "function") return;
+    const paths  = { home:"/", catalog:"/catalog", wl:"/white-label", about:"/standards", coa:"/batch-verification" };
+    const titles = { home:"Home", catalog:"Catalog", wl:"White Label", about:"Standards", coa:"Batch Verification" };
+    window.gtag("event", "page_view", {
+      page_path: paths[page] || "/",
+      page_title: titles[page] || "Home",
+      page_location: window.location.origin + (paths[page] || "/"),
+    });
+  }, [page]);
+
   if (gated) return <Gate ok={()=>setGated(false)}/>;
 
   const addToCart = (p, variant, qty, tier) => {
