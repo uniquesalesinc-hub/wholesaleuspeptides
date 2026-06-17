@@ -249,6 +249,9 @@ function Hero({ setPage }) {
             <button onClick={()=>setPage("catalog")} style={{padding:"13px 28px",background:"transparent",border:"1px solid rgba(201,168,76,0.4)",color:C.gold,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
               View Product Catalog
             </button>
+            <a href="/downloads/2026-wholesaleuspeptides-partner-catalog.pdf" download onClick={()=>trackEvent("catalog_download")} style={{padding:"13px 28px",background:"transparent",border:"1px solid rgba(255,255,255,0.25)",color:"rgba(255,255,255,0.85)",fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",textDecoration:"none",display:"inline-flex",alignItems:"center"}}>
+              Download Partner Catalog
+            </a>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:0,borderTop:"1px solid rgba(201,168,76,0.15)",paddingTop:26}} className="hero-trust-row">
             {[
@@ -561,15 +564,20 @@ function UnlockPartnerCTA({ partnerUnlocked, onUnlockClick, setPage }) {
         <p style={{fontSize:14,color:"rgba(255,255,255,0.55)",lineHeight:1.85,maxWidth:520,margin:"0 auto 32px"}}>
           Register for partner access to view volume pricing, downloadable catalogs, white-label resources, and manufacturing documentation.
         </p>
-        {partnerUnlocked ? (
-          <button onClick={()=>setPage("catalog")} className="btn-polish" style={{padding:"15px 38px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
-            View Wholesale Catalog
-          </button>
-        ) : (
-          <button onClick={onUnlockClick} className="btn-polish" style={{padding:"15px 38px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
-            Unlock Partner Access
-          </button>
-        )}
+        <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
+          {partnerUnlocked ? (
+            <button onClick={()=>setPage("catalog")} className="btn-polish" style={{padding:"15px 38px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
+              View Wholesale Catalog
+            </button>
+          ) : (
+            <button onClick={onUnlockClick} className="btn-polish" style={{padding:"15px 38px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
+              Unlock Partner Access
+            </button>
+          )}
+          <a href="/downloads/2026-wholesaleuspeptides-partner-catalog.pdf" download onClick={()=>trackEvent("catalog_download")} style={{padding:"15px 38px",background:"transparent",border:"1px solid rgba(255,255,255,0.25)",color:"rgba(255,255,255,0.85)",fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",textDecoration:"none",display:"inline-flex",alignItems:"center"}}>
+            Download Partner Catalog
+          </a>
+        </div>
       </div>
     </div>
   );
@@ -630,7 +638,7 @@ function Footer({ setPage, onContactClick }) {
   return (
     <footer ref={ref} style={{background:C.navy,borderTop:"1px solid "+C.gold,padding:"56px 40px 28px",opacity:visible?1:0,transform:visible?"translateY(0)":"translateY(20px)",transition:"opacity 0.7s ease, transform 0.7s ease"}}>
       <div style={{maxWidth:1400,margin:"0 auto"}}>
-        <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr 1fr",gap:40,marginBottom:36}} className="footer-grid">
+        <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr 1fr 1fr",gap:40,marginBottom:36}} className="footer-grid">
           <div>
             <div style={{fontSize:15,fontWeight:800,color:C.white,fontFamily:"Georgia,serif",marginBottom:10}}>WholesaleUSPeptides.com</div>
             <p style={{fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.9,maxWidth:280,marginBottom:14}}>American peptide manufacturing and white-label solutions for qualified partners.</p>
@@ -648,6 +656,10 @@ function Footer({ setPage, onContactClick }) {
               const onClick = label==="Contact" ? onContactClick : (id?()=>setPage(id):undefined);
               return <div key={label} onClick={onClick} className="footer-link" style={{fontSize:12,marginBottom:11,cursor:onClick?"pointer":"default"}}>{label}</div>;
             })}
+          </div>
+          <div>
+            <div style={{fontSize:9,letterSpacing:3,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:16,opacity:0.85}}>Resources</div>
+            <a href="/downloads/2026-wholesaleuspeptides-partner-catalog.pdf" download onClick={()=>trackEvent("catalog_download")} className="footer-link" style={{fontSize:12,marginBottom:11,cursor:"pointer",display:"block",textDecoration:"none"}}>Download Partner Catalog</a>
           </div>
         </div>
         <div style={{display:"flex",gap:8,alignItems:"flex-start",maxWidth:700,marginBottom:28}}>
