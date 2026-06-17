@@ -165,7 +165,7 @@ export default function PartnerAccessModal({ open, onClose, unlocked, onUnlock, 
                   const content = (
                     <>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-                        <span style={{ color: GOLD, fontSize: 10 }}>✓</span>
+                        <span style={{ width: 4, height: 4, borderRadius: "50%", background: GOLD, flexShrink: 0 }}/>
                         <span style={{ fontSize: 12, fontWeight: 700, color: NAVY }}>{r.label}</span>
                       </div>
                       <div style={{ fontSize: 10.5, color: STONE, lineHeight: 1.5 }}>{r.desc}</div>

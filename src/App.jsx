@@ -403,7 +403,7 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
             {["Manufactured in USA","Third Party Tested","White Label Available","Batch Verified"].map((b,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:5,padding:"5px 7px",background:C.off,border:"1px solid "+C.mist}}>
-                <span style={{color:C.gold,fontSize:9,lineHeight:1,flexShrink:0}}>✓</span>
+                <span style={{width:4,height:4,borderRadius:"50%",background:C.gold,flexShrink:0}}/>
                 <span style={{fontSize:8,fontWeight:700,color:C.navy,textTransform:"uppercase",letterSpacing:0.2,lineHeight:1.3}}>{b}</span>
               </div>
             ))}
@@ -523,6 +523,32 @@ function WhyPartners() {
         </div>
         <div className="why-partners-grid">
           {cards.map((c,i)=><PartnerCard key={i} {...c}/>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── WHO WE SERVE ──────────────────────────────────────────────────────────────
+function WhoWeServe() {
+  const served = ["Med Spas","Wellness Clinics","Telehealth Providers","Functional Medicine Practices","Research Organizations","Private Label Brands","National Distributors"];
+  return (
+    <div className="home-section-pad" style={{background:C.white,padding:"84px 40px"}}>
+      <div style={{maxWidth:1400,margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:44}}>
+          <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:14}}>Who We Serve</div>
+          <h2 style={{fontSize:36,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:12}}>Who We Serve</h2>
+          <p style={{fontSize:14,color:C.stone,lineHeight:1.85,maxWidth:540,margin:"0 auto"}}>
+            WholesaleUSPeptides.com supports qualified organizations nationwide.
+          </p>
+        </div>
+        <div className="home-serve-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:1,background:C.mist}}>
+          {served.map((label,i)=>(
+            <div key={i} style={{background:C.white,padding:"30px 26px",textAlign:"center"}}>
+              <div style={{width:26,height:3,background:C.gold,margin:"0 auto 16px"}}/>
+              <div style={{fontSize:13,fontWeight:700,color:C.navy,letterSpacing:0.2,lineHeight:1.35}}>{label}</div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -652,7 +678,6 @@ function HomeSections({ setPage }) {
     {t:"COA Documentation",            b:"Batch-specific Certificates of Analysis delivered to white-label partners for publishing on their platforms."},
   ];
   const flow = ["Application Submitted","Internal Review","Account Approved","Wholesale Pricing Access","ACH Payment","Fulfillment"];
-  const served = ["Med Spas","Wellness Clinics","Telehealth Providers","Functional Medicine Practices","Research Organizations","Private Label Brands","National Distributors"];
 
   return (
     <>
@@ -774,27 +799,6 @@ function HomeSections({ setPage }) {
                 <div style={{width:26,height:3,background:C.gold,marginBottom:16}}/>
                 <div style={{fontSize:13,fontWeight:700,color:C.navy,marginBottom:10,lineHeight:1.35}}>{t}</div>
                 <div style={{fontSize:12,color:C.stone,lineHeight:1.8}}>{b}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* WHO WE SERVE */}
-      <div className="home-section-pad" style={{background:C.white,padding:"84px 40px"}}>
-        <div style={{maxWidth:1400,margin:"0 auto"}}>
-          <div style={{textAlign:"center",marginBottom:44}}>
-            <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:14}}>Who We Serve</div>
-            <h2 style={{fontSize:36,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:12}}>Who We Serve</h2>
-            <p style={{fontSize:14,color:C.stone,lineHeight:1.85,maxWidth:540,margin:"0 auto"}}>
-              WholesaleUSPeptides.com supports qualified organizations nationwide.
-            </p>
-          </div>
-          <div className="home-serve-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:1,background:C.mist}}>
-            {served.map((label,i)=>(
-              <div key={i} style={{background:C.white,padding:"30px 26px",textAlign:"center"}}>
-                <div style={{width:26,height:3,background:C.gold,margin:"0 auto 16px"}}/>
-                <div style={{fontSize:13,fontWeight:700,color:C.navy,letterSpacing:0.2,lineHeight:1.35}}>{label}</div>
               </div>
             ))}
           </div>
@@ -938,7 +942,7 @@ function WLPage({ setPage }) {
                 return (
                   <div key={cat} onClick={()=>toggleInterest(cat)} style={{border:"2px solid "+(sel?C.gold:C.mist),padding:"14px 16px",cursor:"pointer",background:sel?"rgba(201,168,76,0.04)":C.white,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                     <span style={{fontSize:12,fontWeight:700,color:C.navy}}>{cat}</span>
-                    <span style={{width:16,height:16,borderRadius:3,border:"1.5px solid "+(sel?C.gold:C.mist),background:sel?C.gold:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:C.navy,fontWeight:800,flexShrink:0}}>{sel?"✓":""}</span>
+                    <span style={{width:16,height:16,borderRadius:3,border:"1.5px solid "+(sel?C.gold:C.mist),background:sel?C.gold:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}/>
                   </div>
                 );
               })}
@@ -1046,7 +1050,7 @@ function WLPage({ setPage }) {
             <div className="wl-trust-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:22}}>
               {["Manufactured in USA","Batch Verified","White Label Available","Third Party Tested"].map((b,i)=>(
                 <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"9px 10px",background:C.off,border:"1px solid "+C.mist}}>
-                  <span style={{color:C.gold,fontSize:11}}>✓</span>
+                  <span style={{width:4,height:4,borderRadius:"50%",background:C.gold,flexShrink:0}}/>
                   <span style={{fontSize:9,fontWeight:700,letterSpacing:0.3,color:C.navy,textTransform:"uppercase"}}>{b}</span>
                 </div>
               ))}
@@ -1185,7 +1189,7 @@ function COAPage() {
         <div className="coa-trust-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:18}}>
           {["Manufactured in USA","Third Party Tested","Batch Verified","White Label Available"].map((b,i)=>(
             <div key={i} className="coa-trust-badge" style={{display:"flex",alignItems:"center",gap:6,padding:"8px 10px",background:C.white,border:"1px solid "+C.mist}}>
-              <span style={{color:C.gold,fontSize:11,lineHeight:1}}>✓</span>
+              <span style={{width:4,height:4,borderRadius:"50%",background:C.gold,flexShrink:0}}/>
               <span style={{fontSize:9.5,fontWeight:700,letterSpacing:0.3,color:C.navy,textTransform:"uppercase"}}>{b}</span>
             </div>
           ))}
@@ -1303,7 +1307,7 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:18}}>
                 {["Batch Verified","Manufactured in USA","White Label Available","Third-Party Tested"].map((b,i)=>(
                   <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 10px",background:C.off,border:"1px solid "+C.mist}}>
-                    <span style={{color:C.gold,fontSize:11,lineHeight:1}}>✓</span>
+                    <span style={{width:4,height:4,borderRadius:"50%",background:C.gold,flexShrink:0}}/>
                     <span style={{fontSize:9.5,fontWeight:700,letterSpacing:0.3,color:C.navy,textTransform:"uppercase"}}>{b}</span>
                   </div>
                 ))}
@@ -1503,7 +1507,7 @@ export default function App() {
           {count>0?"Order ("+count+")":"Start Application"}
         </button>
       </nav>
-      {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage}/></>}
+      {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><WhoWeServe/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage}/></>}
       {page==="catalog" && <Catalog addToCart={addToCart} openCart={()=>setCopen(true)} partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)}/>}
       {page==="wl"      && <WLPage setPage={setPage}/>}
       {page==="about"   && <AboutPage/>}
