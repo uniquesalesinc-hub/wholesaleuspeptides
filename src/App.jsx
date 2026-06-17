@@ -227,12 +227,15 @@ function Hero({ setPage }) {
             <span style={{fontSize:9,letterSpacing:3.5,color:C.gold,textTransform:"uppercase",fontWeight:700}}>Wholesale Manufacturing Platform — Minimum 10 Units Per SKU</span>
           </div>
           <div style={{width:56,height:3,background:C.gold,marginBottom:22}}/>
-          <h1 style={{fontSize:48,fontWeight:800,color:C.white,lineHeight:1.16,marginBottom:18,letterSpacing:-1.2,fontFamily:"Georgia,serif",maxWidth:620}}>
-            American Peptide Manufacturing,<br/>
-            <span style={{color:C.gold}}>Built For Private Label Growth.</span>
+          <h1 style={{fontSize:44,fontWeight:800,color:C.white,lineHeight:1.16,marginBottom:18,letterSpacing:-1.2,fontFamily:"Georgia,serif",maxWidth:620}}>
+            American Peptide Manufacturing Built for<br/>
+            <span style={{color:C.gold}}>Scalable Private Label Growth.</span>
           </h1>
-          <p style={{fontSize:15,color:"rgba(255,255,255,0.55)",lineHeight:1.9,maxWidth:540,marginBottom:32,fontWeight:300}}>
-            WholesaleUSPeptides.com supplies research-focused peptide products, white-label packaging, and fulfillment support for clinics, distributors, and qualified partners.
+          <p style={{fontSize:15,color:"rgba(255,255,255,0.55)",lineHeight:1.9,maxWidth:540,marginBottom:18,fontWeight:300}}>
+            WholesaleUSPeptides.com provides batch-verified peptide manufacturing, white-label packaging, and fulfillment solutions for clinics, wellness brands, telehealth providers, and qualified distributors.
+          </p>
+          <p style={{fontSize:11,color:C.gold,letterSpacing:1,lineHeight:1.7,maxWidth:540,marginBottom:32,fontWeight:600,textTransform:"uppercase"}}>
+            Minimum Order: 10 Units Per SKU &nbsp;·&nbsp; Quotes Delivered Within 48 Hours &nbsp;·&nbsp; Batch-Specific COAs Available
           </p>
           <div style={{display:"flex",gap:12,marginBottom:40,flexWrap:"wrap"}}>
             <button onClick={()=>setPage("catalog")} style={{padding:"13px 30px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
@@ -467,13 +470,13 @@ function Catalog({ addToCart, openCart }) {
 }
 
 
-function PartnerCard({ icon, title, items }) {
+function PartnerCard({ title, items }) {
   const [hov, setHov] = useState(false);
   return (
     <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{background:C.white,border:"1px solid "+(hov?C.gold:C.mist),padding:"32px 26px",textAlign:"center",transition:"all 0.25s ease",transform:hov?"translateY(-6px)":"translateY(0)",boxShadow:hov?"0 16px 34px rgba(5,17,31,0.16)":"0 6px 18px rgba(5,17,31,0.06)"}}>
-      <div style={{fontSize:30,marginBottom:16}}>{icon}</div>
-      <div style={{fontSize:14,fontWeight:700,color:C.navy,fontFamily:"Georgia,serif",marginBottom:16,letterSpacing:0.3}}>{title}</div>
+      <div style={{width:28,height:2,background:C.gold,margin:"0 auto 16px"}}/>
+      <div style={{fontSize:13,fontWeight:700,color:C.navy,fontFamily:"Georgia,serif",marginBottom:16,letterSpacing:2,textTransform:"uppercase"}}>{title}</div>
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
         {items.map(it=>(
           <div key={it} style={{display:"flex",gap:7,alignItems:"center",justifyContent:"center"}}>
@@ -489,10 +492,10 @@ function PartnerCard({ icon, title, items }) {
 // ── WHY PARTNERS CHOOSE US ──────────────────────────────────────────────────
 function WhyPartners() {
   const cards = [
-    {icon:"🏭", title:"Manufacturing", items:["cGMP APIs","Made in USA","White Label Support"]},
-    {icon:"🧪", title:"Quality",       items:["Third-Party Tested","COA Available","Batch Traceable"]},
-    {icon:"🚚", title:"Fulfillment",   items:["Inventory Management","Packaging Support","Nationwide Shipping"]},
-    {icon:"🤝", title:"Partnership",   items:["Dedicated Account Support","Bulk Pricing","Custom Solutions"]},
+    {title:"Manufacturing", items:["cGMP APIs","Made in USA","White Label Support"]},
+    {title:"Quality",       items:["Third-Party Tested","COA Available","Batch Traceable"]},
+    {title:"Fulfillment",   items:["Inventory Management","Packaging Support","Nationwide Shipping"]},
+    {title:"Partnership",   items:["Dedicated Account Support","Bulk Pricing","Custom Solutions"]},
   ];
   return (
     <div style={{background:C.off,padding:"68px 40px"}}>
