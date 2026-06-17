@@ -393,7 +393,7 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
           </div>
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:18}}>
-          {["Min. Order: 10 Units","White Label Available","COA Available"].map(f=>(
+          {["Min. Order: 10 Units","COA Available"].map(f=>(
             <div key={f} style={{display:"flex",gap:7,alignItems:"center"}}>
               <div style={{width:4,height:4,borderRadius:"50%",background:C.green,flexShrink:0}}/>
               <div style={{fontSize:10,color:C.stone}}>{f}</div>
@@ -412,14 +412,8 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
           </div>
         </div>
         <div style={{background:C.off,border:"1px solid "+C.mist,padding:"10px 12px",marginBottom:12}}>
-          <div style={{fontSize:9,fontWeight:700,color:C.navy,textTransform:"uppercase",letterSpacing:1.5,marginBottom:7}}>Designed For Professional Buyers</div>
-          <div style={{fontSize:9.5,color:C.stone,marginBottom:5}}>Our products are designed for:</div>
-          {["Med Spas","Wellness Clinics","Telehealth Providers","Research Organizations","Private Label Brands"].map((item,i)=>(
-            <div key={i} style={{display:"flex",gap:6,alignItems:"center",marginTop:4}}>
-              <div style={{width:3,height:3,borderRadius:"50%",background:C.gold,flexShrink:0}}/>
-              <div style={{fontSize:9.5,color:C.stone}}>{item}</div>
-            </div>
-          ))}
+          <div style={{fontSize:9,fontWeight:700,color:C.navy,textTransform:"uppercase",letterSpacing:1.5,marginBottom:5}}>Qualified Business Buyers Only</div>
+          <div style={{fontSize:9.5,color:C.stone,lineHeight:1.6}}>Supplied to med spas, wellness clinics, telehealth providers, research organizations, and private label brands.</div>
         </div>
         <button onClick={()=>onAdd(p,variant,qty,t)} className="btn-polish" style={{padding:"9px 0",background:hov?C.navy:"transparent",border:"1px solid "+C.navy,color:hov?C.white:C.navy,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.25s ease"}}>
           Add to Order
@@ -442,12 +436,12 @@ function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick }) {
   };
   return (
     <div style={{background:C.off,minHeight:"100vh"}}>
-      {toast && <div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:C.navy,color:C.white,padding:"10px 20px",fontSize:11,fontWeight:600,zIndex:999,whiteSpace:"nowrap",border:"1px solid "+C.gold}}>Noted: {toast}</div>}
+      {toast && <div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:C.navy,color:C.white,padding:"10px 20px",fontSize:11,fontWeight:600,zIndex:999,whiteSpace:"nowrap",border:"1px solid "+C.gold}}>Added to Order: {toast}</div>}
       <div style={{background:C.navy,padding:"40px 40px 32px",borderBottom:"1px solid rgba(201,168,76,0.15)"}}>
         <div style={{maxWidth:1280,margin:"0 auto"}}>
           <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:10}}>Wholesale Catalog</div>
           <h1 style={{fontSize:32,fontWeight:800,lineHeight:1.18,color:C.white,fontFamily:"Georgia,serif",marginBottom:8}}>Research Compound Catalog</h1>
-          <p style={{fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.7}}>Research Use Only — American Manufacturing — Independent testing per lot — Minimum 10 units per SKU</p>
+          <p style={{fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.7}}>American Manufacturing — Independent Testing Per Lot — Minimum 10 Units Per SKU</p>
         </div>
       </div>
       <div style={{maxWidth:1400,margin:"0 auto",padding:"24px 40px 72px"}}>
@@ -539,7 +533,7 @@ function WhoWeServe() {
       <div style={{maxWidth:1400,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:44}}>
           <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:14}}>Who We Serve</div>
-          <h2 style={{fontSize:36,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:12}}>Who We Serve</h2>
+          <h2 style={{fontSize:36,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:12}}>Trusted by Clinics, Distributors &amp; Private-Label Brands</h2>
           <p style={{fontSize:14,color:C.stone,lineHeight:1.85,maxWidth:540,margin:"0 auto"}}>
             WholesaleUSPeptides.com supports qualified organizations nationwide.
           </p>
@@ -565,7 +559,7 @@ function UnlockPartnerCTA({ partnerUnlocked, onUnlockClick, setPage }) {
         <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:14}}>Partner Access</div>
         <h2 style={{fontSize:32,fontWeight:800,lineHeight:1.18,color:C.white,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:16}}>Unlock Partner Pricing &amp; Resources</h2>
         <p style={{fontSize:14,color:"rgba(255,255,255,0.55)",lineHeight:1.85,maxWidth:520,margin:"0 auto 32px"}}>
-          Create free partner access to view volume pricing, downloadable catalogs, white-label resources, and manufacturing documentation.
+          Register for partner access to view volume pricing, downloadable catalogs, white-label resources, and manufacturing documentation.
         </p>
         {partnerUnlocked ? (
           <button onClick={()=>setPage("catalog")} className="btn-polish" style={{padding:"15px 38px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
@@ -752,7 +746,7 @@ function HomeSections({ setPage, onContactClick }) {
                     ))}
                   </div>
                   <button onClick={()=>setPage("catalog")} className="btn-polish" style={{marginTop:"auto",padding:"9px 0",background:C.navy,border:"none",color:C.white,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>
-                    Start Application
+                    View In Catalog
                   </button>
                 </div>
               </div>
@@ -1141,7 +1135,7 @@ function WLPage({ setPage }) {
             <div style={{fontSize:11,color:C.stone,marginBottom:16}}>Questions: uniquesalesinc@gmail.com — 602-321-8381</div>
             <div style={{display:"flex",gap:8,alignItems:"flex-start",maxWidth:700,margin:"0 auto 18px",textAlign:"left"}}>
               <div style={{color:C.gold,fontSize:9,marginTop:2,flexShrink:0,lineHeight:1}}>◆</div>
-              <div style={{fontSize:10,color:C.stone,lineHeight:1.75,opacity:0.8}}>WholesaleUSPeptides supports clinics, wellness providers, telehealth organizations, distributors, research organizations, and private-label brands. All orders are subject to internal review prior to fulfillment. Product availability, inventory, and compliance requirements are verified before processing.</div>
+              <div style={{fontSize:10,color:C.stone,lineHeight:1.75,opacity:0.8}}>Applications are subject to internal review prior to approval. Account status, inventory availability, and compliance requirements are confirmed before production begins.</div>
             </div>
             <button onClick={()=>setPage("catalog")} className="btn-polish" style={{padding:"11px 24px",background:C.navy,border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>View Catalog</button>
           </div>
@@ -1474,11 +1468,7 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
               {requested ? "Request Submitted" : "Submit For Review"}
             </button>
             <div style={{fontSize:9,color:C.stone,textAlign:"center",lineHeight:1.6,marginBottom:8}}>Orders are reviewed before fulfillment. Payment initiation does not guarantee approval. Business information, inventory availability, and compliance requirements are verified prior to processing.</div>
-            <div style={{fontSize:9,color:C.stone,textAlign:"center",lineHeight:1.6}}>Tax and shipping calculated before final invoice.<br/>Research purposes only. RUO. Not FDA approved.</div>
-            <div style={{display:"flex",gap:7,alignItems:"flex-start",marginTop:12}}>
-              <div style={{color:C.gold,fontSize:8,marginTop:2,flexShrink:0,lineHeight:1}}>◆</div>
-              <div style={{fontSize:9,color:C.stone,lineHeight:1.7,opacity:0.8}}>WholesaleUSPeptides supports clinics, wellness providers, telehealth organizations, distributors, research organizations, and private-label brands. All orders are subject to internal review prior to fulfillment. Product availability, inventory, and compliance requirements are verified before processing.</div>
-            </div>
+            <div style={{fontSize:9,color:C.stone,textAlign:"center",lineHeight:1.6}}>Tax and shipping calculated before final invoice.</div>
           </div>
         )}
       </div>
@@ -1570,7 +1560,7 @@ export default function App() {
           ))}
         </div>
         <button onClick={()=>setCopen(true)} style={{background:C.gold,border:"none",color:C.navy,padding:"9px 18px",fontSize:10,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",flexShrink:0}}>
-          {count>0?"Order ("+count+")":"Start Application"}
+          {count>0?"Order ("+count+")":"Request Pricing"}
         </button>
       </nav>
       {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><WhoWeServe/><UnlockPartnerCTA partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} setPage={setPage}/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage} onContactClick={()=>setContactModalOpen(true)}/></>}
