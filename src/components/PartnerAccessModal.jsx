@@ -110,7 +110,7 @@ export default function PartnerAccessModal({ open, onClose, unlocked, onUnlock, 
         <div style={{ background: NAVY, padding: "20px 26px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid " + GOLD }}>
           <div>
             <div style={{ fontSize: 9, letterSpacing: 3, color: GOLD, textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>
-              {showResources ? "Partner Access Unlocked" : "Partner Access"}
+              {showResources ? "Access Granted" : "Partner Access"}
             </div>
             <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", fontFamily: "Georgia,serif", lineHeight: 1.3 }}>
               {showResources ? "Your Partner Resources" : "Unlock Partner Pricing & Resources"}
