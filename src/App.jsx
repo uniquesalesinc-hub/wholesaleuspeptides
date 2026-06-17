@@ -555,6 +555,30 @@ function WhoWeServe() {
   );
 }
 
+// ── UNLOCK PARTNER PRICING CTA ────────────────────────────────────────────────
+function UnlockPartnerCTA({ partnerUnlocked, onUnlockClick, setPage }) {
+  return (
+    <div className="home-section-pad" style={{background:C.navy,padding:"84px 40px",borderTop:"1px solid rgba(201,168,76,0.15)"}}>
+      <div style={{maxWidth:680,margin:"0 auto",textAlign:"center"}}>
+        <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:14}}>Partner Access</div>
+        <h2 style={{fontSize:32,fontWeight:800,lineHeight:1.18,color:C.white,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:16}}>Unlock Partner Pricing &amp; Resources</h2>
+        <p style={{fontSize:14,color:"rgba(255,255,255,0.55)",lineHeight:1.85,maxWidth:520,margin:"0 auto 32px"}}>
+          Create free partner access to view volume pricing, downloadable catalogs, white-label resources, and manufacturing documentation.
+        </p>
+        {partnerUnlocked ? (
+          <button onClick={()=>setPage("catalog")} className="btn-polish" style={{padding:"15px 38px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
+            View Wholesale Catalog
+          </button>
+        ) : (
+          <button onClick={onUnlockClick} className="btn-polish" style={{padding:"15px 38px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
+            Unlock Partner Access
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── STATS STRIP ──────────────────────────────────────────────────────────────
 function StatsStrip() {
   const ref = useRef(null);
@@ -1501,7 +1525,7 @@ export default function App() {
           {count>0?"Order ("+count+")":"Start Application"}
         </button>
       </nav>
-      {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><WhoWeServe/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage}/></>}
+      {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><WhoWeServe/><UnlockPartnerCTA partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} setPage={setPage}/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage}/></>}
       {page==="catalog" && <Catalog addToCart={addToCart} openCart={()=>setCopen(true)} partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)}/>}
       {page==="wl"      && <WLPage setPage={setPage}/>}
       {page==="about"   && <AboutPage/>}
