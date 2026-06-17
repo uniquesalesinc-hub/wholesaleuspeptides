@@ -568,19 +568,13 @@ function StatsStrip() {
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
-  const stats = [
-    {n:"500+",      l:"Qualified Partners"},
-    {n:"250+",      l:"SKUs Available"},
-    {n:"48 Hours",  l:"Average Quote Turnaround"},
-    {n:"100%",      l:"Batch Traceability"},
-  ];
+  const stats = ["10 Unit Minimums","250+ SKUs Available","48 Hour Quotes","Batch Traceability"];
   return (
     <div ref={ref} style={{background:C.navy,padding:"64px 40px"}}>
       <div style={{maxWidth:1400,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(4,1fr)"}} className="stats-strip-grid">
         {stats.map((s,i)=>(
           <div key={i} style={{textAlign:"center",padding:"0 24px",borderRight:i<3?"1px solid rgba(201,168,76,0.18)":"none",opacity:visible?1:0,transform:visible?"translateY(0)":"translateY(18px)",transition:`opacity 0.6s ease ${i*0.1}s, transform 0.6s ease ${i*0.1}s`}} className="stats-strip-item">
-            <div style={{fontSize:56,fontWeight:800,color:C.gold,fontFamily:"Georgia,serif",letterSpacing:-1,marginBottom:10,lineHeight:1}} className="stats-strip-num">{s.n}</div>
-            <div style={{fontSize:11,color:"rgba(255,255,255,0.55)",letterSpacing:1.5,textTransform:"uppercase",fontWeight:600}}>{s.l}</div>
+            <div style={{fontSize:28,fontWeight:800,color:C.gold,fontFamily:"Georgia,serif",letterSpacing:-0.3,lineHeight:1.3}} className="stats-strip-num">{s}</div>
           </div>
         ))}
       </div>
