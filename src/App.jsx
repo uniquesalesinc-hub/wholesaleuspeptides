@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import TrustBanner from "./components/TrustBanner.jsx";
 import PartnerAccessModal from "./components/PartnerAccessModal.jsx";
+import ContactModal from "./components/ContactModal.jsx";
+import { trackEvent } from "./lib/analytics";
 
 const PARTNER_ACCESS_KEY = "wsp_partner_access";
 
@@ -607,7 +609,7 @@ function StatsStrip() {
 }
 
 // ── FOOTER ──────────────────────────────────────────────────────────────────
-function Footer({ setPage }) {
+function Footer({ setPage, onContactClick }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -648,9 +650,10 @@ function Footer({ setPage }) {
           </div>
           <div>
             <div style={{fontSize:9,letterSpacing:3,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:16,opacity:0.85}}>Company</div>
-            {company.map(({label,id})=>(
-              <div key={label} onClick={id?()=>setPage(id):undefined} className="footer-link" style={{fontSize:12,marginBottom:11,cursor:id?"pointer":"default"}}>{label}</div>
-            ))}
+            {company.map(({label,id})=>{
+              const onClick = label==="Contact" ? onContactClick : (id?()=>setPage(id):undefined);
+              return <div key={label} onClick={onClick} className="footer-link" style={{fontSize:12,marginBottom:11,cursor:onClick?"pointer":"default"}}>{label}</div>;
+            })}
           </div>
         </div>
         <div style={{display:"flex",gap:8,alignItems:"flex-start",maxWidth:700,marginBottom:28}}>
@@ -668,7 +671,7 @@ function Footer({ setPage }) {
   );
 }
 
-function HomeSections({ setPage }) {
+function HomeSections({ setPage, onContactClick }) {
   const cats = [
     {label:"GLP-1 Solutions",      desc:"GLP-S, GLP-T, GLP-R, Tesamorelin, Sermorelin"},
     {label:"Wellness Peptides",     desc:"BPC-157, TB-500, GHK-Cu, NAD+, MOTS-C, Thymosin Alpha-1"},
@@ -846,7 +849,7 @@ function HomeSections({ setPage }) {
       </div>
 
       {/* FOOTER */}
-      <Footer setPage={setPage}/>
+      <Footer setPage={setPage} onContactClick={onContactClick}/>
     </>
   );
 }
@@ -862,6 +865,16 @@ function WLPage({ setPage }) {
   const [fm, setFm]               = useState({co:"",cn:"",em:"",ph:"",web:"",br:"",sk:"",nt:""});
   const [logoFile, setLogoFile]       = useState(null);
   const [stickerFile, setStickerFile] = useState(null);
+  const startedTrackedRef = useRef(false);
+  const submittedTrackedRef = useRef(false);
+  const startApplication = () => {
+    if (!startedTrackedRef.current) { startedTrackedRef.current = true; trackEvent("white_label_application_started"); }
+    setStep(2);
+  };
+  const submitApplication = () => {
+    if (!submittedTrackedRef.current) { submittedTrackedRef.current = true; trackEvent("white_label_application_submitted"); }
+    setStep(6);
+  };
   const onboardingSteps = ["Company Info","Product Interest","Monthly Volume","Review & Submit"];
   const SZ = {
     "3ml": {d:"16mm x 45mm",la:"40mm x 25mm",ca:"44mm x 29mm",qr:"8mm x 8mm"},
@@ -926,7 +939,7 @@ function WLPage({ setPage }) {
               </div>
             </div>
             <div style={{display:"flex",gap:10}}>
-              <button onClick={()=>setStep(2)} className="btn-polish" style={{padding:"12px 26px",background:C.navy,border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Start Application</button>
+              <button onClick={startApplication} className="btn-polish" style={{padding:"12px 26px",background:C.navy,border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Start Application</button>
               <button onClick={()=>setPage("catalog")} className="btn-polish" style={{padding:"12px 20px",background:"transparent",border:"1px solid "+C.mist,color:C.stone,fontSize:11,cursor:"pointer"}}>View Pricing</button>
             </div>
           </div>
@@ -1106,7 +1119,7 @@ function WLPage({ setPage }) {
             </div>
             <div style={{display:"flex",gap:10}}>
               <button onClick={()=>setStep(4)} className="btn-polish" style={{padding:"10px 18px",background:"transparent",border:"1px solid "+C.mist,color:C.stone,fontSize:11,cursor:"pointer"}}>Back</button>
-              <button onClick={()=>setStep(6)} className="btn-polish" style={{padding:"10px 26px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Submit Application</button>
+              <button onClick={submitApplication} className="btn-polish" style={{padding:"10px 26px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>Submit Application</button>
             </div>
           </div>
         )}
@@ -1176,6 +1189,24 @@ function AboutPage() {
 
 // ── BATCH VERIFICATION PAGE ───────────────────────────────────────────────────
 function COAPage() {
+  const [srch, setSrch] = useState("");
+  const lastTrackedSearch = useRef("");
+  const rows = P.slice(0,24).filter(p=>{
+    const lot = "LOT-2026-"+String(p.id).padStart(3,"0");
+    const term = srch.trim().toLowerCase();
+    return !term || p.n.toLowerCase().includes(term) || lot.toLowerCase().includes(term);
+  });
+  useEffect(() => {
+    const term = srch.trim();
+    if (!term) return;
+    const timer = setTimeout(() => {
+      if (term.toLowerCase() !== lastTrackedSearch.current) {
+        lastTrackedSearch.current = term.toLowerCase();
+        trackEvent("batch_verification_search", { search_term: term, results_count: rows.length });
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [srch]);
   return (
     <div style={{background:C.off,minHeight:"100vh"}}>
       <div style={{background:C.navy,padding:"40px 40px 32px",borderBottom:"1px solid rgba(201,168,76,0.15)"}}>
@@ -1218,13 +1249,21 @@ function COAPage() {
         <div style={{background:"#EDE9DF",border:"1px solid "+C.mist,padding:"9px 14px",marginBottom:20,fontSize:10,color:"#6B5E4A",lineHeight:1.7}}>
           <strong style={{color:C.red}}>RUO Documentation:</strong> COAs support legitimate laboratory research only. They do not constitute FDA approval for any use.
         </div>
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:9,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:6}}>Lookup by Compound or Lot Number</div>
+          <input value={srch} onChange={e=>setSrch(e.target.value)} placeholder="e.g. BPC-157 or LOT-2026-004"
+            style={{width:"100%",padding:"10px 14px",border:"1px solid "+C.mist,background:C.white,fontSize:12,color:C.navy,outline:"none",boxSizing:"border-box"}}/>
+        </div>
         <div style={{border:"1px solid "+C.mist,background:C.white}}>
           <div style={{padding:"10px 18px",background:C.navy2,display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 1fr",gap:10}}>
             {["Compound","Lot Number","HPLC Purity","Endotoxins","Heavy Metals","COA"].map(h=>(
               <div key={h} style={{fontSize:8,letterSpacing:2,color:C.gold,textTransform:"uppercase",fontWeight:700}}>{h}</div>
             ))}
           </div>
-          {P.slice(0,24).map((p,i)=>(
+          {rows.length===0 && (
+            <div style={{padding:"24px 18px",fontSize:11,color:C.stone,textAlign:"center"}}>No matching compound or lot number found.</div>
+          )}
+          {rows.map((p,i)=>(
             <div key={p.id} style={{padding:"10px 18px",borderBottom:"1px solid "+C.mist,background:i%2===1?C.off:C.white,display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 1fr",gap:10,alignItems:"center"}}>
               <div>
                 <div style={{fontSize:12,fontWeight:700,color:C.navy}}>{p.n}</div>
@@ -1294,6 +1333,13 @@ function Gate({ ok }) {
 function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
   const total = cart.reduce((s,i) => s + (i.variant[i.tier]||0)*i.qty, 0);
   const units = cart.reduce((s,i) => s + i.qty, 0);
+  const [requested, setRequested] = useState(false);
+  useEffect(() => { setRequested(false); }, [cart]);
+  const requestQuote = () => {
+    if (requested) return;
+    setRequested(true);
+    trackEvent("quote_requested", { units, value: total });
+  };
   const upd = (pid, vid, qty) => {
     if (qty < 1) setCart(p => p.filter(i => !(i.p.id===pid && i.variant.id===vid)));
     else setCart(p => p.map(i => (i.p.id===pid && i.variant.id===vid) ? {...i,qty} : i));
@@ -1424,8 +1470,8 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
               </div>
             </div>
             <div style={{padding:"7px 12px",background:C.navy,marginBottom:10,fontSize:9,color:C.gold,fontWeight:700,letterSpacing:1,textAlign:"center"}}>ACH · Debit Card · Zelle (Debit &amp; Zelle up to $2,500) — No Credit Cards</div>
-            <button style={{width:"100%",padding:"12px 0",background:C.navy,border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",marginBottom:7}}>
-              Submit For Review
+            <button onClick={requestQuote} disabled={requested} style={{width:"100%",padding:"12px 0",background:requested?"#8A8680":C.navy,border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:requested?"not-allowed":"pointer",marginBottom:7}}>
+              {requested ? "Request Submitted" : "Submit For Review"}
             </button>
             <div style={{fontSize:9,color:C.stone,textAlign:"center",lineHeight:1.6,marginBottom:8}}>Orders are reviewed before fulfillment. Payment initiation does not guarantee approval. Business information, inventory availability, and compliance requirements are verified prior to processing.</div>
             <div style={{fontSize:9,color:C.stone,textAlign:"center",lineHeight:1.6}}>Tax and shipping calculated before final invoice.<br/>Research purposes only. RUO. Not FDA approved.</div>
@@ -1449,6 +1495,7 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem(PARTNER_ACCESS_KEY)); } catch { return null; }
   });
   const [partnerModalOpen, setPartnerModalOpen] = useState(false);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
   const partnerUnlocked = !!partnerAccess?.unlocked;
   const unlockPartnerAccess = (lead) => {
     const record = { unlocked: true, lead, unlockedAt: new Date().toISOString() };
@@ -1506,6 +1553,7 @@ export default function App() {
     <div style={{fontFamily:"'Inter',sans-serif",background:C.off,minHeight:"100vh"}}>
       <CartDrawer cart={cart} setCart={setCart} open={copen} setOpen={setCopen} setPage={setPage}/>
       <PartnerAccessModal open={partnerModalOpen} onClose={()=>setPartnerModalOpen(false)} unlocked={partnerUnlocked} onUnlock={unlockPartnerAccess} setPage={setPage}/>
+      <ContactModal open={contactModalOpen} onClose={()=>setContactModalOpen(false)}/>
       <div style={{background:C.navy2,color:C.gold,textAlign:"center",padding:"9px",fontSize:9,letterSpacing:2.5,fontWeight:600,textTransform:"uppercase"}}>
         Wholesale Manufacturing — American Manufacturing — Independent Testing — RUO Only
       </div>
@@ -1525,7 +1573,7 @@ export default function App() {
           {count>0?"Order ("+count+")":"Start Application"}
         </button>
       </nav>
-      {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><WhoWeServe/><UnlockPartnerCTA partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} setPage={setPage}/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage}/></>}
+      {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><WhoWeServe/><UnlockPartnerCTA partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} setPage={setPage}/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage} onContactClick={()=>setContactModalOpen(true)}/></>}
       {page==="catalog" && <Catalog addToCart={addToCart} openCart={()=>setCopen(true)} partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)}/>}
       {page==="wl"      && <WLPage setPage={setPage}/>}
       {page==="about"   && <AboutPage/>}
