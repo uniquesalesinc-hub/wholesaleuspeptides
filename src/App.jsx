@@ -652,6 +652,7 @@ function HomeSections({ setPage }) {
     {t:"COA Documentation",            b:"Batch-specific Certificates of Analysis delivered to white-label partners for publishing on their platforms."},
   ];
   const flow = ["Application Submitted","Internal Review","Account Approved","Wholesale Pricing Access","ACH Payment","Fulfillment"];
+  const served = ["Med Spas","Wellness Clinics","Telehealth Providers","Functional Medicine Practices","Research Organizations","Private Label Brands","National Distributors"];
 
   return (
     <>
@@ -773,6 +774,27 @@ function HomeSections({ setPage }) {
                 <div style={{width:26,height:3,background:C.gold,marginBottom:16}}/>
                 <div style={{fontSize:13,fontWeight:700,color:C.navy,marginBottom:10,lineHeight:1.35}}>{t}</div>
                 <div style={{fontSize:12,color:C.stone,lineHeight:1.8}}>{b}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* WHO WE SERVE */}
+      <div className="home-section-pad" style={{background:C.white,padding:"84px 40px"}}>
+        <div style={{maxWidth:1400,margin:"0 auto"}}>
+          <div style={{textAlign:"center",marginBottom:44}}>
+            <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:14}}>Who We Serve</div>
+            <h2 style={{fontSize:36,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:12}}>Who We Serve</h2>
+            <p style={{fontSize:14,color:C.stone,lineHeight:1.85,maxWidth:540,margin:"0 auto"}}>
+              WholesaleUSPeptides.com supports qualified organizations nationwide.
+            </p>
+          </div>
+          <div className="home-serve-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:1,background:C.mist}}>
+            {served.map((label,i)=>(
+              <div key={i} style={{background:C.white,padding:"30px 26px",textAlign:"center"}}>
+                <div style={{width:26,height:3,background:C.gold,margin:"0 auto 16px"}}/>
+                <div style={{fontSize:13,fontWeight:700,color:C.navy,letterSpacing:0.2,lineHeight:1.35}}>{label}</div>
               </div>
             ))}
           </div>
