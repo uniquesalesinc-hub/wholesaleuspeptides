@@ -357,3 +357,10 @@ html, body {
   .home-mfg-grid     { grid-template-columns: 1fr !important; }
   .home-serve-grid   { grid-template-columns: 1fr !important; }
 }
+
+/* ── PERSISTENT "REQUEST A QUOTE" CTA ──────────────────────────────────────── */
+.quote-bar { display: none; }
+@media (max-width: 768px) {
+  .quote-fab { display: none !important; }
+  .quote-bar { display: block !important; }
+}
