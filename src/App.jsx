@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import TrustBanner from "./components/TrustBanner.jsx";
+import PartnerAccessModal from "./components/PartnerAccessModal.jsx";
+
+const PARTNER_ACCESS_KEY = "wsp_partner_access";
 
 const C = {
   navy:"#05111F", navy2:"#0A1E30", gold:"#C9A84C",
@@ -320,7 +323,7 @@ function ProductVisual({ name, strength, cat }) {
 
 
 // ── PRODUCT CARD ──────────────────────────────────────────────────────────────
-function ProdCard({ p, onAdd, onOpenCart }) {
+function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
   const [hov, setHov] = useState(false);
   const [varIdx, setVarIdx] = useState(0);
   const [qty, setQty] = useState(10);
@@ -351,18 +354,31 @@ function ProdCard({ p, onAdd, onOpenCart }) {
         {p.variants.length === 1 && (
           <div style={{fontSize:11,color:C.stone,marginBottom:14}}>{variant.s}</div>
         )}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:2,marginBottom:14}}>
-          {TIERS.map(tr=>{
-            const active = tr.id===t;
-            return (
-              <div key={tr.id} style={{textAlign:"center",padding:"3px 1px",background:active?"rgba(201,168,76,0.1)":"transparent",border:"1px solid "+(active?C.gold:C.mist)}}>
-                <div style={{fontSize:7.5,color:active?C.navy:C.stone,fontWeight:active?700:400}}>
-                  {variant[tr.id]!=null?fmt(variant[tr.id]):"—"}
+        {partnerUnlocked ? (
+          <div style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:2,marginBottom:14}}>
+            {TIERS.map(tr=>{
+              const active = tr.id===t;
+              return (
+                <div key={tr.id} style={{textAlign:"center",padding:"3px 1px",background:active?"rgba(201,168,76,0.1)":"transparent",border:"1px solid "+(active?C.gold:C.mist)}}>
+                  <div style={{fontSize:7.5,color:active?C.navy:C.stone,fontWeight:active?700:400}}>
+                    {variant[tr.id]!=null?fmt(variant[tr.id]):"—"}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{marginBottom:14}}>
+            <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:9}}>
+              <div style={{fontSize:8,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700}}>Starting At</div>
+              <div style={{fontSize:15,fontWeight:800,color:C.navy}}>{fmt(variant.R1)}</div>
+              <div style={{fontSize:9,color:C.stone}}>/unit (10+ units)</div>
+            </div>
+            <button onClick={onUnlockClick} className="btn-polish" style={{width:"100%",padding:"8px 0",background:"transparent",border:"1px solid "+C.gold,color:C.navy,fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>
+              Unlock Partner Pricing
+            </button>
+          </div>
+        )}
         <div style={{background:C.off,padding:"12px 14px",marginBottom:16,border:"1px solid "+C.mist}}>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
             <div style={{fontSize:8,color:C.stone,letterSpacing:1,textTransform:"uppercase",fontWeight:700}}>Units</div>
@@ -412,7 +428,7 @@ function ProdCard({ p, onAdd, onOpenCart }) {
 }
 
 // ── CATALOG PAGE ──────────────────────────────────────────────────────────────
-function Catalog({ addToCart, openCart }) {
+function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick }) {
   const [cat, setCat] = useState("All");
   const [srch, setSrch] = useState("");
   const [toast, setToast] = useState("");
@@ -462,7 +478,7 @@ function Catalog({ addToCart, openCart }) {
         </div>
         <div style={{fontSize:10,color:C.stone,marginBottom:16}}>{rows.length} compounds — enter quantity, tier pricing applies automatically</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:1,background:C.mist}}>
-          {rows.map(p=><ProdCard key={p.id} p={p} onAdd={add} onOpenCart={openCart}/>)}
+          {rows.map(p=><ProdCard key={p.id} p={p} onAdd={add} onOpenCart={openCart} partnerUnlocked={partnerUnlocked} onUnlockClick={onUnlockClick}/>)}
         </div>
       </div>
     </div>
@@ -1385,6 +1401,16 @@ export default function App() {
   const [cart,  setCart]  = useState([]);
   const [copen, setCopen] = useState(false);
   const [page,  setPageState] = useState(() => pageIdFromPath(window.location.pathname));
+  const [partnerAccess, setPartnerAccess] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(PARTNER_ACCESS_KEY)); } catch { return null; }
+  });
+  const [partnerModalOpen, setPartnerModalOpen] = useState(false);
+  const partnerUnlocked = !!partnerAccess?.unlocked;
+  const unlockPartnerAccess = (lead) => {
+    const record = { unlocked: true, lead, unlockedAt: new Date().toISOString() };
+    localStorage.setItem(PARTNER_ACCESS_KEY, JSON.stringify(record));
+    setPartnerAccess(record);
+  };
   const count = cart.reduce((s,i)=>s+i.qty,0);
 
   const setPage = (id) => {
@@ -1435,6 +1461,7 @@ export default function App() {
   return (
     <div style={{fontFamily:"'Inter',sans-serif",background:C.off,minHeight:"100vh"}}>
       <CartDrawer cart={cart} setCart={setCart} open={copen} setOpen={setCopen} setPage={setPage}/>
+      <PartnerAccessModal open={partnerModalOpen} onClose={()=>setPartnerModalOpen(false)} unlocked={partnerUnlocked} onUnlock={unlockPartnerAccess} setPage={setPage}/>
       <div style={{background:C.navy2,color:C.gold,textAlign:"center",padding:"9px",fontSize:9,letterSpacing:2.5,fontWeight:600,textTransform:"uppercase"}}>
         Wholesale Manufacturing — American Manufacturing — Independent Testing — RUO Only
       </div>
@@ -1455,7 +1482,7 @@ export default function App() {
         </button>
       </nav>
       {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage}/></>}
-      {page==="catalog" && <Catalog addToCart={addToCart} openCart={()=>setCopen(true)}/>}
+      {page==="catalog" && <Catalog addToCart={addToCart} openCart={()=>setCopen(true)} partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)}/>}
       {page==="wl"      && <WLPage setPage={setPage}/>}
       {page==="about"   && <AboutPage/>}
       {page==="coa"     && <COAPage/>}
