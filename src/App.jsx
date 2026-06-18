@@ -19,12 +19,12 @@ const PAGES = {
   home: {
     path: "/", title: "Home",
     seoTitle: "Wholesale Peptides | American Peptide Manufacturing & White Label Supplier",
-    description: "Wholesale peptide supplier offering bulk peptides, white label peptide manufacturing, and private label programs. American-made, batch-tested, and built for clinics, distributors, and research organizations.",
+    description: "Wholesale peptide supplier offering bulk peptides, white label peptide manufacturing, and private label programs. American-made, batch-tested, and built for distributors, research organizations, and private-label brands.",
   },
   catalog: {
     path: "/catalog", title: "Catalog",
     seoTitle: "Wholesale Peptides Catalog | Bulk Peptides & Tiered Pricing",
-    description: "Browse our full catalog of wholesale peptides and bulk peptide pricing tiers. Minimum 10 units per SKU. Domestic manufacturing, third-party tested, ready for clinics and distributors.",
+    description: "Browse our full catalog of wholesale peptides and bulk peptide pricing tiers. Minimum 10 units per SKU. Domestic manufacturing, third-party tested, ready for research organizations and distributors.",
   },
   wl: {
     path: "/white-label", title: "White Label",
@@ -263,7 +263,7 @@ function Hero({ setPage }) {
             <span style={{color:C.gold}}>Scalable Private Label Growth.</span>
           </h1>
           <p style={{fontSize:15,color:"rgba(255,255,255,0.55)",lineHeight:1.9,maxWidth:540,marginBottom:18,fontWeight:300}}>
-            WholesaleUSPeptides.com provides batch-verified peptide manufacturing, white-label packaging, and fulfillment solutions for clinics, wellness brands, telehealth providers, and qualified distributors.
+            WholesaleUSPeptides.com provides batch-verified peptide manufacturing, white-label packaging, and fulfillment solutions for research organizations, wellness brands, and qualified distributors.
           </p>
           <p style={{fontSize:11,color:C.gold,letterSpacing:1,lineHeight:1.7,maxWidth:540,marginBottom:32,fontWeight:600,textTransform:"uppercase"}}>
             Minimum Order: 10 Units Per SKU &nbsp;·&nbsp; Quotes Delivered Within 48 Hours &nbsp;·&nbsp; Batch-Specific COAs Available
@@ -450,7 +450,7 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
         </div>
         <div style={{background:C.off,border:"1px solid "+C.mist,padding:"10px 12px",marginBottom:12}}>
           <div style={{fontSize:9,fontWeight:700,color:C.navy,textTransform:"uppercase",letterSpacing:1.5,marginBottom:5}}>Qualified Business Buyers Only</div>
-          <div style={{fontSize:9.5,color:C.stone,lineHeight:1.6}}>Supplied to med spas, wellness clinics, telehealth providers, research organizations, and private label brands.</div>
+          <div style={{fontSize:9.5,color:C.stone,lineHeight:1.6}}>Supplied to wellness brands, research organizations, distribution partners, and private label brands.</div>
         </div>
         <button onClick={()=>onAdd(p,variant,qty,t)} className="btn-polish" style={{padding:"9px 0",background:hov?C.navy:"transparent",border:"1px solid "+C.navy,color:hov?C.white:C.navy,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.25s ease"}}>
           Add to Order
@@ -564,13 +564,13 @@ function WhyPartners() {
 
 // ── WHO WE SERVE ──────────────────────────────────────────────────────────────
 function WhoWeServe() {
-  const served = ["Med Spas","Wellness Clinics","Telehealth Providers","Functional Medicine Practices","Research Organizations","Private Label Brands","National Distributors"];
+  const served = ["Research Organizations","Distribution Partners","Professional Organizations","Qualified Businesses","Wellness Brands","Private Label Brands","National Distributors"];
   return (
     <div className="home-section-pad" style={{background:C.white,padding:"84px 40px"}}>
       <div style={{maxWidth:1400,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:44}}>
           <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:14}}>Who We Serve</div>
-          <h2 style={{fontSize:36,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:12}}>Trusted by Clinics, Distributors &amp; Private-Label Brands</h2>
+          <h2 style={{fontSize:36,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:12}}>Trusted by Distribution Partners &amp; Private-Label Brands</h2>
           <p style={{fontSize:14,color:C.stone,lineHeight:1.85,maxWidth:540,margin:"0 auto"}}>
             WholesaleUSPeptides.com supports qualified organizations nationwide.
           </p>
@@ -708,7 +708,7 @@ function Footer({ setPage, onContactClick }) {
         </div>
         <div style={{display:"flex",gap:8,alignItems:"flex-start",maxWidth:700,marginBottom:28}}>
           <div style={{color:C.gold,fontSize:9,marginTop:3,flexShrink:0,lineHeight:1}}>◆</div>
-          <div style={{fontSize:10,color:"rgba(255,255,255,0.8)",lineHeight:1.8}}>WholesaleUSPeptides supports clinics, wellness providers, telehealth organizations, distributors, research organizations, and private-label brands. All orders are subject to internal review prior to fulfillment. Product availability, inventory, and compliance requirements are verified before processing.</div>
+          <div style={{fontSize:10,color:"rgba(255,255,255,0.8)",lineHeight:1.8}}>WholesaleUSPeptides supports wellness brands, distribution partners, research organizations, and private-label brands. All orders are subject to internal review prior to fulfillment. Product availability, inventory, and compliance requirements are verified before processing.</div>
         </div>
         <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:18}}>
           <div style={{fontSize:9,color:"rgba(255,255,255,0.2)",lineHeight:1.9,marginBottom:9}}>
@@ -739,11 +739,11 @@ function PersistentQuoteCTA({ onClick }) {
 
 function HomeSections({ setPage, onContactClick }) {
   const cats = [
-    {label:"GLP-1 Solutions",      desc:"GLP-S, GLP-T, GLP-R, Tesamorelin, Sermorelin"},
-    {label:"Wellness Peptides",     desc:"BPC-157, TB-500, GHK-Cu, NAD+, MOTS-C, Thymosin Alpha-1"},
-    {label:"Performance Peptides",  desc:"Ipamorelin, CJC-1295, GHRP-2, GHRP-6, AOD-9604, IGF-1 LR3"},
+    {label:"GLP-1 Solutions",      desc:"GLP-S, GLP-T, GLP-R, Tesamorelin"},
+    {label:"Regenerative Compounds",desc:"BPC-157, TB-500, GHK-Cu, NAD+, MOTS-C, Thymosin Alpha-1"},
+    {label:"Research Peptides",     desc:"Ipamorelin, CJC-1295, GHRP-2, GHRP-6, AOD-9604, IGF-1 LR3"},
     {label:"Research Compounds",    desc:"Bio Regulators, Epithalon, KPV, VIP, PT-141, DSIP, SS-31"},
-    {label:"Capsules",               desc:"BPC-157, TB-500, NAD+, NMN, Methylene Blue, LDN, Berberine, Rapamycin, Metformin"},
+    {label:"Capsules",               desc:"BPC-157, TB-500, NAD+, NMN, Methylene Blue, Berberine"},
     {label:"Custom Formulations",   desc:"Blends, Sprays, Topicals — custom ratios available on request"},
   ];
   const featured = [
@@ -1394,7 +1394,7 @@ function PrivacyPolicyPage() {
       eyebrow="Legal"
       title="Privacy Policy"
       updated={LEGAL_UPDATED}
-      intro="WholesaleUSPeptides.com is a B2B wholesale manufacturing platform serving qualified business purchasers — clinics, distributors, researchers, and private-label brands. This policy explains what information we collect through the platform and how it is used."
+      intro="WholesaleUSPeptides.com is a B2B wholesale manufacturing platform serving qualified business purchasers — distributors, researchers, and private-label brands. This policy explains what information we collect through the platform and how it is used."
       sections={[
         {t:"Information We Collect", b:"We collect information you submit directly: full name, company name, business email, phone number, business type, products of interest, and estimated order or production volume. We also collect standard technical data automatically, such as IP address, browser/device type, and pages viewed."},
         {t:"Lead Forms", b:"Information submitted through Partner Access, Request a Quote, Contact, and White Label Application forms is used solely to verify wholesale eligibility, respond to inquiries, prepare manufacturing quotes, and process applications. We do not sell submitted business information to third parties."},
@@ -1415,7 +1415,7 @@ function TermsOfServicePage() {
       updated={LEGAL_UPDATED}
       intro="These Terms of Service govern access to and use of the WholesaleUSPeptides.com wholesale manufacturing platform. By accessing the platform, you agree to the terms below."
       sections={[
-        {t:"Qualified Business Purchasers Only", b:"This platform is restricted to licensed wholesale buyers, clinics, distributors, research organizations, and private-label brands aged 18 and over. It is not intended for individual consumers. A minimum order of 10 units per SKU is enforced on all orders."},
+        {t:"Qualified Business Purchasers Only", b:"This platform is restricted to licensed wholesale buyers, distributors, research organizations, and private-label brands aged 18 and over. It is not intended for individual consumers. A minimum order of 10 units per SKU is enforced on all orders."},
         {t:"No Guarantee of Product Availability", b:"Product inventory, SKUs, and formulations are subject to change without notice. Submitting a quote request, partner access form, or white-label application does not guarantee product availability or order fulfillment. All orders are subject to internal review prior to acceptance."},
         {t:"Pricing Subject to Change", b:"All pricing tiers displayed on this platform are subject to change without notice. Quoted pricing is valid for a limited period and is subject to confirmation at the time an order is placed."},
         {t:"Manufacturing Timelines May Vary", b:"Quote turnaround and manufacturing lead times referenced on this platform are estimates only. Actual production and fulfillment timelines may vary based on order volume, custom formulation requirements, white-label specifications, and supply conditions."},
@@ -1436,7 +1436,7 @@ function DisclaimerPage() {
       intro="The following disclaimer applies to all products, pricing, and information presented on the WholesaleUSPeptides.com wholesale manufacturing platform."
       sections={[
         {t:"Research Applications Only", b:"All products offered through this platform are Research Use Only (RUO). They are not approved by the U.S. FDA for any clinical, diagnostic, or therapeutic use, and are not drugs, supplements, or medical devices. Clinical trials for many compounds are still ongoing."},
-        {t:"Not for Direct Consumer Sale", b:"WholesaleUSPeptides.com is a wholesale platform serving qualified business purchasers — clinics, distributors, research organizations, and private-label brands. Products are not offered for sale to individual end consumers."},
+        {t:"Not for Direct Consumer Sale", b:"WholesaleUSPeptides.com is a wholesale platform serving qualified business purchasers — distributors, research organizations, and private-label brands. Products are not offered for sale to individual end consumers."},
         {t:"Compliance Is the Purchaser's Responsibility", b:"Purchasers and partners are solely responsible for ensuring that their use, resale, and distribution of products comply with all applicable federal, state, local, and international laws in their jurisdiction."},
         {t:"Educational Information Only", b:"Manufacturing standards, certificates of analysis, product descriptions, and other content on this platform are provided for general informational and educational purposes only. Nothing on this platform constitutes medical, legal, or regulatory advice."},
       ]}
@@ -1478,7 +1478,7 @@ function Gate({ ok }) {
         {!no ? (
           <>
             <p style={{fontSize:12,color:"rgba(255,255,255,0.5)",lineHeight:1.9,marginBottom:10}}>
-              This platform is restricted to <strong style={{color:"rgba(255,255,255,0.8)"}}>licensed wholesale buyers, clinics, distributors, and white-label partners</strong> aged 18 and over.
+              This platform is restricted to <strong style={{color:"rgba(255,255,255,0.8)"}}>licensed wholesale buyers, distributors, and white-label partners</strong> aged 18 and over.
             </p>
             <p style={{fontSize:12,color:"rgba(255,255,255,0.45)",lineHeight:1.85,marginBottom:26}}>
               All compounds are <strong style={{color:"rgba(255,255,255,0.75)"}}>Research Use Only (RUO)</strong>. Not approved by the FDA. Clinical trials for many of these compounds are still ongoing. Not for human or veterinary use.

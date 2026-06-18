@@ -7,7 +7,7 @@ const PILLARS = [
   { label: 'Premium Manufacturing',        sub: 'Licensed U.S. manufacturing partners' },
   { label: 'Batch Traceability',           sub: 'Lot-specific COA on every order' },
   { label: 'White Label Ready',            sub: 'Your brand. Our manufacturing.' },
-  { label: 'Clinic & Distributor Accounts',sub: 'Wholesale access for qualified partners' },
+  { label: 'Distribution Partner Accounts',sub: 'Wholesale access for qualified partners' },
 ];
 
 export default function TrustBanner() {

@@ -8,13 +8,12 @@ const MIST = "#D4CFC6";
 const OFF = "#F7F6F3";
 
 const BUSINESS_TYPES = [
-  "Med Spa",
-  "Wellness Clinic",
-  "Telehealth Provider",
-  "Functional Medicine Practice",
   "Research Organization",
-  "Distributor",
+  "Distribution Partner",
+  "Professional Organization",
+  "Wellness Brand",
   "Private Label Brand",
+  "Qualified Business",
   "Other",
 ];
 
