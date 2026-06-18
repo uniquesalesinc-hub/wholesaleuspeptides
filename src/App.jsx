@@ -263,7 +263,7 @@ function Hero({ setPage }) {
             <span style={{color:C.gold}}>Scalable Private Label Growth.</span>
           </h1>
           <p style={{fontSize:15,color:"rgba(255,255,255,0.55)",lineHeight:1.9,maxWidth:540,marginBottom:18,fontWeight:300}}>
-            WholesaleUSPeptides.com provides batch-verified peptide manufacturing, white-label packaging, and fulfillment solutions for research organizations, wellness brands, and qualified distributors.
+            WholesaleUSPeptides.com provides batch-verified peptide manufacturing, white-label packaging, and fulfillment solutions for research organizations, private label brands, and qualified distributors.
           </p>
           <p style={{fontSize:11,color:C.gold,letterSpacing:1,lineHeight:1.7,maxWidth:540,marginBottom:32,fontWeight:600,textTransform:"uppercase"}}>
             Minimum Order: 10 Units Per SKU &nbsp;·&nbsp; Quotes Delivered Within 48 Hours &nbsp;·&nbsp; Batch-Specific COAs Available
@@ -450,7 +450,7 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
         </div>
         <div style={{background:C.off,border:"1px solid "+C.mist,padding:"10px 12px",marginBottom:12}}>
           <div style={{fontSize:9,fontWeight:700,color:C.navy,textTransform:"uppercase",letterSpacing:1.5,marginBottom:5}}>Qualified Business Buyers Only</div>
-          <div style={{fontSize:9.5,color:C.stone,lineHeight:1.6}}>Supplied to wellness brands, research organizations, distribution partners, and private label brands.</div>
+          <div style={{fontSize:9.5,color:C.stone,lineHeight:1.6}}>Supplied to research organizations, distribution partners, manufacturing partners, and private label brands.</div>
         </div>
         <button onClick={()=>onAdd(p,variant,qty,t)} className="btn-polish" style={{padding:"9px 0",background:hov?C.navy:"transparent",border:"1px solid "+C.navy,color:hov?C.white:C.navy,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.25s ease"}}>
           Add to Order
@@ -564,7 +564,7 @@ function WhyPartners() {
 
 // ── WHO WE SERVE ──────────────────────────────────────────────────────────────
 function WhoWeServe() {
-  const served = ["Research Organizations","Distribution Partners","Professional Organizations","Qualified Businesses","Wellness Brands","Private Label Brands","National Distributors"];
+  const served = ["Research Organizations","Distribution Partners","Professional Organizations","Qualified Businesses","Laboratories","Private Label Brands","National Distributors"];
   return (
     <div className="home-section-pad" style={{background:C.white,padding:"84px 40px"}}>
       <div style={{maxWidth:1400,margin:"0 auto"}}>
@@ -708,7 +708,7 @@ function Footer({ setPage, onContactClick }) {
         </div>
         <div style={{display:"flex",gap:8,alignItems:"flex-start",maxWidth:700,marginBottom:28}}>
           <div style={{color:C.gold,fontSize:9,marginTop:3,flexShrink:0,lineHeight:1}}>◆</div>
-          <div style={{fontSize:10,color:"rgba(255,255,255,0.8)",lineHeight:1.8}}>WholesaleUSPeptides supports wellness brands, distribution partners, research organizations, and private-label brands. All orders are subject to internal review prior to fulfillment. Product availability, inventory, and compliance requirements are verified before processing.</div>
+          <div style={{fontSize:10,color:"rgba(255,255,255,0.8)",lineHeight:1.8}}>WholesaleUSPeptides supports distribution partners, research organizations, laboratories, and private-label brands. All orders are subject to internal review prior to fulfillment. Product availability, inventory, and compliance requirements are verified before processing.</div>
         </div>
         <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:18}}>
           <div style={{fontSize:9,color:"rgba(255,255,255,0.2)",lineHeight:1.9,marginBottom:9}}>
@@ -739,7 +739,7 @@ function PersistentQuoteCTA({ onClick }) {
 
 function HomeSections({ setPage, onContactClick }) {
   const cats = [
-    {label:"GLP-1 Solutions",      desc:"GLP-S, GLP-T, GLP-R, Tesamorelin"},
+    {label:"GLP Research Compounds",desc:"GLP-S, GLP-T, GLP-R, Tesamorelin"},
     {label:"Regenerative Compounds",desc:"BPC-157, TB-500, GHK-Cu, NAD+, MOTS-C, Thymosin Alpha-1"},
     {label:"Research Peptides",     desc:"Ipamorelin, CJC-1295, GHRP-2, GHRP-6, AOD-9604, IGF-1 LR3"},
     {label:"Research Compounds",    desc:"Bio Regulators, Epithalon, KPV, VIP, PT-141, DSIP, SS-31"},

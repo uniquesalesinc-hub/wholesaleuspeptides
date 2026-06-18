@@ -11,7 +11,7 @@ const BUSINESS_TYPES = [
   "Research Organization",
   "Distribution Partner",
   "Professional Organization",
-  "Wellness Brand",
+  "Laboratory",
   "Private Label Brand",
   "Qualified Business",
   "Other",
@@ -130,7 +130,7 @@ export default function PartnerAccessModal({ open, onClose, unlocked, onUnlock, 
                 <input style={inputStyle} value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Jane Doe" />
               </Field>
               <Field label="Company Name">
-                <input style={inputStyle} value={form.company} onChange={(e) => set("company", e.target.value)} placeholder="Apex Wellness LLC" />
+                <input style={inputStyle} value={form.company} onChange={(e) => set("company", e.target.value)} placeholder="Apex Labs LLC" />
               </Field>
               <Field label="Business Email">
                 <input style={inputStyle} type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="you@company.com" />
