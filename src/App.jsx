@@ -41,6 +41,26 @@ const PAGES = {
     seoTitle: "Batch Verification & COA Lookup | Peptide Quality Assurance",
     description: "Verify your peptide batch with our COA lookup tool. Every wholesale peptide order includes batch-specific third-party lab documentation for full transparency.",
   },
+  privacy: {
+    path: "/privacy", title: "Privacy Policy",
+    seoTitle: "Privacy Policy | WholesaleUSPeptides.com",
+    description: "How WholesaleUSPeptides.com collects, uses, and protects information submitted by qualified business purchasers through lead forms, analytics, and cookies.",
+  },
+  terms: {
+    path: "/terms", title: "Terms of Service",
+    seoTitle: "Terms of Service | WholesaleUSPeptides.com",
+    description: "Terms governing access to and use of the WholesaleUSPeptides.com wholesale manufacturing platform by qualified business purchasers.",
+  },
+  disclaimer: {
+    path: "/disclaimer", title: "Disclaimer",
+    seoTitle: "Disclaimer | WholesaleUSPeptides.com",
+    description: "Research Use Only disclaimer and jurisdictional compliance responsibilities for purchasers on the WholesaleUSPeptides.com wholesale platform.",
+  },
+  cookies: {
+    path: "/cookie-policy", title: "Cookie Policy",
+    seoTitle: "Cookie Policy | WholesaleUSPeptides.com",
+    description: "How WholesaleUSPeptides.com uses analytics, functional, and preference cookies across the wholesale manufacturing platform.",
+  },
 };
 
 function pageIdFromPath(path) {
@@ -633,13 +653,17 @@ function Footer({ setPage, onContactClick }) {
   const company = [
     {label:"Request Pricing", id:"catalog"},
     {label:"Contact",         id:null},
-    {label:"Terms",           id:null},
-    {label:"Privacy",         id:null},
+  ];
+  const legal = [
+    {label:"Privacy Policy",    id:"privacy"},
+    {label:"Terms of Service",  id:"terms"},
+    {label:"Disclaimer",        id:"disclaimer"},
+    {label:"Cookie Policy",     id:"cookies"},
   ];
   return (
     <footer ref={ref} style={{background:C.navy,borderTop:"1px solid "+C.gold,padding:"56px 40px 28px",opacity:visible?1:0,transform:visible?"translateY(0)":"translateY(20px)",transition:"opacity 0.7s ease, transform 0.7s ease"}}>
       <div style={{maxWidth:1400,margin:"0 auto"}}>
-        <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr 1fr 1fr",gap:40,marginBottom:36}} className="footer-grid">
+        <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr 1fr 1fr 1fr",gap:40,marginBottom:36}} className="footer-grid">
           <div>
             <div style={{fontSize:15,fontWeight:800,color:C.white,fontFamily:"Georgia,serif",marginBottom:10}}>WholesaleUSPeptides.com</div>
             <p style={{fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.9,maxWidth:280,marginBottom:14}}>American peptide manufacturing and white-label solutions for qualified partners.</p>
@@ -661,6 +685,12 @@ function Footer({ setPage, onContactClick }) {
           <div>
             <div style={{fontSize:9,letterSpacing:3,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:16,opacity:0.85}}>Resources</div>
             <a href="/downloads/2026-wholesaleuspeptides-partner-catalog.pdf" download onClick={()=>trackEvent("catalog_download")} className="footer-link" style={{fontSize:12,marginBottom:11,cursor:"pointer",display:"block",textDecoration:"none"}}>Download Partner Catalog</a>
+          </div>
+          <div>
+            <div style={{fontSize:9,letterSpacing:3,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:16,opacity:0.85}}>Legal</div>
+            {legal.map(({label,id})=>(
+              <div key={label} onClick={()=>setPage(id)} className="footer-link" style={{fontSize:12,marginBottom:11,cursor:"pointer"}}>{label}</div>
+            ))}
           </div>
         </div>
         <div style={{display:"flex",gap:8,alignItems:"flex-start",maxWidth:700,marginBottom:28}}>
@@ -1309,6 +1339,115 @@ function COAPage() {
   );
 }
 
+// ── LEGAL PAGES ───────────────────────────────────────────────────────────────
+function LegalPage({ eyebrow, title, updated, intro, sections, note }) {
+  return (
+    <div style={{background:C.off,minHeight:"100vh"}}>
+      <div style={{background:C.navy,padding:"40px 40px 32px",borderBottom:"1px solid rgba(201,168,76,0.15)"}}>
+        <div style={{maxWidth:780,margin:"0 auto"}}>
+          <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:10}}>{eyebrow}</div>
+          <h1 style={{fontSize:32,fontWeight:800,lineHeight:1.2,color:C.white,fontFamily:"Georgia,serif",marginBottom:8}}>{title}</h1>
+          <p style={{fontSize:11,color:"rgba(255,255,255,0.4)",letterSpacing:0.5}}>Last Updated: {updated}</p>
+        </div>
+      </div>
+      <div style={{maxWidth:780,margin:"0 auto",padding:"44px 40px 72px"}}>
+        {intro && <p style={{fontSize:12,color:C.stone,lineHeight:1.9,marginBottom:30}}>{intro}</p>}
+        {sections.map(({t,b})=>(
+          <div key={t} style={{marginBottom:24,paddingBottom:24,borderBottom:"1px solid "+C.mist}}>
+            <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
+              <div style={{width:3,minWidth:3,height:16,background:C.gold,marginTop:3,flexShrink:0}}/>
+              <div>
+                <h2 style={{fontSize:14,fontWeight:700,color:C.navy,fontFamily:"Georgia,serif",marginBottom:8}}>{t}</h2>
+                <p style={{fontSize:12,color:C.stone,lineHeight:1.9,whiteSpace:"pre-line"}}>{b}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+        {note && (
+          <div style={{background:"#EDE9DF",border:"1px solid "+C.mist,padding:"14px 18px",fontSize:11,color:"#6B5E4A",lineHeight:1.9}}>
+            {note}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const LEGAL_UPDATED = "January 1, 2026";
+
+function PrivacyPolicyPage() {
+  return (
+    <LegalPage
+      eyebrow="Legal"
+      title="Privacy Policy"
+      updated={LEGAL_UPDATED}
+      intro="WholesaleUSPeptides.com is a B2B wholesale manufacturing platform serving qualified business purchasers — clinics, distributors, researchers, and private-label brands. This policy explains what information we collect through the platform and how it is used."
+      sections={[
+        {t:"Information We Collect", b:"We collect information you submit directly: full name, company name, business email, phone number, business type, products of interest, and estimated order or production volume. We also collect standard technical data automatically, such as IP address, browser/device type, and pages viewed."},
+        {t:"Lead Forms", b:"Information submitted through Partner Access, Request a Quote, Contact, and White Label Application forms is used solely to verify wholesale eligibility, respond to inquiries, prepare manufacturing quotes, and process applications. We do not sell submitted business information to third parties."},
+        {t:"Analytics", b:"We use Google Analytics (GA4) to understand aggregate platform usage — such as page views and conversion events like quote requests, catalog downloads, and application submissions — so we can improve the wholesale experience. Analytics data does not include information beyond what is voluntarily submitted through forms."},
+        {t:"Cookies", b:"The platform uses cookies and local storage to support analytics and to remember partner-access status on returning visits. See our Cookie Policy for full detail on the categories of cookies used."},
+        {t:"Contact Information", b:"Questions about this Privacy Policy or requests regarding your business information can be directed to support@wholesaleuspeptides.com."},
+      ]}
+      note="This Privacy Policy applies to qualified business purchasers interacting with the WholesaleUSPeptides.com wholesale manufacturing platform and does not extend rights to individual consumers, as the platform is not intended for direct-to-consumer use."
+    />
+  );
+}
+
+function TermsOfServicePage() {
+  return (
+    <LegalPage
+      eyebrow="Legal"
+      title="Terms of Service"
+      updated={LEGAL_UPDATED}
+      intro="These Terms of Service govern access to and use of the WholesaleUSPeptides.com wholesale manufacturing platform. By accessing the platform, you agree to the terms below."
+      sections={[
+        {t:"Qualified Business Purchasers Only", b:"This platform is restricted to licensed wholesale buyers, clinics, distributors, research organizations, and private-label brands aged 18 and over. It is not intended for individual consumers. A minimum order of 10 units per SKU is enforced on all orders."},
+        {t:"No Guarantee of Product Availability", b:"Product inventory, SKUs, and formulations are subject to change without notice. Submitting a quote request, partner access form, or white-label application does not guarantee product availability or order fulfillment. All orders are subject to internal review prior to acceptance."},
+        {t:"Pricing Subject to Change", b:"All pricing tiers displayed on this platform are subject to change without notice. Quoted pricing is valid for a limited period and is subject to confirmation at the time an order is placed."},
+        {t:"Manufacturing Timelines May Vary", b:"Quote turnaround and manufacturing lead times referenced on this platform are estimates only. Actual production and fulfillment timelines may vary based on order volume, custom formulation requirements, white-label specifications, and supply conditions."},
+        {t:"Payment Terms", b:"WholesaleUSPeptides.com accepts ACH bank transfer, debit card, and Zelle (debit card and Zelle accepted up to $2,500). Credit cards are not accepted and net terms are not offered. A 50% deposit is required to initiate production, with the balance due on completion of manufacturing prior to shipping. Orders are held until payment clears."},
+        {t:"Governing Law & Jurisdiction", b:"These Terms are governed by the laws of the United States and the state in which WholesaleUSPeptides.com's manufacturing operations are domiciled, without regard to conflict-of-law principles. Any dispute arising from use of this platform is subject to the exclusive jurisdiction of the courts located in that state."},
+        {t:"Limitation of Liability", b:"WholesaleUSPeptides.com is not liable for indirect, incidental, or consequential damages arising from use of this platform, including delays in manufacturing, changes in pricing, or unavailability of product."},
+      ]}
+    />
+  );
+}
+
+function DisclaimerPage() {
+  return (
+    <LegalPage
+      eyebrow="Legal"
+      title="Disclaimer"
+      updated={LEGAL_UPDATED}
+      intro="The following disclaimer applies to all products, pricing, and information presented on the WholesaleUSPeptides.com wholesale manufacturing platform."
+      sections={[
+        {t:"Research Applications Only", b:"All products offered through this platform are Research Use Only (RUO). They are not approved by the U.S. FDA for any clinical, diagnostic, or therapeutic use, and are not drugs, supplements, or medical devices. Clinical trials for many compounds are still ongoing."},
+        {t:"Not for Direct Consumer Sale", b:"WholesaleUSPeptides.com is a wholesale platform serving qualified business purchasers — clinics, distributors, research organizations, and private-label brands. Products are not offered for sale to individual end consumers."},
+        {t:"Compliance Is the Purchaser's Responsibility", b:"Purchasers and partners are solely responsible for ensuring that their use, resale, and distribution of products comply with all applicable federal, state, local, and international laws in their jurisdiction."},
+        {t:"Educational Information Only", b:"Manufacturing standards, certificates of analysis, product descriptions, and other content on this platform are provided for general informational and educational purposes only. Nothing on this platform constitutes medical, legal, or regulatory advice."},
+      ]}
+      note="By using this platform, you acknowledge that all compounds are intended solely for legitimate research by qualified professionals aged 18 and over, and not for human or veterinary use."
+    />
+  );
+}
+
+function CookiePolicyPage() {
+  return (
+    <LegalPage
+      eyebrow="Legal"
+      title="Cookie Policy"
+      updated={LEGAL_UPDATED}
+      intro="This Cookie Policy explains the categories of cookies and similar technologies used across the WholesaleUSPeptides.com wholesale manufacturing platform."
+      sections={[
+        {t:"Analytics Cookies", b:"We use Google Analytics (GA4) cookies and identifiers to measure aggregate platform usage, including page views and conversion events such as quote requests, catalog downloads, and application submissions. This data helps us improve the wholesale experience."},
+        {t:"Functional Cookies", b:"Functional cookies support core platform features, including the business-purchaser qualification gate and form session state, so the platform behaves correctly as you navigate between pages."},
+        {t:"User Preferences", b:"Local storage is used to remember partner-access status on returning visits, so verified partners are not required to resubmit access forms each session."},
+        {t:"Managing Cookies", b:"You can control or clear cookies through your browser settings at any time. Disabling cookies may limit certain platform features, such as retaining partner access between visits."},
+      ]}
+    />
+  );
+}
 
 // ── AGE GATE ──────────────────────────────────────────────────────────────────
 function Gate({ ok }) {
@@ -1600,6 +1739,10 @@ export default function App() {
       {page==="wl"      && <WLPage setPage={setPage}/>}
       {page==="about"   && <AboutPage/>}
       {page==="coa"     && <COAPage/>}
+      {page==="privacy"   && <PrivacyPolicyPage/>}
+      {page==="terms"     && <TermsOfServicePage/>}
+      {page==="disclaimer"&& <DisclaimerPage/>}
+      {page==="cookies"   && <CookiePolicyPage/>}
     </div>
   );
 }
