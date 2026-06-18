@@ -109,6 +109,11 @@ function tierForQty(qty) {
 
 const fmt = n => n != null ? "$" + Number(n).toFixed(2) : "$0.00";
 
+// A price is only valid for display if it is a finite, positive number.
+// null/undefined/0/NaN all mean "no pricing data" — never render those as $0.
+const hasPrice = n => typeof n === "number" && Number.isFinite(n) && n > 0;
+const NO_PRICE_LABEL = "Pricing Available Upon Request";
+
 
 const CATS = ["All","Peptides","GLP","Bio Regulators","Blends","Sprays","Topicals","Capsules","Diluents"];
 
@@ -387,7 +392,7 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
               return (
                 <div key={tr.id} style={{textAlign:"center",padding:"3px 1px",background:active?"rgba(201,168,76,0.1)":"transparent",border:"1px solid "+(active?C.gold:C.mist)}}>
                   <div style={{fontSize:7.5,color:active?C.navy:C.stone,fontWeight:active?700:400}}>
-                    {variant[tr.id]!=null?fmt(variant[tr.id]):"—"}
+                    {hasPrice(variant[tr.id])?fmt(variant[tr.id]):"—"}
                   </div>
                 </div>
               );
@@ -395,11 +400,15 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
           </div>
         ) : (
           <div style={{marginBottom:14}}>
-            <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:9}}>
-              <div style={{fontSize:8,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700}}>Starting At</div>
-              <div style={{fontSize:15,fontWeight:800,color:C.navy}}>{fmt(variant.R1)}</div>
-              <div style={{fontSize:9,color:C.stone}}>/unit (10+ units)</div>
-            </div>
+            {hasPrice(variant.R1) ? (
+              <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:9}}>
+                <div style={{fontSize:8,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700}}>Starting At</div>
+                <div style={{fontSize:15,fontWeight:800,color:C.navy}}>{fmt(variant.R1)}</div>
+                <div style={{fontSize:9,color:C.stone}}>/unit (10+ units)</div>
+              </div>
+            ) : (
+              <div style={{fontSize:12,fontWeight:700,color:C.navy,marginBottom:9}}>{NO_PRICE_LABEL}</div>
+            )}
             <button onClick={onUnlockClick} className="btn-polish" style={{width:"100%",padding:"8px 0",background:"transparent",border:"1px solid "+C.gold,color:C.navy,fontSize:9,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"}}>
               Unlock Partner Pricing
             </button>
@@ -411,10 +420,14 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
             <input type="number" min="10" value={qty} onChange={e=>setQty(Math.max(10,parseInt(e.target.value)||10))}
               style={{width:52,padding:"3px 6px",border:"1px solid "+C.mist,background:C.white,fontSize:11,color:C.navy,outline:"none",textAlign:"center"}}/>
           </div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
-            <div style={{fontSize:9,color:C.stone}}>{fmt(price)}/unit</div>
-            <div style={{fontSize:13,fontWeight:800,color:C.navy}}>{fmt(price*qty)}</div>
-          </div>
+          {hasPrice(price) ? (
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
+              <div style={{fontSize:9,color:C.stone}}>{fmt(price)}/unit</div>
+              <div style={{fontSize:13,fontWeight:800,color:C.navy}}>{fmt(price*qty)}</div>
+            </div>
+          ) : (
+            <div style={{fontSize:11,fontWeight:700,color:C.stone}}>{NO_PRICE_LABEL}</div>
+          )}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:18}}>
           {["Min. Order: 10 Units","COA Available"].map(f=>(
@@ -1569,14 +1582,14 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
               </div>
               <div style={{flex:1}}>
                 <div style={{fontSize:12,fontWeight:700,color:C.navy}}>{p.n}</div>
-                <div style={{fontSize:10,color:C.stone,marginBottom:6}}>{variant.s} — {fmt(variant[tier]||0)}/unit</div>
+                <div style={{fontSize:10,color:C.stone,marginBottom:6}}>{variant.s} — {hasPrice(variant[tier])?fmt(variant[tier])+"/unit":NO_PRICE_LABEL}</div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                   <div style={{display:"flex",alignItems:"center",gap:5}}>
                     <button onClick={()=>upd(p.id,variant.id,qty-1)} style={{width:22,height:22,background:C.off,border:"1px solid "+C.mist,cursor:"pointer",color:C.navy,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>-</button>
                     <span style={{fontSize:12,color:C.navy,minWidth:22,textAlign:"center"}}>{qty}</span>
                     <button onClick={()=>upd(p.id,variant.id,qty+1)} style={{width:22,height:22,background:C.off,border:"1px solid "+C.mist,cursor:"pointer",color:C.navy,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
                   </div>
-                  <div style={{fontSize:12,fontWeight:700,color:C.navy}}>{fmt((variant[tier]||0)*qty)}</div>
+                  <div style={{fontSize:12,fontWeight:700,color:C.navy}}>{hasPrice(variant[tier])?fmt(variant[tier]*qty):NO_PRICE_LABEL}</div>
                 </div>
               </div>
               <button onClick={()=>setCart(prev=>prev.filter(i=>!(i.p.id===p.id && i.variant.id===variant.id)))} style={{background:"none",border:"none",color:C.mist,cursor:"pointer",fontSize:18,alignSelf:"flex-start",lineHeight:1}}>x</button>
@@ -1588,11 +1601,11 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
             {/* Line subtotals */}
             <div style={{marginBottom:14}}>
               {cart.map(({p,variant,qty,tier})=>{
-                const up=variant[tier]||0;
+                const up=variant[tier];
                 return (
                   <div key={p.id+"-"+variant.id} style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.stone,padding:"4px 0",borderBottom:"1px solid "+C.mist}}>
                     <span style={{maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.n} {variant.s} x{qty}</span>
-                    <span style={{fontWeight:600,color:C.navy,flexShrink:0,marginLeft:8}}>{fmt(up*qty)}</span>
+                    <span style={{fontWeight:600,color:C.navy,flexShrink:0,marginLeft:8}}>{hasPrice(up)?fmt(up*qty):NO_PRICE_LABEL}</span>
                   </div>
                 );
               })}
@@ -1600,7 +1613,7 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
             {/* Subtotal */}
             <div style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.mist,fontSize:12,color:C.stone}}>
               <span>Subtotal ({units} units)</span>
-              <span style={{fontWeight:600,color:C.navy}}>{fmt(total)}</span>
+              <span style={{fontWeight:600,color:C.navy}}>{hasPrice(total)?fmt(total):NO_PRICE_LABEL}</span>
             </div>
             {/* Tax */}
             <div style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid "+C.mist,fontSize:12,color:C.stone}}>
@@ -1616,7 +1629,7 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
             <div style={{display:"flex",justifyContent:"space-between",padding:"10px 0",marginTop:2}}>
               <span style={{fontSize:15,fontFamily:"Georgia,serif",fontWeight:700,color:C.navy}}>Order Total</span>
               <div style={{textAlign:"right"}}>
-                <div style={{fontSize:18,fontWeight:800,color:C.navy}}>{fmt(total)}</div>
+                <div style={{fontSize:18,fontWeight:800,color:C.navy}}>{hasPrice(total)?fmt(total):NO_PRICE_LABEL}</div>
                 <div style={{fontSize:9,color:C.stone,marginTop:1}}>+ tax & shipping</div>
               </div>
             </div>
@@ -1624,11 +1637,11 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
             <div style={{padding:"10px 14px",background:C.off,border:"1px solid "+C.mist,marginBottom:12}}>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.stone,marginBottom:3}}>
                 <span>50% Deposit Required</span>
-                <span style={{fontWeight:700,color:C.navy}}>{fmt(total*0.5)}</span>
+                <span style={{fontWeight:700,color:C.navy}}>{hasPrice(total)?fmt(total*0.5):NO_PRICE_LABEL}</span>
               </div>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.stone}}>
                 <span>Balance Due on Completion of Manufacturing Prior to Shipping</span>
-                <span style={{fontWeight:700,color:C.navy}}>{fmt(total*0.5)}</span>
+                <span style={{fontWeight:700,color:C.navy}}>{hasPrice(total)?fmt(total*0.5):NO_PRICE_LABEL}</span>
               </div>
             </div>
             <div style={{padding:"7px 12px",background:C.navy,marginBottom:10,fontSize:9,color:C.gold,fontWeight:700,letterSpacing:1,textAlign:"center"}}>ACH · Debit Card · Zelle (Debit &amp; Zelle up to $2,500) — No Credit Cards</div>
