@@ -99,8 +99,14 @@ const TIERS = [
   {id:"T5",lbl:"1000+/SKU",  min:1000,max:null,grp:"wholesale"},
 ];
 
-function tierForQty(qty) {
-  const q = Math.max(10, qty || 10);
+// Default minimum order quantity for normal inventory; Custom Order Compounds
+// carry a separate, higher floor (see CUSTOM_MIN_QTY / minQtyFor below).
+const DEFAULT_MIN_QTY = 10;
+const CUSTOM_MIN_QTY = 100;
+const minQtyFor = item => (item && item.custom ? CUSTOM_MIN_QTY : DEFAULT_MIN_QTY);
+
+function tierForQty(qty, minQty = DEFAULT_MIN_QTY) {
+  const q = Math.max(minQty, qty || minQty);
   for (const t of TIERS) {
     if (q >= t.min && (t.max === null || q <= t.max)) return t.id;
   }
@@ -114,8 +120,32 @@ const fmt = n => n != null ? "$" + Number(n).toFixed(2) : "$0.00";
 const hasPrice = n => typeof n === "number" && Number.isFinite(n) && n > 0;
 const NO_PRICE_LABEL = "Pricing Available Upon Request";
 
+// Customer-facing catalog tabs. GLP and Blends are internal data categories
+// that read to customers simply as "Peptides"; Diluents stays out of the tab
+// bar entirely (still reachable via "All" and search) — see CATEGORY_DISPLAY.
+const CATS = ["All","Peptides","Bio Regulators","Sprays","Creams","Capsules","Custom Order Compounds"];
 
-const CATS = ["All","Peptides","GLP","Bio Regulators","Blends","Sprays","Topicals","Capsules","Diluents"];
+const CUSTOM_ORDER_LABEL = "Custom Order Compound";
+
+// Maps each internal product-data category to the label customers see.
+// This is a display-only mapping — it never changes the underlying `c`
+// value stored on a product row, so grouping, images, and search all
+// keep working against the real category untouched.
+const CATEGORY_DISPLAY = {
+  "Peptides": "Peptides",
+  "GLP": "Peptides",
+  "Blends": "Peptides",
+  "Bio Regulators": "Bio Regulators",
+  "Sprays": "Sprays",
+  "Topicals": "Creams",
+  "Capsules": "Capsules",
+  "Diluents": "Diluents",
+};
+
+function displayCategory(item) {
+  if (item && item.custom) return CUSTOM_ORDER_LABEL;
+  return (item && CATEGORY_DISPLAY[item.c]) || (item && item.c) || "";
+}
 
 const P = [
   {id:1, c:"Peptides",      n:"BPC-157",         s:"5mg",  R1:26,  R2:24.5,R3:23,  T1:21,  T2:16.5,T3:15,  T4:13.5,T5:12,  hot:1},
@@ -235,6 +265,7 @@ function groupProducts(flat) {
     }
     const grp = map.get(key);
     if (item.hot === 1) grp.hot = 1;
+    if (item.custom === 1) grp.custom = 1;
     grp.variants.push({ id: item.id, s: item.s, R1:item.R1, R2:item.R2, R3:item.R3, T1:item.T1, T2:item.T2, T3:item.T3, T4:item.T4, T5:item.T5 });
   }
   return Array.from(map.values());
@@ -358,9 +389,11 @@ function ProductVisual({ name, strength, cat }) {
 function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
   const [hov, setHov] = useState(false);
   const [varIdx, setVarIdx] = useState(0);
-  const [qty, setQty] = useState(10);
+  const isCustom = !!p.custom;
+  const minQty = minQtyFor(p);
+  const [qty, setQty] = useState(minQty);
   const variant = p.variants[varIdx];
-  const t = tierForQty(qty);
+  const t = tierForQty(qty, minQty);
   const price = variant[t] || 0;
   return (
     <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
@@ -368,10 +401,11 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
       <div style={{position:"relative",flexShrink:0,transform:hov?"scale(1.03)":"scale(1)",transition:"transform 0.35s ease",overflow:"hidden"}}>
         <ProductVisual name={p.n} strength={variant.s} cat={p.c}/>
         {p.hot===1 && <div style={{position:"absolute",top:9,left:9,background:C.navy,color:C.gold,fontSize:8,fontWeight:700,letterSpacing:2,textTransform:"uppercase",padding:"3px 8px",zIndex:2}}>Top Seller</div>}
+        {isCustom && <div style={{position:"absolute",top:9,right:9,background:C.navy,color:C.gold,fontSize:8,fontWeight:700,letterSpacing:2,textTransform:"uppercase",padding:"3px 8px",zIndex:2,border:"1px solid "+C.gold}}>Custom Order</div>}
         <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:C.gold,zIndex:2}}/>
       </div>
       <div style={{padding:"22px 20px 26px",flex:1,display:"flex",flexDirection:"column"}}>
-        <div style={{fontSize:8,letterSpacing:2.5,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:10}}>{p.c}</div>
+        <div style={{fontSize:8,letterSpacing:2.5,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:10}}>{displayCategory(p)}</div>
         <div style={{fontSize:16,fontWeight:700,color:C.navy,marginBottom:14,fontFamily:"Georgia,serif",lineHeight:1.3}}>{p.n}</div>
         {p.variants.length > 1 && (
           <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:14}}>
@@ -387,17 +421,9 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
           <div style={{fontSize:11,color:C.stone,marginBottom:14}}>{variant.s}</div>
         )}
         {partnerUnlocked ? (
-          <div style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:2,marginBottom:14}}>
-            {TIERS.map(tr=>{
-              const active = tr.id===t;
-              return (
-                <div key={tr.id} style={{textAlign:"center",padding:"3px 1px",background:active?"rgba(201,168,76,0.1)":"transparent",border:"1px solid "+(active?C.gold:C.mist)}}>
-                  <div style={{fontSize:7.5,color:active?C.navy:C.stone,fontWeight:active?700:400}}>
-                    {hasPrice(variant[tr.id])?fmt(variant[tr.id]):"—"}
-                  </div>
-                </div>
-              );
-            })}
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:8,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:6}}>Partner Pricing Unlocked</div>
+            <div style={{fontSize:11,color:C.stone,lineHeight:1.6}}>Pricing is calculated automatically for the quantity you select below.</div>
           </div>
         ) : (
           <div style={{marginBottom:14}}>
@@ -405,7 +431,7 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
               <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:9}}>
                 <div style={{fontSize:8,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700}}>Starting At</div>
                 <div style={{fontSize:15,fontWeight:800,color:C.navy}}>{fmt(variant.R1)}</div>
-                <div style={{fontSize:9,color:C.stone}}>/unit (10+ units)</div>
+                <div style={{fontSize:9,color:C.stone}}>/unit{!isCustom?` (${minQty}+ units)`:""}</div>
               </div>
             ) : (
               <div style={{fontSize:12,fontWeight:700,color:C.navy,marginBottom:9}}>{NO_PRICE_LABEL}</div>
@@ -418,7 +444,7 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
         <div style={{background:C.off,padding:"12px 14px",marginBottom:16,border:"1px solid "+C.mist}}>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
             <div style={{fontSize:8,color:C.stone,letterSpacing:1,textTransform:"uppercase",fontWeight:700}}>Units</div>
-            <input type="number" min="10" value={qty} onChange={e=>setQty(Math.max(10,parseInt(e.target.value)||10))}
+            <input type="number" min={minQty} value={qty} onChange={e=>setQty(Math.max(minQty,parseInt(e.target.value)||minQty))}
               style={{width:52,padding:"3px 6px",border:"1px solid "+C.mist,background:C.white,fontSize:11,color:C.navy,outline:"none",textAlign:"center"}}/>
           </div>
           {hasPrice(price) ? (
@@ -431,7 +457,7 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
           )}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:18}}>
-          {["Min. Order: 10 Units","COA Available"].map(f=>(
+          {(isCustom ? ["COA Available"] : [`Min. Order: ${minQty} Units`,"COA Available"]).map(f=>(
             <div key={f} style={{display:"flex",gap:7,alignItems:"center"}}>
               <div style={{width:4,height:4,borderRadius:"50%",background:C.green,flexShrink:0}}/>
               <div style={{fontSize:10,color:C.stone}}>{f}</div>
@@ -462,11 +488,11 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
 }
 
 // ── CATALOG PAGE ──────────────────────────────────────────────────────────────
-function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick }) {
-  const [cat, setCat] = useState("All");
+function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick, initialCategory }) {
+  const [cat, setCat] = useState(initialCategory || "All");
   const [srch, setSrch] = useState("");
   const [toast, setToast] = useState("");
-  const rows = GROUPED.filter(p=>(cat==="All"||p.c===cat)&&(!srch||p.n.toLowerCase().includes(srch.toLowerCase())||p.c.toLowerCase().includes(srch.toLowerCase())||p.variants.some(v=>v.s.toLowerCase().includes(srch.toLowerCase()))));
+  const rows = GROUPED.filter(p=>(cat==="All"||displayCategory(p)===cat)&&(!srch||p.n.toLowerCase().includes(srch.toLowerCase())||displayCategory(p).toLowerCase().includes(srch.toLowerCase())||p.variants.some(v=>v.s.toLowerCase().includes(srch.toLowerCase()))));
   const add = (p,variant,qty,tier) => {
     if (addToCart) addToCart(p,variant,qty,tier);
     setToast(p.n);
@@ -486,21 +512,6 @@ function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick }) {
         <div style={{background:"#EDE9DF",border:"1px solid "+C.mist,padding:"9px 14px",marginBottom:16,fontSize:10,color:"#6B5E4A",lineHeight:1.7}}>
           <strong style={{color:C.red}}>RUO ONLY.</strong> All compounds for legitimate research purposes only. Not FDA approved. Not for human or veterinary use.
         </div>
-        <div style={{marginBottom:16,background:C.white,border:"1px solid "+C.mist,padding:"12px 16px"}}>
-          <div style={{fontSize:9,letterSpacing:2,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:9}}>Pricing Tiers — Applied Automatically by Quantity</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            {["retail","wholesale"].map(grp=>(
-              <div key={grp}>
-                <div style={{fontSize:9,color:C.gold,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",marginBottom:5}}>{grp==="retail"?"Retail":"Wholesale"}</div>
-                <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                  {TIERS.filter(t=>t.grp===grp).map(t=>(
-                    <div key={t.id} style={{padding:"4px 9px",border:"1px solid "+C.mist,background:C.off,fontSize:9,color:C.stone}}>{t.lbl}</div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
         <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:9,alignItems:"center"}}>
           {CATS.map(c=>(
             <button key={c} onClick={()=>setCat(c)} className="btn-polish" style={{padding:"5px 12px",fontSize:10,fontWeight:600,cursor:"pointer",border:"1px solid "+(cat===c?C.navy:C.mist),background:cat===c?C.navy:"transparent",color:cat===c?C.white:C.stone,transition:"all 0.15s"}}>
@@ -510,7 +521,15 @@ function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick }) {
           <input placeholder="Search..." value={srch} onChange={e=>setSrch(e.target.value)}
             style={{marginLeft:"auto",padding:"5px 12px",border:"1px solid "+C.mist,fontSize:11,outline:"none",background:C.white,color:C.navy,minWidth:170}}/>
         </div>
-        <div style={{fontSize:10,color:C.stone,marginBottom:16}}>{rows.length} compounds — enter quantity, tier pricing applies automatically</div>
+        {cat==="Custom Order Compounds" && (
+          <div style={{marginBottom:16,background:C.white,border:"1px solid "+C.mist,padding:"14px 16px"}}>
+            <div style={{fontSize:9,letterSpacing:2,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:8}}>Custom Order Compounds</div>
+            <p style={{fontSize:11.5,color:C.stone,lineHeight:1.8,marginBottom:0}}>
+              Custom Order Compounds are available through our extended catalog and are produced to order rather than held in immediate stock. These compounds follow standard manufacturing and fulfillment timelines and require a minimum of 100 units per SKU. Pricing is calculated automatically based on the quantity you select.
+            </p>
+          </div>
+        )}
+        <div style={{fontSize:10,color:C.stone,marginBottom:16}}>{rows.length} compounds — enter quantity, pricing is calculated automatically</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:1,background:C.mist}}>
           {rows.map(p=><ProdCard key={p.id} p={p} onAdd={add} onOpenCart={openCart} partnerUnlocked={partnerUnlocked} onUnlockClick={onUnlockClick}/>)}
         </div>
