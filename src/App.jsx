@@ -8,6 +8,67 @@ import { trackEvent } from "./lib/analytics";
 
 const PARTNER_ACCESS_KEY = "wsp_partner_access";
 
+// Web3Forms access key. Replace VITE_WEB3FORMS_ACCESS_KEY in your environment
+// (.env / Vercel project settings) with a real key registered to
+// support@wholesaleuspeptides.com before launch — see .env.example.
+const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+
+const EMPTY_ORDER_CONTACT = { name: "", company: "", email: "", phone: "" };
+
+const cartInputStyle = {
+  width: "100%",
+  padding: "8px 10px",
+  border: "1px solid #D4CFC6",
+  background: "#fff",
+  fontSize: 11,
+  color: "#05111F",
+  outline: "none",
+  boxSizing: "border-box",
+  fontFamily: "'Inter',sans-serif",
+};
+
+// Builds the full order payload (customer contact + every line item's
+// product, strength, quantity, applied tier, unit price, and line total)
+// and submits it through the same Web3Forms endpoint the Consultation and
+// Quote flows already use. Throws on any non-success response so the caller
+// can keep the cart/contact info intact and surface a retryable error.
+async function submitOrderRequest(cart, total, units, contact) {
+  const orderItems = cart.map(({ p, variant, qty, tier }) => {
+    const unitPrice = variant[tier] || 0;
+    const lineTotal = unitPrice * qty;
+    return `${p.n} — ${variant.s} — Qty ${qty} — Tier ${tier} — ${fmt(unitPrice)}/unit — Line Total ${fmt(lineTotal)}`;
+  }).join("\n");
+
+  const res = await fetch("https://api.web3forms.com/submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({
+      access_key: WEB3FORMS_ACCESS_KEY,
+      subject: "New Wholesale Order Submission",
+      from_name: "WholesaleUSPeptides.com — Wholesale Order",
+      email: "support@wholesaleuspeptides.com",
+      request_type: "New Wholesale Order Submission",
+      name: contact.name,
+      company: contact.company,
+      business_email: contact.email,
+      phone: contact.phone || "Not provided",
+      total_units: units,
+      order_items: orderItems,
+      order_total: fmt(total),
+      deposit_due: fmt(total * 0.5),
+      balance_due: fmt(total * 0.5),
+    }),
+  });
+
+  let data = null;
+  try { data = await res.json(); } catch { /* non-JSON response falls through to the failure branch below */ }
+
+  if (!res.ok || !data || data.success !== true) {
+    throw new Error((data && data.message) || "Web3Forms submission failed");
+  }
+  return data;
+}
+
 const C = {
   navy:"#05111F", navy2:"#0A1E30", gold:"#C9A84C",
   white:"#FFFFFF", off:"#F7F6F3", mist:"#D4CFC6",
@@ -1613,13 +1674,37 @@ function Gate({ ok }) {
 function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
   const total = cart.reduce((s,i) => s + (i.variant[i.tier]||0)*i.qty, 0);
   const units = cart.reduce((s,i) => s + i.qty, 0);
-  const [requested, setRequested] = useState(false);
-  useEffect(() => { setRequested(false); }, [cart]);
-  const requestQuote = () => {
-    if (requested) return;
-    setRequested(true);
-    trackEvent("quote_requested", { units, value: total });
+  const [contact, setContact] = useState(EMPTY_ORDER_CONTACT);
+  const [submitting, setSubmitting] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  // A cart change means this is a new/edited order — clear any prior
+  // submitted/error state so the customer can submit again, but keep
+  // whatever contact info they already entered.
+  useEffect(() => { setSent(false); setSubmitError(""); }, [cart]);
+
+  const setContactField = (k, v) => setContact(c => ({ ...c, [k]: v }));
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email);
+  const contactComplete = contact.name.trim() && contact.company.trim() && emailValid;
+  const canSubmit = contactComplete && !submitting && !sent && cart.length > 0;
+
+  const submitOrder = async () => {
+    if (!canSubmit) return;
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      await submitOrderRequest(cart, total, units, contact);
+      setSent(true);
+      trackEvent("quote_requested", { units, value: total });
+    } catch (err) {
+      // Cart and contact info are left exactly as entered so the customer
+      // can retry without losing their order.
+      setSubmitError("We couldn't submit your order. Please check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
+
   const upd = (pid, vid, qty) => {
     if (qty < 1) { setCart(p => p.filter(i => !(i.p.id===pid && i.variant.id===vid))); return; }
     // Defense-in-depth: block +/- from ever pushing a line into a state
@@ -1627,7 +1712,9 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
     // instead of standard checkout.
     const item = cart.find(i => i.p.id===pid && i.variant.id===vid);
     if (item && !isPurchasable(item.variant, qty)) return;
-    setCart(p => p.map(i => (i.p.id===pid && i.variant.id===vid) ? {...i,qty} : i));
+    // The tier/unit price must always be recomputed from the new quantity —
+    // never left at whatever tier applied when the line was first added.
+    setCart(p => p.map(i => (i.p.id===pid && i.variant.id===vid) ? {...i,qty,tier:tierForQty(qty)} : i));
   };
   return (
     <>
@@ -1755,8 +1842,29 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
               </div>
             </div>
             <div style={{padding:"7px 12px",background:C.navy,marginBottom:10,fontSize:9,color:C.gold,fontWeight:700,letterSpacing:1,textAlign:"center"}}>ACH · Debit Card · Zelle (Debit &amp; Zelle up to $2,500) — No Credit Cards</div>
-            <button onClick={requestQuote} disabled={requested} style={{width:"100%",padding:"12px 0",background:requested?"#8A8680":C.navy,border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:requested?"not-allowed":"pointer",marginBottom:7}}>
-              {requested ? "Request Submitted" : "Submit For Review"}
+
+            {!sent && (
+              <div style={{marginBottom:12}}>
+                <div style={{fontSize:9,letterSpacing:1.5,fontWeight:700,color:C.navy,textTransform:"uppercase",marginBottom:8}}>Your Information</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+                  <input placeholder="Full Name" value={contact.name} onChange={e=>setContactField("name",e.target.value)} style={cartInputStyle} disabled={submitting}/>
+                  <input placeholder="Company Name" value={contact.company} onChange={e=>setContactField("company",e.target.value)} style={cartInputStyle} disabled={submitting}/>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  <input type="email" placeholder="Business Email" value={contact.email} onChange={e=>setContactField("email",e.target.value)} style={cartInputStyle} disabled={submitting}/>
+                  <input placeholder="Phone (optional)" value={contact.phone} onChange={e=>setContactField("phone",e.target.value)} style={cartInputStyle} disabled={submitting}/>
+                </div>
+              </div>
+            )}
+
+            {submitError && (
+              <div style={{padding:"9px 12px",background:"rgba(139,46,46,0.08)",border:"1px solid "+C.red,color:C.red,fontSize:10,lineHeight:1.6,marginBottom:10}}>
+                {submitError} Your order and contact information have been kept — just click submit again.
+              </div>
+            )}
+
+            <button onClick={submitOrder} disabled={!canSubmit} style={{width:"100%",padding:"12px 0",background:sent?"#8A8680":(canSubmit?C.navy:"#B9B4A8"),border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:canSubmit?"pointer":"not-allowed",marginBottom:7}}>
+              {sent ? "Request Submitted" : submitting ? "Submitting..." : "Submit For Review"}
             </button>
             <div style={{fontSize:9,color:C.stone,textAlign:"center",lineHeight:1.6,marginBottom:8}}>Orders are reviewed before fulfillment. Payment initiation does not guarantee approval. Business information, inventory availability, and compliance requirements are verified prior to processing.</div>
             <div style={{fontSize:9,color:C.stone,textAlign:"center",lineHeight:1.6}}>Tax and shipping calculated before final invoice.</div>
@@ -1779,6 +1887,7 @@ export default function App() {
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [consultationRequest, setConsultationRequest] = useState(null);
+  const [navOpen, setNavOpen] = useState(false);
   const partnerUnlocked = !!partnerAccess?.unlocked;
   const unlockPartnerAccess = (lead) => {
     const record = { unlocked: true, lead, unlockedAt: new Date().toISOString() };
@@ -1789,6 +1898,7 @@ export default function App() {
 
   const setPage = (id) => {
     setPageState(id);
+    setNavOpen(false);
     const path = (PAGES[id] || PAGES.home).path;
     if (window.location.pathname !== path) window.history.pushState({page:id}, "", path);
   };
@@ -1823,7 +1933,7 @@ export default function App() {
 
   if (gated) return <Gate ok={()=>setGated(false)}/>;
 
-  const addToCart = (p, variant, qty, tier) => {
+  const addToCart = (p, variant, qty) => {
     // Defense-in-depth: a Custom Production variant or a quantity that
     // crosses the large-volume threshold must never reach the cart, even if
     // this is ever called from somewhere other than the gated "Add to
@@ -1834,9 +1944,12 @@ export default function App() {
       if (ex) {
         const mergedQty = ex.qty + qty;
         if (!isPurchasable(variant, mergedQty)) return prev;
-        return prev.map(i=>(i.p.id===p.id && i.variant.id===variant.id)?{...i,qty:mergedQty}:i);
+        // The tier/unit price must always be recomputed from the resulting
+        // quantity — never carried over from whichever tier applied to the
+        // smaller quantity already in the cart.
+        return prev.map(i=>(i.p.id===p.id && i.variant.id===variant.id)?{...i,qty:mergedQty,tier:tierForQty(mergedQty)}:i);
       }
-      return [...prev,{p,variant,qty,tier}];
+      return [...prev,{p,variant,qty,tier:tierForQty(qty)}];
     });
     setCopen(true);
   };
@@ -1864,9 +1977,27 @@ export default function App() {
             </button>
           ))}
         </div>
-        <button onClick={()=>setCopen(true)} style={{background:C.gold,border:"none",color:C.navy,padding:"9px 18px",fontSize:10,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",flexShrink:0}}>
-          {count>0?"Order ("+count+")":"Request Pricing"}
-        </button>
+        <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+          <button className="nav-mobile-toggle" onClick={()=>setNavOpen(o=>!o)} aria-label={navOpen?"Close navigation menu":"Open navigation menu"} aria-expanded={navOpen} style={{background:"none",border:"1px solid rgba(201,168,76,0.4)",color:C.gold,fontSize:16,width:36,height:36,cursor:"pointer",lineHeight:1}}>
+            {navOpen ? "×" : "☰"}
+          </button>
+          <button onClick={()=>setCopen(true)} style={{background:C.gold,border:"none",color:C.navy,padding:"9px 18px",fontSize:10,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",flexShrink:0}}>
+            {count>0?"Order ("+count+")":"Request Pricing"}
+          </button>
+        </div>
+        {navOpen && (
+          // Anchored to the nav's own bottom edge (top:100%) rather than a
+          // fixed viewport offset, so it lands correctly whether the sticky
+          // nav is still in normal flow below the announcement bar or
+          // already stuck to the top of the viewport after scrolling.
+          <div className="nav-mobile-panel" style={{position:"absolute",top:"100%",left:0,right:0,background:C.navy,borderBottom:"1px solid rgba(201,168,76,0.25)",boxShadow:"0 12px 24px rgba(5,17,31,0.3)",display:"flex",flexDirection:"column",padding:"6px 0"}}>
+            {[["home","Home"],["catalog","Catalog"],["wl","White Label"],["about","Standards"],["coa","Batch Verification"]].map(([id,l])=>(
+              <button key={id} onClick={()=>setPage(id)} style={{background:"none",border:"none",padding:"15px 24px",textAlign:"left",fontSize:12,fontWeight:600,color:page===id?C.gold:"rgba(255,255,255,0.7)",borderBottom:"1px solid rgba(255,255,255,0.06)",cursor:"pointer"}}>
+                {l}
+              </button>
+            ))}
+          </div>
+        )}
       </nav>
       {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><WhoWeServe/><UnlockPartnerCTA partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} setPage={setPage}/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage} onContactClick={()=>setContactModalOpen(true)}/></>}
       {page==="catalog" && <Catalog addToCart={addToCart} openCart={()=>setCopen(true)} partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} onRequestConsultation={(type,ctx)=>setConsultationRequest({type,...ctx})}/>}

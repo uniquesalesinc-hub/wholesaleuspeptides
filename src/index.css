@@ -321,9 +321,11 @@ html, body {
 }
 
 /* ── NAV — mobile collapse ──────────────────────────────────────────────────── */
+.nav-mobile-toggle { display: none; }
 @media (max-width: 768px) {
   .site-nav { padding: 0 16px !important; }
   .nav-links { display: none !important; }
+  .nav-mobile-toggle { display: flex !important; align-items: center; justify-content: center; }
 }
 
 /* ── TRUST BANNER — pillar grid ─────────────────────────────────────────────── */
