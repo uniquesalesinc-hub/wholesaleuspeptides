@@ -3,6 +3,7 @@ import TrustBanner from "./components/TrustBanner.jsx";
 import PartnerAccessModal from "./components/PartnerAccessModal.jsx";
 import ContactModal from "./components/ContactModal.jsx";
 import QuoteRequestModal from "./components/QuoteRequestModal.jsx";
+import ConsultationModal from "./components/ConsultationModal.jsx";
 import { trackEvent } from "./lib/analytics";
 
 const PARTNER_ACCESS_KEY = "wsp_partner_access";
@@ -99,11 +100,7 @@ const TIERS = [
   {id:"T5",lbl:"1000+/SKU",  min:1000,max:null,grp:"wholesale"},
 ];
 
-// Default minimum order quantity for normal inventory; Custom Order Compounds
-// carry a separate, higher floor (see CUSTOM_MIN_QTY / minQtyFor below).
 const DEFAULT_MIN_QTY = 10;
-const CUSTOM_MIN_QTY = 100;
-const minQtyFor = item => (item && item.custom ? CUSTOM_MIN_QTY : DEFAULT_MIN_QTY);
 
 function tierForQty(qty, minQty = DEFAULT_MIN_QTY) {
   const q = Math.max(minQty, qty || minQty);
@@ -123,9 +120,9 @@ const NO_PRICE_LABEL = "Pricing Available Upon Request";
 // Customer-facing catalog tabs. GLP and Blends are internal data categories
 // that read to customers simply as "Peptides"; Diluents stays out of the tab
 // bar entirely (still reachable via "All" and search) — see CATEGORY_DISPLAY.
-const CATS = ["All","Peptides","Bio Regulators","Sprays","Creams","Capsules","Custom Order Compounds"];
-
-const CUSTOM_ORDER_LABEL = "Custom Order Compound";
+// Every product stays in its natural category — availability is handled at
+// the variant level (see fulfillmentStatus below), not by a separate category.
+const CATS = ["All","Peptides","Bio Regulators","Sprays","Creams","Capsules"];
 
 // Maps each internal product-data category to the label customers see.
 // This is a display-only mapping — it never changes the underlying `c`
@@ -143,9 +140,58 @@ const CATEGORY_DISPLAY = {
 };
 
 function displayCategory(item) {
-  if (item && item.custom) return CUSTOM_ORDER_LABEL;
   return (item && CATEGORY_DISPLAY[item.c]) || (item && item.c) || "";
 }
+
+// ── VARIANT-LEVEL STOCK / CUSTOM PRODUCTION AVAILABILITY ──────────────────────
+// Every SKU variant (exact product + strength) carries its own fulfillment
+// status — never inferred from sibling strengths of the same product. Until
+// the verified LA Peptides stocked matrix is entered, no row carries a
+// `stockStatus` field, so every variant falls through to "in_stock" below,
+// preserving today's purchasing behavior exactly. Once the matrix is entered,
+// it becomes the sole source of truth for IN STOCK; anything not on it
+// resolves to CUSTOM PRODUCTION (if lab-capable) or UNAVAILABLE.
+const LARGE_VOLUME_THRESHOLD = 300;
+
+function fulfillmentStatus(variant) {
+  if (!variant || !variant.stockStatus || variant.stockStatus === "in_stock") return "in_stock";
+  return variant.customProductionAvailable ? "custom_production" : "unavailable";
+}
+
+// Combines stock status with the requested quantity into the single state
+// that drives the UI: badge, message, pricing visibility, and CTA.
+function fulfillmentState(variant, qty) {
+  const status = fulfillmentStatus(variant);
+  if (status !== "in_stock") return status;
+  return (qty || 0) >= LARGE_VOLUME_THRESHOLD ? "large_volume" : "in_stock";
+}
+
+const isPurchasable = (variant, qty) => fulfillmentState(variant, qty) === "in_stock";
+
+const FULFILLMENT_META = {
+  in_stock: { badge: "In Stock" },
+  large_volume: {
+    badge: "Large-Volume Review",
+    message: "Orders of 300+ units per SKU require confirmation from our wholesale team before they can be accepted — including lead time, inventory/production availability, payment, testing expectations, packaging/labeling, shipping, and delivery expectations.",
+    cta: "Request Large-Volume Order",
+  },
+  custom_production: {
+    badge: "Custom Production",
+    message: "This strength is available through our custom production program and is not maintained as ready-to-ship inventory. Production lead time, testing requirements, quantity, payment and fulfillment expectations must be confirmed with our wholesale team before the order is accepted.",
+    cta: "Request Custom Production",
+  },
+  unavailable: {
+    badge: "Unavailable",
+    message: "This strength is not currently available.",
+  },
+};
+
+const BADGE_STYLE = {
+  in_stock:          { background:"rgba(46,107,74,0.08)", border:"1px solid "+C.green, color:C.green },
+  large_volume:      { background:"rgba(201,168,76,0.1)", border:"1px solid "+C.gold,  color:C.navy },
+  custom_production: { background:C.navy,                 border:"1px solid "+C.gold,  color:C.gold },
+  unavailable:       { background:C.off,                  border:"1px solid "+C.mist,  color:C.stone },
+};
 
 const P = [
   {id:1, c:"Peptides",      n:"BPC-157",         s:"5mg",  R1:26,  R2:24.5,R3:23,  T1:21,  T2:16.5,T3:15,  T4:13.5,T5:12,  hot:1},
@@ -267,8 +313,7 @@ function groupProducts(flat) {
     }
     const grp = map.get(key);
     if (item.hot === 1) grp.hot = 1;
-    if (item.custom === 1) grp.custom = 1;
-    grp.variants.push({ id: item.id, s: item.s, R1:item.R1, R2:item.R2, R3:item.R3, T1:item.T1, T2:item.T2, T3:item.T3, T4:item.T4, T5:item.T5 });
+    grp.variants.push({ id: item.id, s: item.s, R1:item.R1, R2:item.R2, R3:item.R3, T1:item.T1, T2:item.T2, T3:item.T3, T4:item.T4, T5:item.T5, stockStatus: item.stockStatus, customProductionAvailable: item.customProductionAvailable });
   }
   return Array.from(map.values());
 }
@@ -388,22 +433,22 @@ function ProductVisual({ name, strength, cat }) {
 
 
 // ── PRODUCT CARD ──────────────────────────────────────────────────────────────
-function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
+function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequestConsultation }) {
   const [hov, setHov] = useState(false);
   const [varIdx, setVarIdx] = useState(0);
-  const isCustom = !!p.custom;
-  const minQty = minQtyFor(p);
-  const [qty, setQty] = useState(minQty);
+  const [qty, setQty] = useState(DEFAULT_MIN_QTY);
   const variant = p.variants[varIdx];
-  const t = tierForQty(qty, minQty);
+  const fState = fulfillmentState(variant, qty);
+  const meta = FULFILLMENT_META[fState];
+  const t = tierForQty(qty);
   const price = variant[t] || 0;
+  const showPricing = fState === "in_stock" || fState === "large_volume";
   return (
     <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{background:C.white,border:"1px solid "+(hov?C.gold:C.mist),display:"flex",flexDirection:"column",transition:"all 0.25s ease",boxShadow:hov?"0 12px 32px rgba(5,17,31,0.16)":"0 2px 8px rgba(5,17,31,0.04)",transform:hov?"translateY(-4px)":"translateY(0)"}}>
       <div style={{position:"relative",flexShrink:0,transform:hov?"scale(1.03)":"scale(1)",transition:"transform 0.35s ease",overflow:"hidden"}}>
         <ProductVisual name={p.n} strength={variant.s} cat={p.c}/>
         {p.hot===1 && <div style={{position:"absolute",top:9,left:9,background:C.navy,color:C.gold,fontSize:8,fontWeight:700,letterSpacing:2,textTransform:"uppercase",padding:"3px 8px",zIndex:2}}>Top Seller</div>}
-        {isCustom && <div style={{position:"absolute",top:9,right:9,background:C.navy,color:C.gold,fontSize:8,fontWeight:700,letterSpacing:2,textTransform:"uppercase",padding:"3px 8px",zIndex:2,border:"1px solid "+C.gold}}>Custom Order</div>}
         <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:C.gold,zIndex:2}}/>
       </div>
       <div style={{padding:"22px 20px 26px",flex:1,display:"flex",flexDirection:"column"}}>
@@ -411,18 +456,24 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
         <div style={{fontSize:16,fontWeight:700,color:C.navy,marginBottom:14,fontFamily:"Georgia,serif",lineHeight:1.3}}>{p.n}</div>
         {p.variants.length > 1 && (
           <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:14}}>
-            {p.variants.map((v,i)=>(
-              <button key={v.id} onClick={()=>setVarIdx(i)} className="btn-polish"
-                style={{padding:"3px 9px",fontSize:10,fontWeight:600,cursor:"pointer",border:"1px solid "+(i===varIdx?C.navy:C.mist),background:i===varIdx?C.navy:"transparent",color:i===varIdx?C.white:C.stone,transition:"all 0.15s"}}>
-                {v.s}
-              </button>
-            ))}
+            {p.variants.map((v,i)=>{
+              const vState = fulfillmentState(v, qty);
+              return (
+                <button key={v.id} onClick={()=>setVarIdx(i)} className="btn-polish"
+                  style={{padding:"3px 9px",fontSize:10,fontWeight:600,cursor:"pointer",border:"1px solid "+(i===varIdx?C.navy:C.mist),background:i===varIdx?C.navy:"transparent",color:i===varIdx?C.white:C.stone,transition:"all 0.15s"}}>
+                  {v.s}{vState==="custom_production"?" *":vState==="unavailable"?" ×":""}
+                </button>
+              );
+            })}
           </div>
         )}
         {p.variants.length === 1 && (
           <div style={{fontSize:11,color:C.stone,marginBottom:14}}>{variant.s}</div>
         )}
-        {partnerUnlocked ? (
+        <div style={{marginBottom:14}}>
+          <span style={{display:"inline-block",padding:"3px 9px",fontSize:8,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",...BADGE_STYLE[fState]}}>{meta.badge}</span>
+        </div>
+        {showPricing && (partnerUnlocked ? (
           <div style={{marginBottom:14}}>
             <div style={{fontSize:8,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:6}}>Partner Pricing Unlocked</div>
             <div style={{fontSize:11,color:C.stone,lineHeight:1.6}}>Pricing is calculated automatically for the quantity you select below.</div>
@@ -433,7 +484,7 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
               <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:9}}>
                 <div style={{fontSize:8,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700}}>Starting At</div>
                 <div style={{fontSize:15,fontWeight:800,color:C.navy}}>{fmt(variant.R1)}</div>
-                <div style={{fontSize:9,color:C.stone}}>/unit{!isCustom?` (${minQty}+ units)`:""}</div>
+                <div style={{fontSize:9,color:C.stone}}>/unit ({DEFAULT_MIN_QTY}+ units)</div>
               </div>
             ) : (
               <div style={{fontSize:12,fontWeight:700,color:C.navy,marginBottom:9}}>{NO_PRICE_LABEL}</div>
@@ -442,24 +493,28 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
               Unlock Partner Pricing
             </button>
           </div>
-        )}
+        ))}
         <div style={{background:C.off,padding:"12px 14px",marginBottom:16,border:"1px solid "+C.mist}}>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
             <div style={{fontSize:8,color:C.stone,letterSpacing:1,textTransform:"uppercase",fontWeight:700}}>Units</div>
-            <input type="number" min={minQty} value={qty} onChange={e=>setQty(Math.max(minQty,parseInt(e.target.value)||minQty))}
+            <input type="number" min={DEFAULT_MIN_QTY} value={qty} onChange={e=>setQty(Math.max(DEFAULT_MIN_QTY,parseInt(e.target.value)||DEFAULT_MIN_QTY))}
               style={{width:52,padding:"3px 6px",border:"1px solid "+C.mist,background:C.white,fontSize:11,color:C.navy,outline:"none",textAlign:"center"}}/>
           </div>
-          {hasPrice(price) ? (
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
-              <div style={{fontSize:9,color:C.stone}}>{fmt(price)}/unit</div>
-              <div style={{fontSize:13,fontWeight:800,color:C.navy}}>{fmt(price*qty)}</div>
-            </div>
+          {fState === "in_stock" ? (
+            hasPrice(price) ? (
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
+                <div style={{fontSize:9,color:C.stone}}>{fmt(price)}/unit</div>
+                <div style={{fontSize:13,fontWeight:800,color:C.navy}}>{fmt(price*qty)}</div>
+              </div>
+            ) : (
+              <div style={{fontSize:11,fontWeight:700,color:C.stone}}>{NO_PRICE_LABEL}</div>
+            )
           ) : (
-            <div style={{fontSize:11,fontWeight:700,color:C.stone}}>{NO_PRICE_LABEL}</div>
+            <div style={{fontSize:10.5,color:C.stone,lineHeight:1.6}}>{meta.message}</div>
           )}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:18}}>
-          {(isCustom ? ["COA Available"] : [`Min. Order: ${minQty} Units`,"COA Available"]).map(f=>(
+          {(fState === "in_stock" || fState === "large_volume" ? [`Min. Order: ${DEFAULT_MIN_QTY} Units`,"COA Available"] : ["COA Available"]).map(f=>(
             <div key={f} style={{display:"flex",gap:7,alignItems:"center"}}>
               <div style={{width:4,height:4,borderRadius:"50%",background:C.green,flexShrink:0}}/>
               <div style={{fontSize:10,color:C.stone}}>{f}</div>
@@ -481,16 +536,28 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
           <div style={{fontSize:9,fontWeight:700,color:C.navy,textTransform:"uppercase",letterSpacing:1.5,marginBottom:5}}>Qualified Business Buyers Only</div>
           <div style={{fontSize:9.5,color:C.stone,lineHeight:1.6}}>Supplied to wellness brands, research organizations, distribution partners, and private label brands.</div>
         </div>
-        <button onClick={()=>onAdd(p,variant,qty,t)} className="btn-polish" style={{padding:"9px 0",background:hov?C.navy:"transparent",border:"1px solid "+C.navy,color:hov?C.white:C.navy,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.25s ease"}}>
-          Add to Order
-        </button>
+        {fState === "in_stock" && (
+          <button onClick={()=>onAdd(p,variant,qty,t)} className="btn-polish" style={{padding:"9px 0",background:hov?C.navy:"transparent",border:"1px solid "+C.navy,color:hov?C.white:C.navy,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.25s ease"}}>
+            Add to Order
+          </button>
+        )}
+        {(fState === "large_volume" || fState === "custom_production") && (
+          <button onClick={()=>onRequestConsultation(fState, {productName:p.n, strength:variant.s, qty})} className="btn-polish" style={{padding:"9px 0",background:C.navy,border:"1px solid "+C.navy,color:C.gold,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.25s ease"}}>
+            {meta.cta}
+          </button>
+        )}
+        {fState === "unavailable" && (
+          <button disabled className="btn-polish" style={{padding:"9px 0",background:C.off,border:"1px solid "+C.mist,color:C.stone,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"not-allowed"}}>
+            Currently Unavailable
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
 // ── CATALOG PAGE ──────────────────────────────────────────────────────────────
-function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick, initialCategory }) {
+function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick, initialCategory, onRequestConsultation }) {
   const [cat, setCat] = useState(initialCategory || "All");
   const [srch, setSrch] = useState("");
   const [toast, setToast] = useState("");
@@ -523,17 +590,9 @@ function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick, initialC
           <input placeholder="Search..." value={srch} onChange={e=>setSrch(e.target.value)}
             style={{marginLeft:"auto",padding:"5px 12px",border:"1px solid "+C.mist,fontSize:11,outline:"none",background:C.white,color:C.navy,minWidth:170}}/>
         </div>
-        {cat==="Custom Order Compounds" && (
-          <div style={{marginBottom:16,background:C.white,border:"1px solid "+C.mist,padding:"14px 16px"}}>
-            <div style={{fontSize:9,letterSpacing:2,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:8}}>Custom Order Compounds</div>
-            <p style={{fontSize:11.5,color:C.stone,lineHeight:1.8,marginBottom:0}}>
-              Custom Order Compounds are available through our extended catalog and are produced to order rather than held in immediate stock. These compounds follow standard manufacturing and fulfillment timelines and require a minimum of 100 units per SKU. Pricing is calculated automatically based on the quantity you select.
-            </p>
-          </div>
-        )}
         <div style={{fontSize:10,color:C.stone,marginBottom:16}}>{rows.length} compounds — enter quantity, pricing is calculated automatically</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:1,background:C.mist}}>
-          {rows.map(p=><ProdCard key={p.id} p={p} onAdd={add} onOpenCart={openCart} partnerUnlocked={partnerUnlocked} onUnlockClick={onUnlockClick}/>)}
+          {rows.map(p=><ProdCard key={p.id} p={p} onAdd={add} onOpenCart={openCart} partnerUnlocked={partnerUnlocked} onUnlockClick={onUnlockClick} onRequestConsultation={onRequestConsultation}/>)}
         </div>
       </div>
     </div>
@@ -1538,8 +1597,13 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
     trackEvent("quote_requested", { units, value: total });
   };
   const upd = (pid, vid, qty) => {
-    if (qty < 1) setCart(p => p.filter(i => !(i.p.id===pid && i.variant.id===vid)));
-    else setCart(p => p.map(i => (i.p.id===pid && i.variant.id===vid) ? {...i,qty} : i));
+    if (qty < 1) { setCart(p => p.filter(i => !(i.p.id===pid && i.variant.id===vid))); return; }
+    // Defense-in-depth: block +/- from ever pushing a line into a state
+    // (large-volume threshold, custom production) that requires consultation
+    // instead of standard checkout.
+    const item = cart.find(i => i.p.id===pid && i.variant.id===vid);
+    if (item && !isPurchasable(item.variant, qty)) return;
+    setCart(p => p.map(i => (i.p.id===pid && i.variant.id===vid) ? {...i,qty} : i));
   };
   return (
     <>
@@ -1690,6 +1754,7 @@ export default function App() {
   const [partnerModalOpen, setPartnerModalOpen] = useState(false);
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [consultationRequest, setConsultationRequest] = useState(null);
   const partnerUnlocked = !!partnerAccess?.unlocked;
   const unlockPartnerAccess = (lead) => {
     const record = { unlocked: true, lead, unlockedAt: new Date().toISOString() };
@@ -1735,9 +1800,18 @@ export default function App() {
   if (gated) return <Gate ok={()=>setGated(false)}/>;
 
   const addToCart = (p, variant, qty, tier) => {
+    // Defense-in-depth: a Custom Production variant or a quantity that
+    // crosses the large-volume threshold must never reach the cart, even if
+    // this is ever called from somewhere other than the gated "Add to
+    // Order" button (which already only renders when isPurchasable).
+    if (!isPurchasable(variant, qty)) return;
     setCart(prev => {
       const ex = prev.find(i=>i.p.id===p.id && i.variant.id===variant.id);
-      if (ex) return prev.map(i=>(i.p.id===p.id && i.variant.id===variant.id)?{...i,qty:i.qty+qty}:i);
+      if (ex) {
+        const mergedQty = ex.qty + qty;
+        if (!isPurchasable(variant, mergedQty)) return prev;
+        return prev.map(i=>(i.p.id===p.id && i.variant.id===variant.id)?{...i,qty:mergedQty}:i);
+      }
       return [...prev,{p,variant,qty,tier}];
     });
     setCopen(true);
@@ -1749,6 +1823,7 @@ export default function App() {
       <PartnerAccessModal open={partnerModalOpen} onClose={()=>setPartnerModalOpen(false)} unlocked={partnerUnlocked} onUnlock={unlockPartnerAccess} setPage={setPage}/>
       <ContactModal open={contactModalOpen} onClose={()=>setContactModalOpen(false)}/>
       <QuoteRequestModal open={quoteModalOpen} onClose={()=>setQuoteModalOpen(false)}/>
+      <ConsultationModal open={!!consultationRequest} onClose={()=>setConsultationRequest(null)} context={consultationRequest}/>
       <PersistentQuoteCTA onClick={()=>setQuoteModalOpen(true)}/>
       <div style={{background:C.navy2,color:C.gold,textAlign:"center",padding:"9px",fontSize:9,letterSpacing:2.5,fontWeight:600,textTransform:"uppercase"}}>
         Wholesale Manufacturing — American Manufacturing — Independent Testing — RUO Only
@@ -1770,7 +1845,7 @@ export default function App() {
         </button>
       </nav>
       {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><WhoWeServe/><UnlockPartnerCTA partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} setPage={setPage}/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage} onContactClick={()=>setContactModalOpen(true)}/></>}
-      {page==="catalog" && <Catalog addToCart={addToCart} openCart={()=>setCopen(true)} partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)}/>}
+      {page==="catalog" && <Catalog addToCart={addToCart} openCart={()=>setCopen(true)} partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} onRequestConsultation={(type,ctx)=>setConsultationRequest({type,...ctx})}/>}
       {page==="wl"      && <WLPage setPage={setPage}/>}
       {page==="about"   && <AboutPage/>}
       {page==="coa"     && <COAPage/>}
