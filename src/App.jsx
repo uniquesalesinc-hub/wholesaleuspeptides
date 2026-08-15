@@ -3,9 +3,71 @@ import TrustBanner from "./components/TrustBanner.jsx";
 import PartnerAccessModal from "./components/PartnerAccessModal.jsx";
 import ContactModal from "./components/ContactModal.jsx";
 import QuoteRequestModal from "./components/QuoteRequestModal.jsx";
+import ConsultationModal from "./components/ConsultationModal.jsx";
 import { trackEvent } from "./lib/analytics";
 
 const PARTNER_ACCESS_KEY = "wsp_partner_access";
+
+// Web3Forms access key. Replace VITE_WEB3FORMS_ACCESS_KEY in your environment
+// (.env / Vercel project settings) with a real key registered to
+// support@wholesaleuspeptides.com before launch — see .env.example.
+const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+
+const EMPTY_ORDER_CONTACT = { name: "", company: "", email: "", phone: "" };
+
+const cartInputStyle = {
+  width: "100%",
+  padding: "8px 10px",
+  border: "1px solid #D4CFC6",
+  background: "#fff",
+  fontSize: 11,
+  color: "#05111F",
+  outline: "none",
+  boxSizing: "border-box",
+  fontFamily: "'Inter',sans-serif",
+};
+
+// Builds the full order payload (customer contact + every line item's
+// product, strength, quantity, applied tier, unit price, and line total)
+// and submits it through the same Web3Forms endpoint the Consultation and
+// Quote flows already use. Throws on any non-success response so the caller
+// can keep the cart/contact info intact and surface a retryable error.
+async function submitOrderRequest(cart, total, units, contact) {
+  const orderItems = cart.map(({ p, variant, qty, tier }) => {
+    const unitPrice = variant[tier] || 0;
+    const lineTotal = unitPrice * qty;
+    return `${p.n} — ${variant.s} — Qty ${qty} — Tier ${tier} — ${fmt(unitPrice)}/unit — Line Total ${fmt(lineTotal)}`;
+  }).join("\n");
+
+  const res = await fetch("https://api.web3forms.com/submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({
+      access_key: WEB3FORMS_ACCESS_KEY,
+      subject: "New Wholesale Order Submission",
+      from_name: "WholesaleUSPeptides.com — Wholesale Order",
+      email: "support@wholesaleuspeptides.com",
+      request_type: "New Wholesale Order Submission",
+      name: contact.name,
+      company: contact.company,
+      business_email: contact.email,
+      phone: contact.phone || "Not provided",
+      total_units: units,
+      order_items: orderItems,
+      order_total: fmt(total),
+      deposit_due: fmt(total * 0.5),
+      balance_due: fmt(total * 0.5),
+    }),
+  });
+
+  let data = null;
+  try { data = await res.json(); } catch { /* non-JSON response falls through to the failure branch below */ }
+
+  if (!res.ok || !data || data.success !== true) {
+    throw new Error((data && data.message) || "Web3Forms submission failed");
+  }
+  return data;
+}
 
 const C = {
   navy:"#05111F", navy2:"#0A1E30", gold:"#C9A84C",
@@ -99,8 +161,10 @@ const TIERS = [
   {id:"T5",lbl:"1000+/SKU",  min:1000,max:null,grp:"wholesale"},
 ];
 
-function tierForQty(qty) {
-  const q = Math.max(10, qty || 10);
+const DEFAULT_MIN_QTY = 10;
+
+function tierForQty(qty, minQty = DEFAULT_MIN_QTY) {
+  const q = Math.max(minQty, qty || minQty);
   for (const t of TIERS) {
     if (q >= t.min && (t.max === null || q <= t.max)) return t.id;
   }
@@ -114,112 +178,209 @@ const fmt = n => n != null ? "$" + Number(n).toFixed(2) : "$0.00";
 const hasPrice = n => typeof n === "number" && Number.isFinite(n) && n > 0;
 const NO_PRICE_LABEL = "Pricing Available Upon Request";
 
+// Customer-facing catalog tabs. GLP and Blends are internal data categories
+// that read to customers simply as "Peptides"; Diluents stays out of the tab
+// bar entirely (still reachable via "All" and search) — see CATEGORY_DISPLAY.
+// Every product stays in its natural category — availability is handled at
+// the variant level (see fulfillmentStatus below), not by a separate category.
+const CATS = ["All","Peptides","Bio Regulators","Sprays","Creams","Capsules"];
 
-const CATS = ["All","Peptides","GLP","Bio Regulators","Blends","Sprays","Topicals","Capsules","Diluents"];
+// Maps each internal product-data category to the label customers see.
+// This is a display-only mapping — it never changes the underlying `c`
+// value stored on a product row, so grouping, images, and search all
+// keep working against the real category untouched.
+const CATEGORY_DISPLAY = {
+  "Peptides": "Peptides",
+  "GLP": "Peptides",
+  "Blends": "Peptides",
+  "Bio Regulators": "Bio Regulators",
+  "Sprays": "Sprays",
+  "Topicals": "Creams",
+  "Capsules": "Capsules",
+  "Diluents": "Diluents",
+};
+
+function displayCategory(item) {
+  return (item && CATEGORY_DISPLAY[item.c]) || (item && item.c) || "";
+}
+
+// ── VARIANT-LEVEL STOCK / CUSTOM PRODUCTION AVAILABILITY ──────────────────────
+// Every SKU variant (exact product + strength) carries its own fulfillment
+// status — never inferred from sibling strengths of the same product. Until
+// the verified LA Peptides stocked matrix is entered, no row carries a
+// `stockStatus` field, so every variant falls through to "in_stock" below,
+// preserving today's purchasing behavior exactly. Once the matrix is entered,
+// it becomes the sole source of truth for IN STOCK; anything not on it
+// resolves to CUSTOM PRODUCTION (if lab-capable) or UNAVAILABLE.
+const LARGE_VOLUME_THRESHOLD = 300;
+
+function fulfillmentStatus(variant) {
+  if (!variant || !variant.stockStatus || variant.stockStatus === "in_stock") return "in_stock";
+  return variant.customProductionAvailable ? "custom_production" : "unavailable";
+}
+
+// Combines stock status with the requested quantity into the single state
+// that drives the UI: badge, message, pricing visibility, and CTA.
+function fulfillmentState(variant, qty) {
+  const status = fulfillmentStatus(variant);
+  if (status !== "in_stock") return status;
+  return (qty || 0) >= LARGE_VOLUME_THRESHOLD ? "large_volume" : "in_stock";
+}
+
+const isPurchasable = (variant, qty) => fulfillmentState(variant, qty) === "in_stock";
+
+const FULFILLMENT_META = {
+  in_stock: { badge: "In Stock" },
+  large_volume: {
+    badge: "Large-Volume Review",
+    message: "Orders of 300+ units per SKU require confirmation from our wholesale team before they can be accepted — including lead time, inventory/production availability, payment, testing expectations, packaging/labeling, shipping, and delivery expectations.",
+    cta: "Request Large-Volume Order",
+  },
+  custom_production: {
+    badge: "Custom Production",
+    message: "This strength is available through our custom production program and is not maintained as ready-to-ship inventory. Production lead time, testing requirements, quantity, payment and fulfillment expectations must be confirmed with our wholesale team before the order is accepted.",
+    cta: "Request Custom Production",
+  },
+  unavailable: {
+    badge: "Unavailable",
+    message: "This strength is not currently available.",
+  },
+};
+
+const BADGE_STYLE = {
+  in_stock:          { background:"rgba(46,107,74,0.08)", border:"1px solid "+C.green, color:C.green },
+  large_volume:      { background:"rgba(201,168,76,0.1)", border:"1px solid "+C.gold,  color:C.navy },
+  custom_production: { background:C.navy,                 border:"1px solid "+C.gold,  color:C.gold },
+  unavailable:       { background:C.off,                  border:"1px solid "+C.mist,  color:C.stone },
+};
 
 const P = [
-  {id:1, c:"Peptides",      n:"BPC-157",         s:"5mg",  R1:26,  R2:24.5,R3:23,  T1:21,  T2:16.5,T3:15,  T4:13.5,T5:12,  hot:1},
-  {id:2, c:"Peptides",      n:"BPC-157",         s:"10mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:22,  T3:17.5,T4:16,  T5:13,  hot:0},
-  {id:3, c:"Peptides",      n:"BPC-157",         s:"15mg", R1:49,  R2:45.5,R3:42,  T1:39,  T2:31.5,T3:27.5,T4:23.5,T5:18,  hot:0},
-  {id:4, c:"Peptides",      n:"BPC-157",         s:"20mg", R1:60,  R2:56,  R3:52,  T1:48,  T2:38.5,T3:32.5,T4:27,  T5:20,  hot:0},
-  {id:5, c:"Peptides",      n:"TB-500",          s:"5mg",  R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:22.5,T4:18,  T5:16,  hot:1},
-  {id:6, c:"Peptides",      n:"TB-500",          s:"10mg", R1:45,  R2:40,  R3:35,  T1:37.5,T2:35.5,T3:32.5,T4:29,  T5:26,  hot:0},
-  {id:7, c:"Peptides",      n:"Ipamorelin",      s:"5mg",  R1:22.5,R2:21,  R3:19.5,T1:18,  T2:16.5,T3:15,  T4:13.5,T5:12,  hot:0},
-  {id:8, c:"Peptides",      n:"Ipamorelin",      s:"10mg", R1:30,  R2:28,  R3:26,  T1:24,  T2:22,  T3:20,  T4:18,  T5:14,  hot:0},
-  {id:9, c:"Peptides",      n:"AOD-9604",        s:"5mg",  R1:52.5,R2:49,  R3:45.5,T1:42,  T2:36,  T3:32.5,T4:27,  T5:24,  hot:0},
-  {id:10,c:"Peptides",      n:"AOD-9604",        s:"10mg", R1:50,  R2:48.5,R3:47,  T1:45.5,T2:44.5,T3:43,  T4:41.5,T5:40,  hot:0},
-  {id:11,c:"Peptides",      n:"CJC-1295 W DAC",  s:"5mg",  R1:71,  R2:66.5,R3:62,  T1:57,  T2:49.5,T3:42.5,T4:36,  T5:30,  hot:0},
-  {id:12,c:"Peptides",      n:"CJC-1295 W DAC",  s:"10mg", R1:112.5,R2:105,R3:97.5,T1:90, T2:80,  T3:70,  T4:61,  T5:52,  hot:0},
-  {id:13,c:"Peptides",      n:"CJC-1295",        s:"5mg",  R1:41,  R2:38.5,R3:36,  T1:33,  T2:27.5,T3:25,  T4:22.5,T5:18,  hot:0},
-  {id:14,c:"Peptides",      n:"CJC-1295",        s:"10mg", R1:67.5,R2:63,  R3:58.5,T1:54,  T2:47,  T3:40,  T4:34,  T5:28,  hot:0},
-  {id:15,c:"Peptides",      n:"Epithalon",       s:"10mg", R1:22.5,R2:21,  R3:19.5,T1:18,  T2:16.5,T3:15,  T4:13.5,T5:12,  hot:0},
-  {id:16,c:"Peptides",      n:"Epithalon",       s:"50mg", R1:62,  R2:58.5,R3:54.5,T1:51,  T2:47,  T3:43.5,T4:39.5,T5:36,  hot:0},
-  {id:17,c:"Peptides",      n:"GHK-Cu",          s:"50mg", R1:22.5,R2:21,  R3:19.5,T1:18,  T2:14,  T3:12.5,T4:11,  T5:10,  hot:1},
-  {id:18,c:"Peptides",      n:"GHK-Cu",          s:"100mg",R1:30,  R2:27.5,R3:25.5,T1:23,  T2:21,  T3:18.5,T4:16.5,T5:14,  hot:0},
-  {id:19,c:"Peptides",      n:"Melanotan-II",    s:"10mg", R1:30,  R2:28,  R3:26,  T1:24,  T2:19,  T3:17.5,T4:16,  T5:12,  hot:0},
-  {id:20,c:"Peptides",      n:"FOXO4-DRI",       s:"10mg", R1:187.5,R2:175,R3:162.5,T1:150,T2:132,T3:115, T4:99,  T5:84,  hot:0},
-  {id:21,c:"Peptides",      n:"KPV",             s:"10mg", R1:30,  R2:28,  R3:26,  T1:24,  T2:19,  T3:17.5,T4:16,  T5:14,  hot:0},
-  {id:22,c:"Peptides",      n:"VIP",             s:"5mg",  R1:34,  R2:31.5,R3:29,  T1:27,  T2:22,  T3:20,  T4:16,  T5:14,  hot:0},
-  {id:23,c:"Peptides",      n:"VIP",             s:"10mg", R1:60,  R2:56,  R3:52,  T1:48,  T2:41,  T3:35,  T4:29,  T5:24,  hot:0},
-  {id:24,c:"Peptides",      n:"GHRP-2",          s:"5mg",  R1:22.5,R2:21,  R3:19.5,T1:18,  T2:16.5,T3:15,  T4:13.5,T5:12,  hot:0},
-  {id:25,c:"Peptides",      n:"GHRP-6",          s:"5mg",  R1:22.5,R2:21,  R3:19.5,T1:18,  T2:16.5,T3:15,  T4:13.5,T5:12,  hot:0},
-  {id:26,c:"Peptides",      n:"SNAP-8",          s:"10mg", R1:22.5,R2:21,  R3:19.5,T1:18,  T2:16.5,T3:15,  T4:13.5,T5:12,  hot:0},
-  {id:27,c:"Peptides",      n:"MOTS-C",          s:"10mg", R1:26,  R2:24.5,R3:23,  T1:21,  T2:19,  T3:17.5,T4:16,  T5:14,  hot:1},
-  {id:28,c:"Peptides",      n:"MOTS-C",          s:"20mg", R1:67.5,R2:63,  R3:58.5,T1:54,  T2:47,  T3:40,  T4:34,  T5:28,  hot:0},
-  {id:29,c:"Peptides",      n:"IGF-1 LR3",       s:"1mg",  R1:95,  R2:88,  R3:80.5,T1:73.5,T2:66.5,T3:59.5,T4:52,  T5:45,  hot:0},
-  {id:30,c:"Peptides",      n:"Dihexa",          s:"5mg",  R1:19,  R2:17.5,R3:16,  T1:15,  T2:14,  T3:12.5,T4:11,  T5:10,  hot:0},
-  {id:31,c:"Peptides",      n:"Oxytocin",        s:"10mg", R1:30,  R2:28,  R3:26,  T1:24,  T2:19,  T3:17.5,T4:16,  T5:14,  hot:0},
-  {id:32,c:"Peptides",      n:"PT-141",          s:"10mg", R1:26,  R2:24.5,R3:23,  T1:21,  T2:19,  T3:17.5,T4:16,  T5:14,  hot:0},
-  {id:33,c:"Peptides",      n:"Thymosin Alpha-1",s:"10mg", R1:48,  R2:45,  R3:42.5,T1:39.5,T2:36.5,T3:33.5,T4:31,  T5:28,  hot:0},
-  {id:34,c:"Peptides",      n:"Gonadorelin",     s:"10mg", R1:41,  R2:38.5,R3:36,  T1:33,  T2:27.5,T3:22.5,T4:20,  T5:16,  hot:0},
-  {id:35,c:"Peptides",      n:"Semax",           s:"10mg", R1:26,  R2:24.5,R3:23,  T1:21,  T2:19,  T3:17.5,T4:16,  T5:12,  hot:0},
-  {id:36,c:"Peptides",      n:"Selank",          s:"10mg", R1:26,  R2:24.5,R3:23,  T1:21,  T2:19,  T3:17.5,T4:16,  T5:12,  hot:0},
-  {id:37,c:"Peptides",      n:"NAD+",            s:"500mg",R1:37.5,R2:35,  R3:32.5,T1:30,  T2:27.5,T3:25,  T4:22.5,T5:20,  hot:1},
-  {id:38,c:"Peptides",      n:"NAD+",            s:"1000mg",R1:67.5,R2:63, R3:58.5,T1:54,  T2:49.5,T3:45,  T4:40.5,T5:36,  hot:0},
-  {id:39,c:"Peptides",      n:"LL-37",           s:"5mg",  R1:56,  R2:52.5,R3:49,  T1:45,  T2:38.5,T3:32.5,T4:29,  T5:24,  hot:0},
-  {id:40,c:"Peptides",      n:"ARA-290",         s:"16mg", R1:49,  R2:45.5,R3:42,  T1:39,  T2:36,  T3:32.5,T4:29,  T5:26,  hot:0},
-  {id:41,c:"Peptides",      n:"SS-31",           s:"10mg", R1:34,  R2:31.5,R3:29,  T1:27,  T2:25,  T3:22.5,T4:20,  T5:18,  hot:0},
-  {id:104,c:"Peptides",     n:"SS-31",           s:"50mg", R1:135, R2:128.5,R3:121.5,T1:115,T2:108, T3:101.5,T4:94.5,T5:88, hot:0},
-  {id:42,c:"Peptides",      n:"HGH Frag 176-191",s:"5mg",  R1:56,  R2:52.5,R3:49,  T1:45,  T2:38.5,T3:32.5,T4:29,  T5:24,  hot:0},
-  {id:43,c:"GLP",           n:"GLP-S",              s:"5mg",  R1:45,  R2:43,  R3:40.5,T1:38.5,T2:36.5,T3:34.5,T4:32,  T5:30,  hot:1},
-  {id:44,c:"GLP",           n:"GLP-S",              s:"10mg", R1:55,  R2:53,  R3:50.5,T1:48.5,T2:46.5,T3:44.5,T4:42,  T5:40,  hot:1},
-  {id:45,c:"GLP",           n:"GLP-S",              s:"15mg", R1:75,  R2:72,  R3:69.5,T1:66.5,T2:63.5,T3:60.5,T4:58,  T5:55,  hot:0},
-  {id:46,c:"GLP",           n:"GLP-S",              s:"20mg", R1:90,  R2:86.5,R3:83,  T1:79.5,T2:75.5,T3:72,  T4:68.5,T5:65,  hot:0},
-  {id:47,c:"GLP",           n:"GLP-T",              s:"10mg", R1:48,  R2:46.5,R3:44.5,T1:43,  T2:41,  T3:39.5,T4:37.5,T5:36,  hot:1},
-  {id:48,c:"GLP",           n:"GLP-T",              s:"15mg", R1:58,  R2:56,  R3:54.5,T1:52.5,T2:50.5,T3:48.5,T4:47,  T5:45,  hot:0},
-  {id:49,c:"GLP",           n:"GLP-T",              s:"20mg", R1:74,  R2:70.5,R3:67.5,T1:64,  T2:61,  T3:57.5,T4:54.5,T5:51,  hot:0},
-  {id:50,c:"GLP",           n:"GLP-T",              s:"30mg", R1:80,  R2:78.5,R3:76.5,T1:75,  T2:73,  T3:71.5,T4:69.5,T5:68,  hot:0},
-  {id:51,c:"GLP",           n:"GLP-T",              s:"40mg", R1:90,  R2:88.5,R3:86.5,T1:85,  T2:83,  T3:81.5,T4:79.5,T5:78,  hot:0},
-  {id:52,c:"GLP",           n:"GLP-R",              s:"10mg", R1:55,  R2:53,  R3:50.5,T1:48.5,T2:46.5,T3:44.5,T4:42,  T5:40,  hot:0},
-  {id:53,c:"GLP",           n:"GLP-R",              s:"20mg", R1:90,  R2:88,  R3:85.5,T1:83.5,T2:81.5,T3:79.5,T4:77,  T5:75,  hot:0},
-  {id:54,c:"GLP",           n:"GLP-R",              s:"30mg", R1:120, R2:115.5,R3:111.5,T1:107,T2:103,T3:98.5,T4:94.5,T5:90,  hot:0},
-  {id:55,c:"GLP",           n:"Tesamorelin",     s:"5mg",  R1:37.5,R2:35,  R3:32.5,T1:30,  T2:27.5,T3:22.5,T4:18,  T5:16,  hot:0},
-  {id:56,c:"GLP",           n:"Tesamorelin",     s:"10mg", R1:60,  R2:56,  R3:52,  T1:48,  T2:44,  T3:40,  T4:36,  T5:32,  hot:0},
-  {id:57,c:"GLP",           n:"Tesamorelin",     s:"20mg", R1:135, R2:126, R3:117, T1:108, T2:93.5,T3:85,  T4:72,  T5:64,  hot:0},
-  {id:58,c:"GLP",           n:"Sermorelin",      s:"5mg",  R1:34,  R2:31.5,R3:29,  T1:27,  T2:22,  T3:17.5,T4:16,  T5:14,  hot:0},
-  {id:59,c:"GLP",           n:"Sermorelin",      s:"10mg", R1:54,  R2:50.5,R3:47,  T1:43.5,T2:40,  T3:36.5,T4:33,  T5:29.5,hot:0},
-  {id:60,c:"Bio Regulators",n:"Pinealon",        s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  hot:0},
-  {id:61,c:"Bio Regulators",n:"Ovagen",          s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  hot:0},
-  {id:62,c:"Bio Regulators",n:"Chonluten",       s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  hot:0},
-  {id:63,c:"Bio Regulators",n:"Thymalin",        s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  hot:0},
-  {id:64,c:"Bio Regulators",n:"Cardiogen",       s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  hot:0},
-  {id:65,c:"Bio Regulators",n:"Vesugen",         s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  hot:0},
-  {id:66,c:"Bio Regulators",n:"Testagen",        s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  hot:0},
-  {id:67,c:"Bio Regulators",n:"Vilon",           s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  hot:0},
-  {id:68,c:"Bio Regulators",n:"Crystagen",       s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  hot:0},
-  {id:69,c:"Bio Regulators",n:"Bronchogen",      s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  hot:0},
-  {id:70,c:"Blends",        n:"BPC-TB Blend",    s:"5/5mg",R1:30,  R2:30,  R3:30,  T1:28,  T2:26,  T3:26,  T4:24,  T5:22,  hot:1},
-  {id:71,c:"Blends",        n:"BPC-TB Blend",    s:"10/10mg",R1:38,R2:36,  R3:34,  T1:34,  T2:32,  T3:32,  T4:30,  T5:28,  hot:0},
-  {id:99,c:"Blends",        n:"BPC-TB Blend",    s:"20/20mg",R1:68,R2:68,  R3:68,  T1:68,  T2:68,  T3:68,  T4:68,  T5:68,  hot:0},
-  {id:72,c:"Blends",        n:"Ipa/CJC Blend",   s:"5/5mg",R1:28,  R2:27,  R3:26,  T1:26,  T2:24,  T3:22,  T4:22,  T5:20,  hot:1},
-  {id:73,c:"Blends",        n:"GLOW Blend",      s:"50/10/10mg",R1:36,R2:35,R3:34,T1:34,  T2:32,  T3:32,  T4:30,  T5:30,  hot:0},
-  {id:74,c:"Blends",        n:"KLOW Blend",      s:"50/10mg",R1:44,R2:43,  R3:42,  T1:42,  T2:40,  T3:38,  T4:38,  T5:38,  hot:0},
-  {id:75,c:"Blends",        n:"Semax/Selank",    s:"30/10mg",R1:38,R2:37,  R3:36,  T1:36,  T2:34,  T3:34,  T4:32,  T5:32,  hot:0},
-  {id:76,c:"Blends",        n:"AOD/Tesa Blend",  s:"5/5mg", R1:46, R2:45,  R3:44,  T1:44,  T2:42,  T3:40,  T4:40,  T5:40,  hot:0},
-  {id:77, c:"Sprays",   n:"BPC-157 Spray",        s:"30ml", R1:35,  R2:35,  R3:35,  T1:35,  T2:35,  T3:32.5,T4:32.5,T5:30,  hot:0},
-  {id:78, c:"Sprays",   n:"NAD+ Spray",           s:"30ml", R1:35,  R2:35,  R3:35,  T1:35,  T2:35,  T3:32.5,T4:32.5,T5:30,  hot:1},
-  {id:79, c:"Sprays",   n:"Semax Spray",          s:"30ml", R1:33,  R2:33,  R3:33,  T1:33,  T2:33,  T3:30.5,T4:30.5,T5:28,  hot:0},
-  {id:80, c:"Sprays",   n:"Selank Spray",         s:"30ml", R1:33,  R2:33,  R3:33,  T1:33,  T2:33,  T3:30.5,T4:30.5,T5:28,  hot:0},
-  {id:81, c:"Sprays",   n:"PT-141 Spray",         s:"30ml", R1:35,  R2:35,  R3:35,  T1:35,  T2:35,  T3:32.5,T4:32.5,T5:30,  hot:0},
-  {id:82, c:"Sprays",   n:"TB500 Spray",          s:"30ml", R1:35,  R2:35,  R3:35,  T1:35,  T2:35,  T3:32.5,T4:32.5,T5:30,  hot:0},
-  {id:100,c:"Sprays",   n:"Dihexa Spray",         s:"30ml", R1:35,  R2:35,  R3:35,  T1:35,  T2:35,  T3:32.5,T4:32.5,T5:30,  hot:0},
-  {id:101,c:"Sprays",   n:"MT-2 Spray",           s:"30ml", R1:35,  R2:35,  R3:35,  T1:35,  T2:35,  T3:32.5,T4:32.5,T5:30,  hot:0},
-  {id:102,c:"Sprays",   n:"PT141/Oxytocin Spray", s:"30ml", R1:43,  R2:43,  R3:43,  T1:43,  T2:43,  T3:40.5,T4:40.5,T5:38,  hot:0},
-  {id:103,c:"Sprays",   n:"Semax/Selank/Dihexa",  s:"30ml", R1:43,  R2:43,  R3:43,  T1:43,  T2:43,  T3:40.5,T4:40.5,T5:38,  hot:0},
-  {id:83, c:"Topicals", n:"Repair Cream",         s:"50ml", R1:45,  R2:45,  R3:45,  T1:45,  T2:45,  T3:42.5,T4:42.5,T5:40,  hot:1},
-  {id:84, c:"Topicals", n:"Smooth Cream",         s:"50ml", R1:49,  R2:49,  R3:49,  T1:49,  T2:49,  T3:46.5,T4:46.5,T5:44,  hot:0},
-  {id:85, c:"Topicals", n:"Tan Cream",            s:"50ml", R1:45,  R2:45,  R3:45,  T1:45,  T2:45,  T3:42.5,T4:42.5,T5:40,  hot:0},
+  {id:1, c:"Peptides",      n:"BPC-157",         s:"5mg",  R1:26,  R2:24.5,R3:23,  T1:21,  T2:16.5,T3:15,  T4:13.5,T5:12,  stockStatus:"custom_production", customProductionAvailable:true, hot:1},
+  {id:2, c:"Peptides",      n:"BPC-157",         s:"10mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:22,  T3:17.5,T4:16,  T5:13,  stockStatus:"in_stock", hot:0},
+  {id:3, c:"Peptides",      n:"BPC-157",         s:"15mg", R1:49,  R2:45.5,R3:42,  T1:39,  T2:31.5,T3:27.5,T4:23.5,T5:18,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:4, c:"Peptides",      n:"BPC-157",         s:"20mg", R1:60,  R2:56,  R3:52,  T1:48,  T2:38.5,T3:32.5,T4:27,  T5:20,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:5, c:"Peptides",      n:"TB-500",          s:"5mg",  R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:22.5,T4:18,  T5:16,  stockStatus:"custom_production", customProductionAvailable:true, hot:1},
+  {id:6, c:"Peptides",      n:"TB-500",          s:"10mg", R1:45,  R2:40,  R3:35,  T1:37.5,T2:35.5,T3:32.5,T4:29,  T5:26,  stockStatus:"in_stock", hot:0},
+  {id:7, c:"Peptides",      n:"Ipamorelin",      s:"5mg",  R1:22.5,R2:21,  R3:19.5,T1:18,  T2:16.5,T3:15,  T4:13.5,T5:12,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:8, c:"Peptides",      n:"Ipamorelin",      s:"10mg", R1:30,  R2:28,  R3:26,  T1:24,  T2:22,  T3:20,  T4:18,  T5:14,  stockStatus:"in_stock", hot:0},
+  {id:9, c:"Peptides",      n:"AOD-9604",        s:"5mg",  R1:52.5,R2:49,  R3:45.5,T1:42,  T2:36,  T3:32.5,T4:27,  T5:24,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:10,c:"Peptides",      n:"AOD-9604",        s:"10mg", R1:50,  R2:48.5,R3:47,  T1:45.5,T2:44.5,T3:43,  T4:41.5,T5:40,  stockStatus:"in_stock", hot:0},
+  {id:11,c:"Peptides",      n:"CJC-1295 W DAC",  s:"5mg",  R1:71,  R2:66.5,R3:62,  T1:57,  T2:49.5,T3:42.5,T4:36,  T5:30,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:12,c:"Peptides",      n:"CJC-1295 W DAC",  s:"10mg", R1:112.5,R2:105,R3:97.5,T1:90, T2:80,  T3:70,  T4:61,  T5:52,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:13,c:"Peptides",      n:"CJC-1295",        s:"5mg",  R1:41,  R2:38.5,R3:36,  T1:33,  T2:27.5,T3:25,  T4:22.5,T5:18,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:14,c:"Peptides",      n:"CJC-1295",        s:"10mg", R1:67.5,R2:63,  R3:58.5,T1:54,  T2:47,  T3:40,  T4:34,  T5:28,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:15,c:"Peptides",      n:"Epithalon",       s:"10mg", R1:22.5,R2:21,  R3:19.5,T1:18,  T2:16.5,T3:15,  T4:13.5,T5:12,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:16,c:"Peptides",      n:"Epithalon",       s:"50mg", R1:62,  R2:58.5,R3:54.5,T1:51,  T2:47,  T3:43.5,T4:39.5,T5:36,  stockStatus:"in_stock", hot:0},
+  {id:17,c:"Peptides",      n:"GHK-Cu",          s:"50mg", R1:22.5,R2:21,  R3:19.5,T1:18,  T2:14,  T3:12.5,T4:11,  T5:10,  stockStatus:"custom_production", customProductionAvailable:true, hot:1},
+  {id:18,c:"Peptides",      n:"GHK-Cu",          s:"100mg",R1:30,  R2:27.5,R3:25.5,T1:23,  T2:21,  T3:18.5,T4:16.5,T5:14,  stockStatus:"in_stock", hot:0},
+  {id:19,c:"Peptides",      n:"Melanotan-II",    s:"10mg", R1:30,  R2:28,  R3:26,  T1:24,  T2:19,  T3:17.5,T4:16,  T5:12,  stockStatus:"in_stock", hot:0},
+  {id:20,c:"Peptides",      n:"FOXO4-DRI",       s:"10mg", R1:187.5,R2:175,R3:162.5,T1:150,T2:132,T3:115, T4:99,  T5:84,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:21,c:"Peptides",      n:"KPV",             s:"10mg", R1:30,  R2:28,  R3:26,  T1:24,  T2:19,  T3:17.5,T4:16,  T5:14,  stockStatus:"in_stock", hot:0},
+  {id:22,c:"Peptides",      n:"VIP",             s:"5mg",  R1:34,  R2:31.5,R3:29,  T1:27,  T2:22,  T3:20,  T4:16,  T5:14,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:23,c:"Peptides",      n:"VIP",             s:"10mg", R1:60,  R2:56,  R3:52,  T1:48,  T2:41,  T3:35,  T4:29,  T5:24,  stockStatus:"in_stock", hot:0},
+  {id:24,c:"Peptides",      n:"GHRP-2",          s:"5mg",  R1:22.5,R2:21,  R3:19.5,T1:18,  T2:16.5,T3:15,  T4:13.5,T5:12,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:97,c:"Peptides",      n:"GHRP-2",          s:"10mg", R1:30,  R2:28,  R3:26,  T1:24,  T2:19,  T3:17.5,T4:16,  T5:14,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:25,c:"Peptides",      n:"GHRP-6",          s:"5mg",  R1:22.5,R2:21,  R3:19.5,T1:18,  T2:16.5,T3:15,  T4:13.5,T5:12,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:98,c:"Peptides",      n:"GHRP-6",          s:"10mg", R1:30,  R2:28,  R3:26,  T1:24,  T2:19,  T3:17.5,T4:16,  T5:14,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:26,c:"Peptides",      n:"SNAP-8",          s:"10mg", R1:22.5,R2:21,  R3:19.5,T1:18,  T2:16.5,T3:15,  T4:13.5,T5:12,  stockStatus:"in_stock", hot:0},
+  {id:27,c:"Peptides",      n:"MOTS-C",          s:"10mg", R1:26,  R2:24.5,R3:23,  T1:21,  T2:19,  T3:17.5,T4:16,  T5:14,  stockStatus:"in_stock", hot:1},
+  {id:28,c:"Peptides",      n:"MOTS-C",          s:"20mg", R1:67.5,R2:63,  R3:58.5,T1:54,  T2:47,  T3:40,  T4:34,  T5:28,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:29,c:"Peptides",      n:"IGF-1 LR3",       s:"1mg",  R1:95,  R2:88,  R3:80.5,T1:73.5,T2:66.5,T3:59.5,T4:52,  T5:45,  stockStatus:"in_stock", hot:0},
+  {id:30,c:"Peptides",      n:"Dihexa",          s:"5mg",  R1:19,  R2:17.5,R3:16,  T1:15,  T2:14,  T3:12.5,T4:11,  T5:10,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:105,c:"Peptides",     n:"Dihexa",          s:"10mg", R1:26,  R2:24.5,R3:23,  T1:21,  T2:19,  T3:17.5,T4:16,  T5:12,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:31,c:"Peptides",      n:"Oxytocin",        s:"10mg", R1:30,  R2:28,  R3:26,  T1:24,  T2:19,  T3:17.5,T4:16,  T5:14,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:32,c:"Peptides",      n:"PT-141",          s:"10mg", R1:26,  R2:24.5,R3:23,  T1:21,  T2:19,  T3:17.5,T4:16,  T5:14,  stockStatus:"in_stock", hot:0},
+  {id:33,c:"Peptides",      n:"Thymosin Alpha-1",s:"10mg", R1:48,  R2:45,  R3:42.5,T1:39.5,T2:36.5,T3:33.5,T4:31,  T5:28,  stockStatus:"in_stock", hot:0},
+  {id:34,c:"Peptides",      n:"Gonadorelin",     s:"10mg", R1:41,  R2:38.5,R3:36,  T1:33,  T2:27.5,T3:22.5,T4:20,  T5:16,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:35,c:"Peptides",      n:"Semax",           s:"10mg", R1:26,  R2:24.5,R3:23,  T1:21,  T2:19,  T3:17.5,T4:16,  T5:12,  stockStatus:"in_stock", hot:0},
+  {id:106,c:"Peptides",     n:"Semax",           s:"30mg", R1:56,  R2:52.5,R3:49,  T1:45,  T2:38.5,T3:32.5,T4:29,  T5:24,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:36,c:"Peptides",      n:"Selank",          s:"10mg", R1:26,  R2:24.5,R3:23,  T1:21,  T2:19,  T3:17.5,T4:16,  T5:12,  stockStatus:"in_stock", hot:0},
+  {id:37,c:"Peptides",      n:"NAD+",            s:"500mg",R1:37.5,R2:35,  R3:32.5,T1:30,  T2:27.5,T3:25,  T4:22.5,T5:20,  stockStatus:"in_stock", hot:1},
+  {id:38,c:"Peptides",      n:"NAD+",            s:"1000mg",R1:67.5,R2:63, R3:58.5,T1:54,  T2:49.5,T3:45,  T4:40.5,T5:36,  stockStatus:"in_stock", hot:0},
+  {id:39,c:"Peptides",      n:"LL-37",           s:"5mg",  R1:56,  R2:52.5,R3:49,  T1:45,  T2:38.5,T3:32.5,T4:29,  T5:24,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:40,c:"Peptides",      n:"ARA-290",         s:"16mg", R1:49,  R2:45.5,R3:42,  T1:39,  T2:36,  T3:32.5,T4:29,  T5:26,  stockStatus:"in_stock", hot:0},
+  {id:41,c:"Peptides",      n:"SS-31",           s:"10mg", R1:34,  R2:31.5,R3:29,  T1:27,  T2:25,  T3:22.5,T4:20,  T5:18,  stockStatus:"in_stock", hot:0},
+  {id:107,c:"Peptides",     n:"SS-31",           s:"30mg", R1:105, R2:98,  R3:91,  T1:84,  T2:71.5,T3:65,  T4:56,  T5:48,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:104,c:"Peptides",     n:"SS-31",           s:"50mg", R1:135, R2:128.5,R3:121.5,T1:115,T2:108, T3:101.5,T4:94.5,T5:88, stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:42,c:"Peptides",      n:"HGH Frag 176-191",s:"5mg",  R1:56,  R2:52.5,R3:49,  T1:45,  T2:38.5,T3:32.5,T4:29,  T5:24,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:113,c:"Peptides",     n:"P-21",            s:"5mg",  R1:90,  R2:84,  R3:78,  T1:72,  T2:63,  T3:55,  T4:47,  T5:42,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:114,c:"Peptides",     n:"Cagrilintide",    s:"5mg",  R1:52.5,R2:49,  R3:45.5,T1:42,  T2:36,  T3:30,  T4:25,  T5:20,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:115,c:"Peptides",     n:"Cagrilintide",    s:"10mg", R1:90,  R2:84,  R3:78,  T1:72,  T2:63,  T3:55,  T4:47,  T5:40,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:116,c:"Peptides",     n:"DSIP",            s:"5mg",  R1:24,  R2:22.5,R3:21,  T1:19.5,T2:18.5,T3:17,  T4:15.5,T5:14,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:117,c:"Peptides",     n:"Kisspeptin-10",   s:"10mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:22.5,T4:18,  T5:16,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:118,c:"Peptides",     n:"Semax Acetyl",    s:"30mg", R1:64,  R2:59.5,R3:55,  T1:51,  T2:44,  T3:37.5,T4:34,  T5:28,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:119,c:"Peptides",     n:"Selank Acetyl",   s:"10mg", R1:34,  R2:31.5,R3:29,  T1:27,  T2:25,  T3:22.5,T4:20,  T5:16,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:43,c:"GLP",           n:"GLP-S",              s:"5mg",  R1:45,  R2:43,  R3:40.5,T1:38.5,T2:36.5,T3:34.5,T4:32,  T5:30,  stockStatus:"in_stock", hot:1},
+  {id:44,c:"GLP",           n:"GLP-S",              s:"10mg", R1:55,  R2:53,  R3:50.5,T1:48.5,T2:46.5,T3:44.5,T4:42,  T5:40,  stockStatus:"in_stock", hot:1},
+  {id:45,c:"GLP",           n:"GLP-S",              s:"15mg", R1:75,  R2:72,  R3:69.5,T1:66.5,T2:63.5,T3:60.5,T4:58,  T5:55,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:46,c:"GLP",           n:"GLP-S",              s:"20mg", R1:90,  R2:86.5,R3:83,  T1:79.5,T2:75.5,T3:72,  T4:68.5,T5:65,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:47,c:"GLP",           n:"GLP-T",              s:"10mg", R1:48,  R2:46.5,R3:44.5,T1:43,  T2:41,  T3:39.5,T4:37.5,T5:36,  stockStatus:"custom_production", customProductionAvailable:true, hot:1},
+  {id:48,c:"GLP",           n:"GLP-T",              s:"15mg", R1:58,  R2:56,  R3:54.5,T1:52.5,T2:50.5,T3:48.5,T4:47,  T5:45,  stockStatus:"in_stock", hot:0},
+  {id:49,c:"GLP",           n:"GLP-T",              s:"20mg", R1:74,  R2:70.5,R3:67.5,T1:64,  T2:61,  T3:57.5,T4:54.5,T5:51,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:50,c:"GLP",           n:"GLP-T",              s:"30mg", R1:80,  R2:78.5,R3:76.5,T1:75,  T2:73,  T3:71.5,T4:69.5,T5:68,  stockStatus:"in_stock", hot:0},
+  {id:51,c:"GLP",           n:"GLP-T",              s:"40mg", R1:90,  R2:88.5,R3:86.5,T1:85,  T2:83,  T3:81.5,T4:79.5,T5:78,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:52,c:"GLP",           n:"GLP-R",              s:"10mg", R1:55,  R2:53,  R3:50.5,T1:48.5,T2:46.5,T3:44.5,T4:42,  T5:40,  stockStatus:"in_stock", hot:0},
+  {id:53,c:"GLP",           n:"GLP-R",              s:"20mg", R1:90,  R2:88,  R3:85.5,T1:83.5,T2:81.5,T3:79.5,T4:77,  T5:75,  stockStatus:"in_stock", hot:0},
+  {id:54,c:"GLP",           n:"GLP-R",              s:"30mg", R1:120, R2:115.5,R3:111.5,T1:107,T2:103,T3:98.5,T4:94.5,T5:90,  stockStatus:"in_stock", hot:0},
+  {id:108,c:"GLP",          n:"GLP-R",              s:"40mg", R1:120, R2:112,  R3:104,  T1:96, T2:82.5,T3:70, T4:61,  T5:50,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:55,c:"GLP",           n:"Tesamorelin",     s:"5mg",  R1:37.5,R2:35,  R3:32.5,T1:30,  T2:27.5,T3:22.5,T4:18,  T5:16,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:56,c:"GLP",           n:"Tesamorelin",     s:"10mg", R1:60,  R2:56,  R3:52,  T1:48,  T2:44,  T3:40,  T4:36,  T5:32,  stockStatus:"in_stock", hot:0},
+  {id:57,c:"GLP",           n:"Tesamorelin",     s:"20mg", R1:135, R2:126, R3:117, T1:108, T2:93.5,T3:85,  T4:72,  T5:64,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:58,c:"GLP",           n:"Sermorelin",      s:"5mg",  R1:34,  R2:31.5,R3:29,  T1:27,  T2:22,  T3:17.5,T4:16,  T5:14,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:59,c:"GLP",           n:"Sermorelin",      s:"10mg", R1:54,  R2:50.5,R3:47,  T1:43.5,T2:40,  T3:36.5,T4:33,  T5:29.5,stockStatus:"in_stock", hot:0},
+  {id:60,c:"Bio Regulators",n:"Pinealon",        s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"in_stock", hot:0},
+  {id:61,c:"Bio Regulators",n:"Ovagen",          s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"in_stock", hot:0},
+  {id:62,c:"Bio Regulators",n:"Chonluten",       s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"in_stock", hot:0},
+  {id:63,c:"Bio Regulators",n:"Thymalin",        s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"in_stock", hot:0},
+  {id:64,c:"Bio Regulators",n:"Cardiogen",       s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"in_stock", hot:0},
+  {id:65,c:"Bio Regulators",n:"Vesugen",         s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"in_stock", hot:0},
+  {id:66,c:"Bio Regulators",n:"Testagen",        s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"in_stock", hot:0},
+  {id:67,c:"Bio Regulators",n:"Vilon",           s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"in_stock", hot:0},
+  {id:68,c:"Bio Regulators",n:"Crystagen",       s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"in_stock", hot:0},
+  {id:69,c:"Bio Regulators",n:"Bronchogen",      s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"in_stock", hot:0},
+  {id:121,c:"Bio Regulators",n:"Prostamax",      s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:122,c:"Bio Regulators",n:"Cortagen",       s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:123,c:"Bio Regulators",n:"Cartalax",       s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:124,c:"Bio Regulators",n:"Pancragen",      s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:125,c:"Bio Regulators",n:"Vesilute",       s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:126,c:"Bio Regulators",n:"Livagen",        s:"20mg", R1:37.5,R2:35,  R3:32.5,T1:30,  T2:25,  T3:20,  T4:18,  T5:14,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:70,c:"Blends",        n:"BPC-TB Blend",    s:"5/5mg",R1:30,  R2:30,  R3:30,  T1:30,  T2:28,  T3:28,  T4:26,  T5:24,  stockStatus:"custom_production", customProductionAvailable:true, hot:1},
+  {id:71,c:"Blends",        n:"BPC-TB Blend",    s:"10/10mg",R1:34,R2:34,  R3:34,  T1:34,  T2:34,  T3:34,  T4:34,  T5:34,  stockStatus:"in_stock", hot:0},
+  {id:99,c:"Blends",        n:"BPC-TB Blend",    s:"20/20mg",R1:68,R2:68,  R3:68,  T1:68,  T2:68,  T3:68,  T4:68,  T5:68,  stockStatus:"in_stock", hot:0},
+  {id:72,c:"Blends",        n:"Ipa/CJC Blend",   s:"5/5mg",R1:26,  R2:26,  R3:26,  T1:26,  T2:24,  T3:22,  T4:22,  T5:20,  stockStatus:"in_stock", hot:1},
+  {id:112,c:"Blends",       n:"Ipa/CJC Blend",   s:"10/10mg",R1:54,R2:50,  R3:45.5,T1:41.5,T2:37.5,T3:33.5,T4:29,  T5:25,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:73,c:"Blends",        n:"GLOW Blend",      s:"50/10/10mg",R1:34,R2:34,R3:34,T1:34,  T2:32,  T3:32,  T4:30,  T5:30,  stockStatus:"in_stock", hot:0},
+  {id:111,c:"Blends",       n:"GLOW Blend",      s:"100/20/20mg",R1:72,R2:70,R3:68,T1:66,  T2:64,  T3:62,  T4:60,  T5:58,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:74,c:"Blends",        n:"KLOW Blend",      s:"50/10mg",R1:42,R2:42,  R3:42,  T1:42,  T2:40,  T3:38,  T4:38,  T5:38,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:109,c:"Blends",       n:"KLOW Blend",      s:"80mg",R1:42,  R2:42,  R3:42,  T1:42,  T2:42,  T3:42,  T4:42,  T5:42,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:110,c:"Blends",       n:"KLOW Blend",      s:"100/20mg",R1:80,R2:80,  R3:80,  T1:80,  T2:78,  T3:74,  T4:74,  T5:72,  stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:75,c:"Blends",        n:"Semax/Selank",    s:"30/10mg",R1:36,R2:36,  R3:36,  T1:36,  T2:34,  T3:34,  T4:32,  T5:32,  stockStatus:"in_stock", hot:0},
+  {id:76,c:"Blends",        n:"AOD/Tesa Blend",  s:"5/5mg", R1:44, R2:44,  R3:44,  T1:44,  T2:42,  T3:40,  T4:40,  T5:40,  stockStatus:"in_stock", hot:0},
+  {id:120,c:"Blends",       n:"Tesamorelin/Ipamorelin Blend", s:"10/5mg", R1:50, R2:50, R3:50, T1:50, T2:46, T3:42, T4:40, T5:38, stockStatus:"custom_production", customProductionAvailable:true, hot:0},
+  {id:77, c:"Sprays",   n:"BPC-157 Spray",        s:"30ml", R1:35,  R2:35,  R3:35,  T1:35,  T2:35,  T3:32.5,T4:32.5,T5:30,  stockStatus:"in_stock", hot:0},
+  {id:78, c:"Sprays",   n:"NAD+ Spray",           s:"30ml", R1:35,  R2:35,  R3:35,  T1:35,  T2:35,  T3:32.5,T4:32.5,T5:30,  stockStatus:"in_stock", hot:1},
+  {id:79, c:"Sprays",   n:"Semax Spray",          s:"30ml", R1:33,  R2:33,  R3:33,  T1:33,  T2:33,  T3:30.5,T4:30.5,T5:28,  stockStatus:"in_stock", hot:0},
+  {id:80, c:"Sprays",   n:"Selank Spray",         s:"30ml", R1:33,  R2:33,  R3:33,  T1:33,  T2:33,  T3:30.5,T4:30.5,T5:28,  stockStatus:"in_stock", hot:0},
+  {id:81, c:"Sprays",   n:"PT-141 Spray",         s:"30ml", R1:35,  R2:35,  R3:35,  T1:35,  T2:35,  T3:32.5,T4:32.5,T5:30,  stockStatus:"in_stock", hot:0},
+  {id:82, c:"Sprays",   n:"TB500 Spray",          s:"30ml", R1:35,  R2:35,  R3:35,  T1:35,  T2:35,  T3:32.5,T4:32.5,T5:30,  stockStatus:"in_stock", hot:0},
+  {id:100,c:"Sprays",   n:"Dihexa Spray",         s:"30ml", R1:35,  R2:35,  R3:35,  T1:35,  T2:35,  T3:32.5,T4:32.5,T5:30,  stockStatus:"in_stock", hot:0},
+  {id:101,c:"Sprays",   n:"MT-2 Spray",           s:"30ml", R1:35,  R2:35,  R3:35,  T1:35,  T2:35,  T3:32.5,T4:32.5,T5:30,  stockStatus:"in_stock", hot:0},
+  {id:102,c:"Sprays",   n:"PT141/Oxytocin Spray", s:"30ml", R1:43,  R2:43,  R3:43,  T1:43,  T2:43,  T3:40.5,T4:40.5,T5:38,  stockStatus:"in_stock", hot:0},
+  {id:103,c:"Sprays",   n:"Semax/Selank/Dihexa",  s:"30ml", R1:43,  R2:43,  R3:43,  T1:43,  T2:43,  T3:40.5,T4:40.5,T5:38,  stockStatus:"in_stock", hot:0},
+  {id:83, c:"Topicals", n:"Repair Cream",         s:"50ml", R1:45,  R2:45,  R3:45,  T1:45,  T2:45,  T3:42.5,T4:42.5,T5:40,  stockStatus:"in_stock", hot:1},
+  {id:84, c:"Topicals", n:"Smooth Cream",         s:"50ml", R1:49,  R2:49,  R3:49,  T1:49,  T2:49,  T3:46.5,T4:46.5,T5:44,  stockStatus:"in_stock", hot:0},
+  {id:85, c:"Topicals", n:"Tan Cream",            s:"50ml", R1:45,  R2:45,  R3:45,  T1:45,  T2:45,  T3:42.5,T4:42.5,T5:40,  stockStatus:"in_stock", hot:0},
   {id:86, c:"Diluents", n:"Water",                s:"10ml", R1:6.99,R2:6.49,R3:5.99,T1:4.5, T2:4.5, T3:4.5, T4:4.5, T5:4.5, hot:0},
-  {id:87, c:"Capsules", n:"5 Amino 1MQ",          s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  hot:0},
-  {id:88, c:"Capsules", n:"BPC-157",              s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  hot:0},
-  {id:89, c:"Capsules", n:"Dihexa",               s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  hot:0},
-  {id:90, c:"Capsules", n:"GHK-Cu",               s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  hot:0},
+  {id:87, c:"Capsules", n:"5 Amino 1MQ",          s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  stockStatus:"in_stock", hot:0},
+  {id:88, c:"Capsules", n:"BPC-157",              s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  stockStatus:"in_stock", hot:0},
+  {id:89, c:"Capsules", n:"Dihexa",               s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  stockStatus:"in_stock", hot:0},
+  {id:90, c:"Capsules", n:"GHK-Cu",               s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  stockStatus:"in_stock", hot:0},
   {id:91, c:"Capsules", n:"GLP-1",                s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  hot:0},
   {id:92, c:"Capsules", n:"GLP-2",                s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  hot:0},
-  {id:93, c:"Capsules", n:"Gut Restore",          s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  hot:0},
-  {id:94, c:"Capsules", n:"Repair & Fix",         s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  hot:0},
-  {id:95, c:"Capsules", n:"SLU-PP-332",           s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  hot:0},
-  {id:96, c:"Capsules", n:"TB-500",               s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  hot:0},
+  {id:93, c:"Capsules", n:"Gut Restore",          s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  stockStatus:"in_stock", hot:0},
+  {id:94, c:"Capsules", n:"Repair & Fix",         s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  stockStatus:"in_stock", hot:0},
+  {id:95, c:"Capsules", n:"SLU-PP-332",           s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  stockStatus:"in_stock", hot:0},
+  {id:96, c:"Capsules", n:"TB-500",               s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  stockStatus:"in_stock", hot:0},
 ];
 
 function groupProducts(flat) {
@@ -237,7 +398,7 @@ function groupProducts(flat) {
     }
     const grp = map.get(key);
     if (item.hot === 1) grp.hot = 1;
-    grp.variants.push({ id: item.id, s: item.s, R1:item.R1, R2:item.R2, R3:item.R3, T1:item.T1, T2:item.T2, T3:item.T3, T4:item.T4, T5:item.T5 });
+    grp.variants.push({ id: item.id, s: item.s, R1:item.R1, R2:item.R2, R3:item.R3, T1:item.T1, T2:item.T2, T3:item.T3, T4:item.T4, T5:item.T5, stockStatus: item.stockStatus, customProductionAvailable: item.customProductionAvailable });
   }
   return Array.from(map.values());
 }
@@ -357,13 +518,16 @@ function ProductVisual({ name, strength, cat }) {
 
 
 // ── PRODUCT CARD ──────────────────────────────────────────────────────────────
-function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
+function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequestConsultation }) {
   const [hov, setHov] = useState(false);
   const [varIdx, setVarIdx] = useState(0);
-  const [qty, setQty] = useState(10);
+  const [qty, setQty] = useState(DEFAULT_MIN_QTY);
   const variant = p.variants[varIdx];
+  const fState = fulfillmentState(variant, qty);
+  const meta = FULFILLMENT_META[fState];
   const t = tierForQty(qty);
   const price = variant[t] || 0;
+  const showPricing = fState === "in_stock" || fState === "large_volume";
   return (
     <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{background:C.white,border:"1px solid "+(hov?C.gold:C.mist),display:"flex",flexDirection:"column",transition:"all 0.25s ease",boxShadow:hov?"0 12px 32px rgba(5,17,31,0.16)":"0 2px 8px rgba(5,17,31,0.04)",transform:hov?"translateY(-4px)":"translateY(0)"}}>
@@ -373,33 +537,31 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
         <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:C.gold,zIndex:2}}/>
       </div>
       <div style={{padding:"22px 20px 26px",flex:1,display:"flex",flexDirection:"column"}}>
-        <div style={{fontSize:8,letterSpacing:2.5,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:10}}>{p.c}</div>
+        <div style={{fontSize:8,letterSpacing:2.5,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:10}}>{displayCategory(p)}</div>
         <div style={{fontSize:16,fontWeight:700,color:C.navy,marginBottom:14,fontFamily:"Georgia,serif",lineHeight:1.3}}>{p.n}</div>
         {p.variants.length > 1 && (
           <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:14}}>
-            {p.variants.map((v,i)=>(
-              <button key={v.id} onClick={()=>setVarIdx(i)} className="btn-polish"
-                style={{padding:"3px 9px",fontSize:10,fontWeight:600,cursor:"pointer",border:"1px solid "+(i===varIdx?C.navy:C.mist),background:i===varIdx?C.navy:"transparent",color:i===varIdx?C.white:C.stone,transition:"all 0.15s"}}>
-                {v.s}
-              </button>
-            ))}
+            {p.variants.map((v,i)=>{
+              const vState = fulfillmentState(v, qty);
+              return (
+                <button key={v.id} onClick={()=>setVarIdx(i)} className="btn-polish"
+                  style={{padding:"3px 9px",fontSize:10,fontWeight:600,cursor:"pointer",border:"1px solid "+(i===varIdx?C.navy:C.mist),background:i===varIdx?C.navy:"transparent",color:i===varIdx?C.white:C.stone,transition:"all 0.15s"}}>
+                  {v.s}{vState==="custom_production"?" *":vState==="unavailable"?" ×":""}
+                </button>
+              );
+            })}
           </div>
         )}
         {p.variants.length === 1 && (
           <div style={{fontSize:11,color:C.stone,marginBottom:14}}>{variant.s}</div>
         )}
-        {partnerUnlocked ? (
-          <div style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:2,marginBottom:14}}>
-            {TIERS.map(tr=>{
-              const active = tr.id===t;
-              return (
-                <div key={tr.id} style={{textAlign:"center",padding:"3px 1px",background:active?"rgba(201,168,76,0.1)":"transparent",border:"1px solid "+(active?C.gold:C.mist)}}>
-                  <div style={{fontSize:7.5,color:active?C.navy:C.stone,fontWeight:active?700:400}}>
-                    {hasPrice(variant[tr.id])?fmt(variant[tr.id]):"—"}
-                  </div>
-                </div>
-              );
-            })}
+        <div style={{marginBottom:14}}>
+          <span style={{display:"inline-block",padding:"3px 9px",fontSize:8,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",...BADGE_STYLE[fState]}}>{meta.badge}</span>
+        </div>
+        {showPricing && (partnerUnlocked ? (
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:8,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:6}}>Partner Pricing Unlocked</div>
+            <div style={{fontSize:11,color:C.stone,lineHeight:1.6}}>Pricing is calculated automatically for the quantity you select below.</div>
           </div>
         ) : (
           <div style={{marginBottom:14}}>
@@ -407,7 +569,7 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
               <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:9}}>
                 <div style={{fontSize:8,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700}}>Starting At</div>
                 <div style={{fontSize:15,fontWeight:800,color:C.navy}}>{fmt(variant.R1)}</div>
-                <div style={{fontSize:9,color:C.stone}}>/unit (10+ units)</div>
+                <div style={{fontSize:9,color:C.stone}}>/unit ({DEFAULT_MIN_QTY}+ units)</div>
               </div>
             ) : (
               <div style={{fontSize:12,fontWeight:700,color:C.navy,marginBottom:9}}>{NO_PRICE_LABEL}</div>
@@ -416,24 +578,28 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
               Unlock Partner Pricing
             </button>
           </div>
-        )}
+        ))}
         <div style={{background:C.off,padding:"12px 14px",marginBottom:16,border:"1px solid "+C.mist}}>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
             <div style={{fontSize:8,color:C.stone,letterSpacing:1,textTransform:"uppercase",fontWeight:700}}>Units</div>
-            <input type="number" min="10" value={qty} onChange={e=>setQty(Math.max(10,parseInt(e.target.value)||10))}
+            <input type="number" min={DEFAULT_MIN_QTY} value={qty} onChange={e=>setQty(Math.max(DEFAULT_MIN_QTY,parseInt(e.target.value)||DEFAULT_MIN_QTY))}
               style={{width:52,padding:"3px 6px",border:"1px solid "+C.mist,background:C.white,fontSize:11,color:C.navy,outline:"none",textAlign:"center"}}/>
           </div>
-          {hasPrice(price) ? (
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
-              <div style={{fontSize:9,color:C.stone}}>{fmt(price)}/unit</div>
-              <div style={{fontSize:13,fontWeight:800,color:C.navy}}>{fmt(price*qty)}</div>
-            </div>
+          {fState === "in_stock" ? (
+            hasPrice(price) ? (
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
+                <div style={{fontSize:9,color:C.stone}}>{fmt(price)}/unit</div>
+                <div style={{fontSize:13,fontWeight:800,color:C.navy}}>{fmt(price*qty)}</div>
+              </div>
+            ) : (
+              <div style={{fontSize:11,fontWeight:700,color:C.stone}}>{NO_PRICE_LABEL}</div>
+            )
           ) : (
-            <div style={{fontSize:11,fontWeight:700,color:C.stone}}>{NO_PRICE_LABEL}</div>
+            <div style={{fontSize:10.5,color:C.stone,lineHeight:1.6}}>{meta.message}</div>
           )}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:18}}>
-          {["Min. Order: 10 Units","COA Available"].map(f=>(
+          {(fState === "in_stock" || fState === "large_volume" ? [`Min. Order: ${DEFAULT_MIN_QTY} Units`,"COA Available"] : ["COA Available"]).map(f=>(
             <div key={f} style={{display:"flex",gap:7,alignItems:"center"}}>
               <div style={{width:4,height:4,borderRadius:"50%",background:C.green,flexShrink:0}}/>
               <div style={{fontSize:10,color:C.stone}}>{f}</div>
@@ -455,20 +621,32 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick }) {
           <div style={{fontSize:9,fontWeight:700,color:C.navy,textTransform:"uppercase",letterSpacing:1.5,marginBottom:5}}>Qualified Business Buyers Only</div>
           <div style={{fontSize:9.5,color:C.stone,lineHeight:1.6}}>Supplied to wellness brands, research organizations, distribution partners, and private label brands.</div>
         </div>
-        <button onClick={()=>onAdd(p,variant,qty,t)} className="btn-polish" style={{padding:"9px 0",background:hov?C.navy:"transparent",border:"1px solid "+C.navy,color:hov?C.white:C.navy,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.25s ease"}}>
-          Add to Order
-        </button>
+        {fState === "in_stock" && (
+          <button onClick={()=>onAdd(p,variant,qty,t)} className="btn-polish" style={{padding:"9px 0",background:hov?C.navy:"transparent",border:"1px solid "+C.navy,color:hov?C.white:C.navy,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.25s ease"}}>
+            Add to Order
+          </button>
+        )}
+        {(fState === "large_volume" || fState === "custom_production") && (
+          <button onClick={()=>onRequestConsultation(fState, {productName:p.n, strength:variant.s, qty})} className="btn-polish" style={{padding:"9px 0",background:C.navy,border:"1px solid "+C.navy,color:C.gold,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.25s ease"}}>
+            {meta.cta}
+          </button>
+        )}
+        {fState === "unavailable" && (
+          <button disabled className="btn-polish" style={{padding:"9px 0",background:C.off,border:"1px solid "+C.mist,color:C.stone,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"not-allowed"}}>
+            Currently Unavailable
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
 // ── CATALOG PAGE ──────────────────────────────────────────────────────────────
-function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick }) {
-  const [cat, setCat] = useState("All");
+function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick, initialCategory, onRequestConsultation }) {
+  const [cat, setCat] = useState(initialCategory || "All");
   const [srch, setSrch] = useState("");
   const [toast, setToast] = useState("");
-  const rows = GROUPED.filter(p=>(cat==="All"||p.c===cat)&&(!srch||p.n.toLowerCase().includes(srch.toLowerCase())||p.c.toLowerCase().includes(srch.toLowerCase())||p.variants.some(v=>v.s.toLowerCase().includes(srch.toLowerCase()))));
+  const rows = GROUPED.filter(p=>(cat==="All"||displayCategory(p)===cat)&&(!srch||p.n.toLowerCase().includes(srch.toLowerCase())||displayCategory(p).toLowerCase().includes(srch.toLowerCase())||p.variants.some(v=>v.s.toLowerCase().includes(srch.toLowerCase()))));
   const add = (p,variant,qty,tier) => {
     if (addToCart) addToCart(p,variant,qty,tier);
     setToast(p.n);
@@ -488,21 +666,6 @@ function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick }) {
         <div style={{background:"#EDE9DF",border:"1px solid "+C.mist,padding:"9px 14px",marginBottom:16,fontSize:10,color:"#6B5E4A",lineHeight:1.7}}>
           <strong style={{color:C.red}}>RUO ONLY.</strong> All compounds for legitimate research purposes only. Not FDA approved. Not for human or veterinary use.
         </div>
-        <div style={{marginBottom:16,background:C.white,border:"1px solid "+C.mist,padding:"12px 16px"}}>
-          <div style={{fontSize:9,letterSpacing:2,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:9}}>Pricing Tiers — Applied Automatically by Quantity</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            {["retail","wholesale"].map(grp=>(
-              <div key={grp}>
-                <div style={{fontSize:9,color:C.gold,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",marginBottom:5}}>{grp==="retail"?"Retail":"Wholesale"}</div>
-                <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                  {TIERS.filter(t=>t.grp===grp).map(t=>(
-                    <div key={t.id} style={{padding:"4px 9px",border:"1px solid "+C.mist,background:C.off,fontSize:9,color:C.stone}}>{t.lbl}</div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
         <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:9,alignItems:"center"}}>
           {CATS.map(c=>(
             <button key={c} onClick={()=>setCat(c)} className="btn-polish" style={{padding:"5px 12px",fontSize:10,fontWeight:600,cursor:"pointer",border:"1px solid "+(cat===c?C.navy:C.mist),background:cat===c?C.navy:"transparent",color:cat===c?C.white:C.stone,transition:"all 0.15s"}}>
@@ -512,9 +675,9 @@ function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick }) {
           <input placeholder="Search..." value={srch} onChange={e=>setSrch(e.target.value)}
             style={{marginLeft:"auto",padding:"5px 12px",border:"1px solid "+C.mist,fontSize:11,outline:"none",background:C.white,color:C.navy,minWidth:170}}/>
         </div>
-        <div style={{fontSize:10,color:C.stone,marginBottom:16}}>{rows.length} compounds — enter quantity, tier pricing applies automatically</div>
+        <div style={{fontSize:10,color:C.stone,marginBottom:16}}>{rows.length} compounds — enter quantity, pricing is calculated automatically</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:1,background:C.mist}}>
-          {rows.map(p=><ProdCard key={p.id} p={p} onAdd={add} onOpenCart={openCart} partnerUnlocked={partnerUnlocked} onUnlockClick={onUnlockClick}/>)}
+          {rows.map(p=><ProdCard key={p.id} p={p} onAdd={add} onOpenCart={openCart} partnerUnlocked={partnerUnlocked} onUnlockClick={onUnlockClick} onRequestConsultation={onRequestConsultation}/>)}
         </div>
       </div>
     </div>
@@ -1511,16 +1674,47 @@ function Gate({ ok }) {
 function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
   const total = cart.reduce((s,i) => s + (i.variant[i.tier]||0)*i.qty, 0);
   const units = cart.reduce((s,i) => s + i.qty, 0);
-  const [requested, setRequested] = useState(false);
-  useEffect(() => { setRequested(false); }, [cart]);
-  const requestQuote = () => {
-    if (requested) return;
-    setRequested(true);
-    trackEvent("quote_requested", { units, value: total });
+  const [contact, setContact] = useState(EMPTY_ORDER_CONTACT);
+  const [submitting, setSubmitting] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  // A cart change means this is a new/edited order — clear any prior
+  // submitted/error state so the customer can submit again, but keep
+  // whatever contact info they already entered.
+  useEffect(() => { setSent(false); setSubmitError(""); }, [cart]);
+
+  const setContactField = (k, v) => setContact(c => ({ ...c, [k]: v }));
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email);
+  const contactComplete = contact.name.trim() && contact.company.trim() && emailValid;
+  const canSubmit = contactComplete && !submitting && !sent && cart.length > 0;
+
+  const submitOrder = async () => {
+    if (!canSubmit) return;
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      await submitOrderRequest(cart, total, units, contact);
+      setSent(true);
+      trackEvent("quote_requested", { units, value: total });
+    } catch (err) {
+      // Cart and contact info are left exactly as entered so the customer
+      // can retry without losing their order.
+      setSubmitError("We couldn't submit your order. Please check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
+
   const upd = (pid, vid, qty) => {
-    if (qty < 1) setCart(p => p.filter(i => !(i.p.id===pid && i.variant.id===vid)));
-    else setCart(p => p.map(i => (i.p.id===pid && i.variant.id===vid) ? {...i,qty} : i));
+    if (qty < 1) { setCart(p => p.filter(i => !(i.p.id===pid && i.variant.id===vid))); return; }
+    // Defense-in-depth: block +/- from ever pushing a line into a state
+    // (large-volume threshold, custom production) that requires consultation
+    // instead of standard checkout.
+    const item = cart.find(i => i.p.id===pid && i.variant.id===vid);
+    if (item && !isPurchasable(item.variant, qty)) return;
+    // The tier/unit price must always be recomputed from the new quantity —
+    // never left at whatever tier applied when the line was first added.
+    setCart(p => p.map(i => (i.p.id===pid && i.variant.id===vid) ? {...i,qty,tier:tierForQty(qty)} : i));
   };
   return (
     <>
@@ -1648,8 +1842,29 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
               </div>
             </div>
             <div style={{padding:"7px 12px",background:C.navy,marginBottom:10,fontSize:9,color:C.gold,fontWeight:700,letterSpacing:1,textAlign:"center"}}>ACH · Debit Card · Zelle (Debit &amp; Zelle up to $2,500) — No Credit Cards</div>
-            <button onClick={requestQuote} disabled={requested} style={{width:"100%",padding:"12px 0",background:requested?"#8A8680":C.navy,border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:requested?"not-allowed":"pointer",marginBottom:7}}>
-              {requested ? "Request Submitted" : "Submit For Review"}
+
+            {!sent && (
+              <div style={{marginBottom:12}}>
+                <div style={{fontSize:9,letterSpacing:1.5,fontWeight:700,color:C.navy,textTransform:"uppercase",marginBottom:8}}>Your Information</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+                  <input placeholder="Full Name" value={contact.name} onChange={e=>setContactField("name",e.target.value)} style={cartInputStyle} disabled={submitting}/>
+                  <input placeholder="Company Name" value={contact.company} onChange={e=>setContactField("company",e.target.value)} style={cartInputStyle} disabled={submitting}/>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  <input type="email" placeholder="Business Email" value={contact.email} onChange={e=>setContactField("email",e.target.value)} style={cartInputStyle} disabled={submitting}/>
+                  <input placeholder="Phone (optional)" value={contact.phone} onChange={e=>setContactField("phone",e.target.value)} style={cartInputStyle} disabled={submitting}/>
+                </div>
+              </div>
+            )}
+
+            {submitError && (
+              <div style={{padding:"9px 12px",background:"rgba(139,46,46,0.08)",border:"1px solid "+C.red,color:C.red,fontSize:10,lineHeight:1.6,marginBottom:10}}>
+                {submitError} Your order and contact information have been kept — just click submit again.
+              </div>
+            )}
+
+            <button onClick={submitOrder} disabled={!canSubmit} style={{width:"100%",padding:"12px 0",background:sent?"#8A8680":(canSubmit?C.navy:"#B9B4A8"),border:"none",color:C.white,fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:canSubmit?"pointer":"not-allowed",marginBottom:7}}>
+              {sent ? "Request Submitted" : submitting ? "Submitting..." : "Submit For Review"}
             </button>
             <div style={{fontSize:9,color:C.stone,textAlign:"center",lineHeight:1.6,marginBottom:8}}>Orders are reviewed before fulfillment. Payment initiation does not guarantee approval. Business information, inventory availability, and compliance requirements are verified prior to processing.</div>
             <div style={{fontSize:9,color:C.stone,textAlign:"center",lineHeight:1.6}}>Tax and shipping calculated before final invoice.</div>
@@ -1671,6 +1886,8 @@ export default function App() {
   const [partnerModalOpen, setPartnerModalOpen] = useState(false);
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [consultationRequest, setConsultationRequest] = useState(null);
+  const [navOpen, setNavOpen] = useState(false);
   const partnerUnlocked = !!partnerAccess?.unlocked;
   const unlockPartnerAccess = (lead) => {
     const record = { unlocked: true, lead, unlockedAt: new Date().toISOString() };
@@ -1681,6 +1898,7 @@ export default function App() {
 
   const setPage = (id) => {
     setPageState(id);
+    setNavOpen(false);
     const path = (PAGES[id] || PAGES.home).path;
     if (window.location.pathname !== path) window.history.pushState({page:id}, "", path);
   };
@@ -1715,11 +1933,23 @@ export default function App() {
 
   if (gated) return <Gate ok={()=>setGated(false)}/>;
 
-  const addToCart = (p, variant, qty, tier) => {
+  const addToCart = (p, variant, qty) => {
+    // Defense-in-depth: a Custom Production variant or a quantity that
+    // crosses the large-volume threshold must never reach the cart, even if
+    // this is ever called from somewhere other than the gated "Add to
+    // Order" button (which already only renders when isPurchasable).
+    if (!isPurchasable(variant, qty)) return;
     setCart(prev => {
       const ex = prev.find(i=>i.p.id===p.id && i.variant.id===variant.id);
-      if (ex) return prev.map(i=>(i.p.id===p.id && i.variant.id===variant.id)?{...i,qty:i.qty+qty}:i);
-      return [...prev,{p,variant,qty,tier}];
+      if (ex) {
+        const mergedQty = ex.qty + qty;
+        if (!isPurchasable(variant, mergedQty)) return prev;
+        // The tier/unit price must always be recomputed from the resulting
+        // quantity — never carried over from whichever tier applied to the
+        // smaller quantity already in the cart.
+        return prev.map(i=>(i.p.id===p.id && i.variant.id===variant.id)?{...i,qty:mergedQty,tier:tierForQty(mergedQty)}:i);
+      }
+      return [...prev,{p,variant,qty,tier:tierForQty(qty)}];
     });
     setCopen(true);
   };
@@ -1730,6 +1960,7 @@ export default function App() {
       <PartnerAccessModal open={partnerModalOpen} onClose={()=>setPartnerModalOpen(false)} unlocked={partnerUnlocked} onUnlock={unlockPartnerAccess} setPage={setPage}/>
       <ContactModal open={contactModalOpen} onClose={()=>setContactModalOpen(false)}/>
       <QuoteRequestModal open={quoteModalOpen} onClose={()=>setQuoteModalOpen(false)}/>
+      <ConsultationModal open={!!consultationRequest} onClose={()=>setConsultationRequest(null)} context={consultationRequest}/>
       <PersistentQuoteCTA onClick={()=>setQuoteModalOpen(true)}/>
       <div style={{background:C.navy2,color:C.gold,textAlign:"center",padding:"9px",fontSize:9,letterSpacing:2.5,fontWeight:600,textTransform:"uppercase"}}>
         Wholesale Manufacturing — American Manufacturing — Independent Testing — RUO Only
@@ -1746,12 +1977,30 @@ export default function App() {
             </button>
           ))}
         </div>
-        <button onClick={()=>setCopen(true)} style={{background:C.gold,border:"none",color:C.navy,padding:"9px 18px",fontSize:10,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",flexShrink:0}}>
-          {count>0?"Order ("+count+")":"Request Pricing"}
-        </button>
+        <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+          <button className="nav-mobile-toggle" onClick={()=>setNavOpen(o=>!o)} aria-label={navOpen?"Close navigation menu":"Open navigation menu"} aria-expanded={navOpen} style={{background:"none",border:"1px solid rgba(201,168,76,0.4)",color:C.gold,fontSize:16,width:36,height:36,cursor:"pointer",lineHeight:1}}>
+            {navOpen ? "×" : "☰"}
+          </button>
+          <button onClick={()=>setCopen(true)} style={{background:C.gold,border:"none",color:C.navy,padding:"9px 18px",fontSize:10,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",flexShrink:0}}>
+            {count>0?"Order ("+count+")":"Request Pricing"}
+          </button>
+        </div>
+        {navOpen && (
+          // Anchored to the nav's own bottom edge (top:100%) rather than a
+          // fixed viewport offset, so it lands correctly whether the sticky
+          // nav is still in normal flow below the announcement bar or
+          // already stuck to the top of the viewport after scrolling.
+          <div className="nav-mobile-panel" style={{position:"absolute",top:"100%",left:0,right:0,background:C.navy,borderBottom:"1px solid rgba(201,168,76,0.25)",boxShadow:"0 12px 24px rgba(5,17,31,0.3)",display:"flex",flexDirection:"column",padding:"6px 0"}}>
+            {[["home","Home"],["catalog","Catalog"],["wl","White Label"],["about","Standards"],["coa","Batch Verification"]].map(([id,l])=>(
+              <button key={id} onClick={()=>setPage(id)} style={{background:"none",border:"none",padding:"15px 24px",textAlign:"left",fontSize:12,fontWeight:600,color:page===id?C.gold:"rgba(255,255,255,0.7)",borderBottom:"1px solid rgba(255,255,255,0.06)",cursor:"pointer"}}>
+                {l}
+              </button>
+            ))}
+          </div>
+        )}
       </nav>
       {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><WhoWeServe/><UnlockPartnerCTA partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} setPage={setPage}/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage} onContactClick={()=>setContactModalOpen(true)}/></>}
-      {page==="catalog" && <Catalog addToCart={addToCart} openCart={()=>setCopen(true)} partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)}/>}
+      {page==="catalog" && <Catalog addToCart={addToCart} openCart={()=>setCopen(true)} partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} onRequestConsultation={(type,ctx)=>setConsultationRequest({type,...ctx})}/>}
       {page==="wl"      && <WLPage setPage={setPage}/>}
       {page==="about"   && <AboutPage/>}
       {page==="coa"     && <COAPage/>}
