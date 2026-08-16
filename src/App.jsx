@@ -689,7 +689,7 @@ function PartnerCard({ title, items }) {
 // ── WHY PARTNERS CHOOSE US ──────────────────────────────────────────────────
 function WhyPartners() {
   const cards = [
-    {title:"Manufacturing", items:["cGMP APIs","Made in USA","White Label Support"]},
+    {title:"Manufacturing", items:["U.S. Lyophilization & Compounding","Made in USA","White Label Support"]},
     {title:"Quality",       items:["Third-Party Tested","COA Available","Batch Traceable"]},
     {title:"Fulfillment",   items:["Inventory Management","Packaging Support","Nationwide Shipping"]},
     {title:"Partnership",   items:["Dedicated Account Support","Bulk Pricing","Custom Solutions"]},
