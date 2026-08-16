@@ -778,7 +778,7 @@ function StatsStrip() {
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
-  const stats = ["10 Unit Minimums","250+ SKUs Available","48 Hour Quotes","Batch Traceability"];
+  const stats = ["10 Unit Minimums","126+ Product Configurations","48 Hour Quotes","Batch Traceability"];
   return (
     <div ref={ref} style={{background:C.navy,padding:"64px 40px"}}>
       <div style={{maxWidth:1400,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(4,1fr)"}} className="stats-strip-grid">
@@ -828,7 +828,7 @@ function Footer({ setPage, onContactClick }) {
           <div>
             <div style={{fontSize:15,fontWeight:800,color:C.white,fontFamily:"Georgia,serif",marginBottom:10}}>WholesaleUSPeptides.com</div>
             <p style={{fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.9,maxWidth:280,marginBottom:14}}>American peptide manufacturing and white-label solutions for qualified partners.</p>
-            <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",lineHeight:1.8}}>uniquesalesinc@gmail.com<br/>602-321-8381</div>
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",lineHeight:1.8}}>sales@wholesaleuspeptides.com<br/>602-321-8381</div>
           </div>
           <div>
             <div style={{fontSize:9,letterSpacing:3,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:16,opacity:0.85}}>Navigation</div>
@@ -887,9 +887,9 @@ function PersistentQuoteCTA({ onClick }) {
 
 function HomeSections({ setPage, onContactClick }) {
   const cats = [
-    {label:"GLP-1 Solutions",      desc:"GLP-S, GLP-T, GLP-R, Tesamorelin"},
+    {label:"GLP Research",         desc:"GLP-S, GLP-T, GLP-R"},
     {label:"Regenerative Compounds",desc:"BPC-157, TB-500, GHK-Cu, NAD+, MOTS-C, Thymosin Alpha-1"},
-    {label:"Research Peptides",     desc:"Ipamorelin, CJC-1295, GHRP-2, GHRP-6, AOD-9604, IGF-1 LR3"},
+    {label:"Research Peptides",     desc:"Ipamorelin, CJC-1295, GHRP-2, GHRP-6, AOD-9604, IGF-1 LR3, Tesamorelin"},
     {label:"Research Compounds",    desc:"Bio Regulators, Epithalon, KPV, VIP, PT-141, DSIP, SS-31"},
     {label:"Capsules",               desc:"BPC-157, TB-500, GHK-Cu, Dihexa, GLP-1, GLP-2, Gut Restore, Repair & Fix"},
     {label:"Custom Formulations",   desc:"Blends, Sprays, Topicals — custom ratios available on request"},
@@ -905,14 +905,15 @@ function HomeSections({ setPage, onContactClick }) {
     {n:"MOTS-C",      s:"10mg – 20mg",c:"Peptides"},
   ];
   const mfg = [
-    {t:"Quality Control",              b:"Every production lot subject to documented quality control procedures from synthesis through final packaging."},
-    {t:"Third-Party Sterility Testing",b:"Independent sterility verification via LAL endotoxin assay on every production batch before release."},
-    {t:"HPLC Purity Analysis",         b:"High-performance liquid chromatography purity testing confirms compound integrity at 99%+ per lot."},
-    {t:"Heavy Metal Screening",        b:"ICP-MS heavy metal screening provides a complete safety profile for every production lot we release."},
+    {t:"Quality Control",              b:"Applicable production lots are subject to documented quality control procedures from synthesis through final packaging."},
+    {t:"Third-Party Sterility Testing",b:"Sterility testing performed by an independent U.S. laboratory according to applicable product and production requirements."},
+    {t:"Third-Party Endotoxin Testing",b:"Endotoxin verification via LAL (Limulus Amebocyte Lysate) assay, performed by an independent U.S. laboratory on applicable production lots."},
+    {t:"HPLC Purity Analysis",         b:"High-performance liquid chromatography purity testing confirms compound integrity at 99%+ on applicable production lots."},
+    {t:"Heavy Metal Screening",        b:"ICP-MS heavy metal screening provides a complete safety profile for applicable production lots."},
     {t:"Batch Traceability",           b:"Every lot is assigned a unique batch number. Full chain-of-custody documentation available to verified partners."},
     {t:"COA Documentation",            b:"Batch-specific Certificates of Analysis delivered to white-label partners for publishing on their platforms."},
   ];
-  const flow = ["Application Submitted","Internal Review","Account Approved","Wholesale Pricing Access","ACH Payment","Fulfillment"];
+  const flow = ["Application Submitted","Internal Review","Account Approved","Wholesale Pricing Access","ACH / Zelle Payment","Fulfillment"];
 
   return (
     <>
@@ -984,7 +985,7 @@ function HomeSections({ setPage, onContactClick }) {
               Your Brand.<br/>Our Manufacturing.
             </h2>
             <p style={{fontSize:14,color:"rgba(255,255,255,0.5)",lineHeight:1.9,marginBottom:26,maxWidth:460}}>
-              Launch your private label peptide line without a manufacturing facility. We handle production, testing, labeling, and fulfillment. You receive documented compounds under your brand, ready for your clients.
+              Launch your private label peptide line without a manufacturing facility. We handle production, testing, labeling, and fulfillment. You receive documented compounds prepared under your brand specifications.
             </p>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,background:"rgba(201,168,76,0.12)",marginBottom:28}}>
               {["Custom Branding","Custom Label Design","Batch-Specific COA","QR Code Verification","Packaging Support","Fulfillment Support"].map(f=>(
@@ -1025,7 +1026,7 @@ function HomeSections({ setPage, onContactClick }) {
             <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:14}}>Quality Assurance</div>
             <h2 style={{fontSize:36,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:12}}>Manufacturing Standards</h2>
             <p style={{fontSize:14,color:C.stone,lineHeight:1.85,maxWidth:540,margin:"0 auto"}}>
-              Every batch produced through qualified domestic manufacturing partners with documented chain-of-custody procedures and lot traceability.
+              Production is carried out through qualified domestic manufacturing partners with documented chain-of-custody procedures and lot traceability.
             </p>
           </div>
           <div className="home-mfg-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:1,background:C.mist}}>
@@ -1352,7 +1353,7 @@ function WLPage({ setPage }) {
                 </div>
               ))}
             </div>
-            <div style={{fontSize:11,color:C.stone,marginBottom:16}}>Questions: uniquesalesinc@gmail.com — 602-321-8381</div>
+            <div style={{fontSize:11,color:C.stone,marginBottom:16}}>Questions: sales@wholesaleuspeptides.com — 602-321-8381</div>
             <div style={{display:"flex",gap:8,alignItems:"flex-start",maxWidth:700,margin:"0 auto 18px",textAlign:"left"}}>
               <div style={{color:C.gold,fontSize:9,marginTop:2,flexShrink:0,lineHeight:1}}>◆</div>
               <div style={{fontSize:10,color:C.stone,lineHeight:1.75,opacity:0.8}}>Applications are subject to internal review prior to approval. Account status, inventory availability, and compliance requirements are confirmed before production begins.</div>
@@ -1493,7 +1494,7 @@ function COAPage() {
         </div>
         <div style={{marginTop:18,textAlign:"center",fontSize:11,color:C.stone}}>
           Full COA package for all lots available to verified wholesale partners.<br/>
-          Contact uniquesalesinc@gmail.com — 602-321-8381
+          Contact sales@wholesaleuspeptides.com — 602-321-8381
         </div>
       </div>
     </div>
