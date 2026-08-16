@@ -1136,7 +1136,7 @@ function WLPage({ setPage }) {
                 <div style={{fontSize:9,letterSpacing:3,color:C.gold,textTransform:"uppercase",marginBottom:9}}>Signature Feature</div>
                 <h2 style={{fontSize:18,fontWeight:700,color:C.white,fontFamily:"Georgia,serif",lineHeight:1.35,marginBottom:11}}>Batch-Specific QR Code on Every Label</h2>
                 <p style={{fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.85,marginBottom:12}}>Every label includes a unique QR code linked to the independent Certificate of Analysis for that production lot. Lot-specific, not a generic template. We send you the COA documents to publish on your platform.</p>
-                {["QR code unique to each production batch","Independent third-party lab report","Purity, endotoxins, and heavy metals","COA documents emailed for your website"].map(f=>(
+                {["QR code unique to each production batch","Independent third-party lab report","Purity, sterility, endotoxins, and heavy metals","COA documents emailed for your website"].map(f=>(
                   <div key={f} style={{display:"flex",gap:8,alignItems:"center",marginBottom:6}}>
                     <div style={{color:C.gold,fontSize:9,flexShrink:0}}>—</div>
                     <div style={{fontSize:11,color:"rgba(255,255,255,0.45)"}}>{f}</div>
@@ -1145,7 +1145,7 @@ function WLPage({ setPage }) {
               </div>
               <div>
                 <div style={{fontSize:10,fontWeight:700,color:C.navy,letterSpacing:1,textTransform:"uppercase",marginBottom:11}}>Program Terms</div>
-                {[["Minimum","10 units per SKU"],["Formats","3ml and 10ml vial"],["Turnaround","7-10 days after art approval"],["COA","Batch-specific PDF per lot, emailed"],["QR Code","Unique per batch, linked to COA"],["Deposit","50% ACH required to initiate"],["Pricing","8-tier retail and wholesale"],["Compliance","Labels reviewed before print approval"]].map(([k,v])=>(
+                {[["Minimum","10 units per SKU"],["Formats","3 mL and 10 mL vials"],["Turnaround","Production lead time confirmed at order approval"],["COA","Batch-specific PDF per lot, emailed"],["QR Code","Unique per batch, linked to COA"],["Deposit","50% deposit via ACH or Zelle required to initiate production; remaining 50% due before shipment"],["Pricing","Volume-based wholesale pricing"],["Compliance","Labels reviewed before print approval"]].map(([k,v])=>(
                   <div key={k} style={{display:"flex",gap:10,padding:"6px 0",borderBottom:"1px solid "+C.mist}}>
                     <span style={{fontSize:11,fontWeight:700,color:C.navy,minWidth:108,flexShrink:0}}>{k}</span>
                     <span style={{fontSize:11,color:C.stone}}>{v}</span>
@@ -1283,10 +1283,9 @@ function WLPage({ setPage }) {
             <div style={{marginBottom:22}}>
               <div style={{fontSize:10,letterSpacing:1.5,fontWeight:700,color:C.navy,textTransform:"uppercase",marginBottom:12}}>Onboarding Timeline</div>
               <div className="wl-timeline" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
-                {[["Week 1","Strategy"],["Week 2","Label Design"],["Week 3","Production"],["Week 4","Fulfillment"]].map(([w,t],i)=>(
-                  <div key={w} style={{textAlign:"center",padding:"14px 10px",background:C.off,border:"1px solid "+C.mist}}>
+                {["Strategy","Label Design","Production","Fulfillment"].map((t,i)=>(
+                  <div key={t} style={{textAlign:"center",padding:"14px 10px",background:C.off,border:"1px solid "+C.mist}}>
                     <div style={{width:24,height:24,borderRadius:"50%",background:C.navy,color:C.gold,fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 8px"}}>{i+1}</div>
-                    <div style={{fontSize:9,letterSpacing:1.5,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:3}}>{w}</div>
                     <div style={{fontSize:11,fontWeight:700,color:C.navy}}>{t}</div>
                   </div>
                 ))}
@@ -1346,7 +1345,7 @@ function WLPage({ setPage }) {
             <h2 style={{fontSize:21,fontWeight:700,fontFamily:"Georgia,serif",color:C.navy,marginBottom:10}}>Application Received</h2>
             <p style={{fontSize:12,color:C.stone,lineHeight:1.85,marginBottom:18}}>Our wholesale team will contact you at <strong>{fm.em||"the email you provided"}</strong> within 2 business days to confirm specifications and issue a formal quote.</p>
             <div style={{background:C.white,border:"1px solid "+C.mist,padding:"14px 18px",marginBottom:18,textAlign:"left"}}>
-              {["Artwork reviewed for spec and compliance","QR placement confirmed","Formal quote and deposit invoice issued","Production begins upon 50% ACH deposit","Labeled compounds ship 7-10 days after deposit clears","Batch-specific COA documents emailed"].map((s,i)=>(
+              {["Artwork reviewed for spec and compliance","QR placement confirmed","Formal quote and deposit invoice issued","Production begins upon 50% ACH deposit","Production lead time confirmed at order approval","Batch-specific COA documents emailed"].map((s,i)=>(
                 <div key={i} style={{display:"flex",gap:10,padding:"5px 0",borderBottom:"1px solid "+C.mist,fontSize:11,color:C.stone}}>
                   <div style={{color:C.gold,fontWeight:700,minWidth:20,fontFamily:"'Courier New',monospace"}}>0{i+1}</div>
                   <div>{s}</div>
