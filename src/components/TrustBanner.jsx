@@ -18,7 +18,7 @@ export default function TrustBanner() {
         {/* Taglines */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{ fontSize: 13, fontWeight: 300, color: 'rgba(255,255,255,0.5)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6 }}>
-            For partners who value quality over price.
+            Built for partners who prioritize quality, consistency, and traceability.
           </div>
           <div style={{ fontSize: 11, color: `rgba(201,168,76,0.55)`, letterSpacing: 1.5 }}>
             Lyophilized and packaged in the USA &nbsp;·&nbsp; Premium American manufacturing
