@@ -646,7 +646,7 @@ function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick, initialC
       </div>
       <div style={{maxWidth:1400,margin:"0 auto",padding:"24px 40px 72px"}}>
         <div style={{background:"#EDE9DF",border:"1px solid "+C.mist,padding:"9px 14px",marginBottom:16,fontSize:10,color:"#6B5E4A",lineHeight:1.7}}>
-          <strong style={{color:C.red}}>RUO ONLY.</strong> All compounds for legitimate research purposes only. Not FDA approved. Not for human or veterinary use.
+          <strong style={{color:C.red}}>RUO ONLY.</strong> All compounds are intended solely for laboratory research use — not for human or veterinary use, consumption, diagnosis, treatment, or therapeutic application. Not FDA approved.
         </div>
         <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:9,alignItems:"center"}}>
           {CATS.map(c=>(
@@ -1729,21 +1729,18 @@ function Gate({ ok }) {
       <div style={{maxWidth:500,width:"100%",border:"1px solid rgba(201,168,76,0.3)",padding:"48px 44px",background:"#071424",textAlign:"center",fontFamily:"'Inter',sans-serif"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:28}}>
           <div style={{width:40,height:1,background:"rgba(201,168,76,0.35)"}}/>
-          <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700}}>Wholesale Access Required</div>
+          <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700}}>Research Use Only</div>
           <div style={{width:40,height:1,background:"rgba(201,168,76,0.35)"}}/>
         </div>
         <div style={{fontSize:22,fontWeight:800,color:C.white,marginBottom:4,fontFamily:"Georgia,serif",letterSpacing:-0.3}}>WholesaleUSPeptides.com</div>
         <div style={{fontSize:10,color:C.gold,letterSpacing:3,textTransform:"uppercase",marginBottom:26,opacity:0.75}}>Wholesale Manufacturing Platform</div>
         {!no ? (
           <>
-            <p style={{fontSize:12,color:"rgba(255,255,255,0.5)",lineHeight:1.9,marginBottom:10}}>
-              This platform is restricted to <strong style={{color:"rgba(255,255,255,0.8)"}}>licensed wholesale buyers, distributors, and white-label partners</strong> aged 18 and over.
-            </p>
-            <p style={{fontSize:12,color:"rgba(255,255,255,0.45)",lineHeight:1.85,marginBottom:26}}>
-              All compounds are <strong style={{color:"rgba(255,255,255,0.75)"}}>Research Use Only (RUO)</strong>. Not approved by the FDA. Clinical trials for many of these compounds are still ongoing. Not for human or veterinary use.
+            <p style={{fontSize:12,color:"rgba(255,255,255,0.5)",lineHeight:1.9,marginBottom:26}}>
+              By entering this site, I confirm that I am 18 years of age or older and understand that products offered by WholesaleUSPeptides.com are intended solely for laboratory research purposes.
             </p>
             <button onClick={ok} className="btn-polish" style={{display:"block",width:"100%",padding:"14px 0",marginBottom:10,background:C.gold,border:"none",color:"#05111F",fontSize:11,fontWeight:800,letterSpacing:2.5,textTransform:"uppercase",cursor:"pointer"}}>
-              I Confirm — Enter Platform
+              I Understand — Enter Site
             </button>
             <button onClick={()=>setNo(true)} className="btn-polish" style={{display:"block",width:"100%",padding:"11px 0",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.3)",fontSize:11,cursor:"pointer"}}>
               I Do Not Qualify — Exit
@@ -1822,7 +1819,7 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
         </div>
         <div style={{padding:"10px 22px 0"}}>
           <div style={{padding:"8px 12px",background:"#EDE9DF",border:"1px solid "+C.mist,fontSize:10,color:"#6B5E4A",lineHeight:1.6}}>
-            <strong style={{color:C.red}}>RUO:</strong> Research purposes only. Not FDA approved. ACH or Zelle payment accepted. Orders held until payment clears.
+            <strong style={{color:C.red}}>RUO:</strong> Laboratory research purposes only. Not for human or veterinary use. Not FDA approved. ACH or Zelle payment accepted. Orders held until payment clears.
           </div>
         </div>
         <div style={{flex:1,overflowY:"auto",padding:"12px 22px"}}>

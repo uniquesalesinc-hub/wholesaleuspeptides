@@ -47,7 +47,7 @@ async function submitPartnerLead(lead) {
 }
 
 const RESOURCES = [
-  { label: "Volume Pricing Tiers", desc: "Full 8-tier retail and wholesale pricing is now visible on every product card.", action: "catalog" },
+  { label: "Volume Pricing Tiers", desc: "Full volume-based wholesale pricing is now visible on every product card.", action: "catalog" },
   { label: "2026 Wholesale Catalog", desc: "Download the current category and starting-price overview.", href: "/downloads/2026-wholesale-catalog.pdf" },
   { label: "White Label Resources", desc: "Private label program details, formats, and onboarding steps.", action: "wl" },
   { label: "Manufacturing Standards", desc: "Domestic manufacturing and third-party testing standards.", action: "about" },
