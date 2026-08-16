@@ -17,7 +17,7 @@ const TYPE_META = {
     eyebrow: "Custom Production",
     title: "Request Custom Production",
     subject: "New Custom Production Request",
-    intro: "This strength is available through our custom production program and is not maintained as ready-to-ship inventory. Production lead time, testing requirements, quantity, payment and fulfillment expectations must be confirmed with our wholesale team before the order is accepted.",
+    intro: "This strength is available through our custom production program and is not maintained as ready-to-ship inventory. Production lead time, testing requirements, and quantity must be confirmed with our wholesale team before the order is accepted. Once approved, a 50% deposit (ACH or Zelle) is required to begin production, with the remaining 50% due before shipment.",
   },
   large_volume: {
     eyebrow: "Large-Volume Order",

@@ -55,8 +55,8 @@ async function submitOrderRequest(cart, total, units, contact) {
       total_units: units,
       order_items: orderItems,
       order_total: fmt(total),
-      deposit_due: fmt(total * 0.5),
-      balance_due: fmt(total * 0.5),
+      payment_due: fmt(total),
+      payment_terms: "In-stock order — 100% due in full before fulfillment",
     }),
   });
 
@@ -1432,7 +1432,7 @@ function AboutPage() {
           {t:"Three-Panel Independent Testing — Every Lot",      b:"HPLC peptide purity (99%+), endotoxin via LAL assay, and heavy metal screen via ICP-MS. Performed by a U.S. third-party laboratory on every production lot — not averaged, not based on manufacturer-supplied COAs."},
           {t:"Batch-Specific COA for White-Label Partners",      b:"White-label partners receive the full third-party COA document for every lot we fulfill under their brand — delivered as PDF for posting on partner websites. Full traceability from the QR code on the bottle to the independent lab report."},
           {t:"Research Use Only (RUO) — Legal Position",        b:"All products are Research Use Only. Not approved by the U.S. FDA for any clinical, diagnostic, or therapeutic use. Clinical trials for many compounds are ongoing. Not drugs, supplements, or medical devices. Partners and purchasers are responsible for compliance with all applicable federal, state, and local laws."},
-          {t:"Payment Policy",                                   b:"WholesaleUSPeptides accepts ACH bank transfer, debit cards, and Zelle (debit card and Zelle payments accepted up to $2,500). All orders are held pending until payment clears. 50% deposit required on all new accounts to initiate production. Net terms are not offered."},
+          {t:"Payment Policy",                                   b:"WholesaleUSPeptides accepts ACH bank transfer and Zelle. Credit and debit cards are not accepted. Customers are responsible for any sending limits imposed by their own financial institution. All orders are held pending until payment clears. In-stock orders are due in full before fulfillment. Custom production orders require a 50% deposit to begin production once approved, with the remaining 50% due before shipment. Net terms are not offered."},
         ].map(({t,b})=>(
           <div key={t} style={{marginBottom:24,paddingBottom:24,borderBottom:"1px solid "+C.mist}}>
             <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
@@ -1618,7 +1618,7 @@ function TermsOfServicePage() {
         {t:"No Guarantee of Product Availability", b:"Product inventory, SKUs, and formulations are subject to change without notice. Submitting a quote request, partner access form, or white-label application does not guarantee product availability or order fulfillment. All orders are subject to internal review prior to acceptance."},
         {t:"Pricing Subject to Change", b:"All pricing tiers displayed on this platform are subject to change without notice. Quoted pricing is valid for a limited period and is subject to confirmation at the time an order is placed."},
         {t:"Manufacturing Timelines May Vary", b:"Quote turnaround and manufacturing lead times referenced on this platform are estimates only. Actual production and fulfillment timelines may vary based on order volume, custom formulation requirements, white-label specifications, and supply conditions."},
-        {t:"Payment Terms", b:"WholesaleUSPeptides.com accepts ACH bank transfer, debit card, and Zelle (debit card and Zelle accepted up to $2,500). Credit cards are not accepted and net terms are not offered. A 50% deposit is required to initiate production, with the balance due on completion of manufacturing prior to shipping. Orders are held until payment clears."},
+        {t:"Payment Terms", b:"WholesaleUSPeptides.com accepts ACH bank transfer and Zelle. Credit and debit cards are not accepted, and net terms are not offered. Customers are responsible for any sending limits imposed by their own financial institution. In-stock orders are due in full before fulfillment. Custom production orders require a 50% deposit to begin production once approved, with the remaining 50% due before shipment. Orders are held until payment clears."},
         {t:"Governing Law & Jurisdiction", b:"These Terms are governed by the laws of the United States and the state in which WholesaleUSPeptides.com's manufacturing operations are domiciled, without regard to conflict-of-law principles. Any dispute arising from use of this platform is subject to the exclusive jurisdiction of the courts located in that state."},
         {t:"Limitation of Liability", b:"WholesaleUSPeptides.com is not liable for indirect, incidental, or consequential damages arising from use of this platform, including delays in manufacturing, changes in pricing, or unavailability of product."},
       ]}
@@ -1762,7 +1762,7 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
         </div>
         <div style={{padding:"10px 22px 0"}}>
           <div style={{padding:"8px 12px",background:"#EDE9DF",border:"1px solid "+C.mist,fontSize:10,color:"#6B5E4A",lineHeight:1.6}}>
-            <strong style={{color:C.red}}>RUO:</strong> Research purposes only. Not FDA approved. ACH, debit card, or Zelle (up to $2,500) payment accepted. Orders held until payment clears.
+            <strong style={{color:C.red}}>RUO:</strong> Research purposes only. Not FDA approved. ACH or Zelle payment accepted. Orders held until payment clears.
           </div>
         </div>
         <div style={{flex:1,overflowY:"auto",padding:"12px 22px"}}>
@@ -1863,18 +1863,16 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
                 <div style={{fontSize:9,color:C.stone,marginTop:1}}>+ tax & shipping</div>
               </div>
             </div>
-            {/* Deposit */}
+            {/* Payment due — every line in this cart is an in-stock item
+                (custom-production SKUs cannot be added here), so the full
+                order total is due before fulfillment. */}
             <div style={{padding:"10px 14px",background:C.off,border:"1px solid "+C.mist,marginBottom:12}}>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.stone,marginBottom:3}}>
-                <span>50% Deposit Required</span>
-                <span style={{fontWeight:700,color:C.navy}}>{hasPrice(total)?fmt(total*0.5):NO_PRICE_LABEL}</span>
-              </div>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.stone}}>
-                <span>Balance Due on Completion of Manufacturing Prior to Shipping</span>
-                <span style={{fontWeight:700,color:C.navy}}>{hasPrice(total)?fmt(total*0.5):NO_PRICE_LABEL}</span>
+                <span>In-Stock Items — Due in Full</span>
+                <span style={{fontWeight:700,color:C.navy}}>{hasPrice(total)?fmt(total):NO_PRICE_LABEL}</span>
               </div>
             </div>
-            <div style={{padding:"7px 12px",background:C.navy,marginBottom:10,fontSize:9,color:C.gold,fontWeight:700,letterSpacing:1,textAlign:"center"}}>ACH · Debit Card · Zelle (Debit &amp; Zelle up to $2,500) — No Credit Cards</div>
+            <div style={{padding:"7px 12px",background:C.navy,marginBottom:10,fontSize:9,color:C.gold,fontWeight:700,letterSpacing:1,textAlign:"center"}}>ACH · Zelle — No Credit or Debit Cards</div>
 
             {!sent && (
               <div style={{marginBottom:12}}>
