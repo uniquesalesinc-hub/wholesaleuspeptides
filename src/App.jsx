@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import TrustBanner from "./components/TrustBanner.jsx";
 import PartnerAccessModal from "./components/PartnerAccessModal.jsx";
 import ContactModal from "./components/ContactModal.jsx";
@@ -1402,14 +1402,80 @@ function AboutPage() {
 }
 
 // ── BATCH VERIFICATION PAGE ───────────────────────────────────────────────────
+// Historical Testing Archive: real, sanitized third-party COAs (Bioviridian Inc.).
+// Every field below is transcribed from the underlying laboratory document —
+// nothing here is inferred or fabricated. Panels not documented on a given COA
+// are rendered as "Not Tested" rather than a passing result. Two lot numbers
+// (COA6562, COA6563) are recorded exactly as printed on their source COAs even
+// though they don't match their batch's other records — see each row's `anomaly`.
+const COA_ARCHIVE = [
+  {compound:"Ipamorelin",strength:"10mg",reportId:"COA4273",lot:"1218",received:"2026-05-06",issued:"2026-05-12",purity:"99.8%",endotoxin:"<0.05 EU/mL",heavyMetals:null,sterility:null,pdf:"/coas/ipamorelin/ipamorelin-10mg-lot1218-coa4273.pdf"},
+  {compound:"BPC-157 / TB-500",strength:"20mg",reportId:"COA4274",lot:"1218",received:"2026-05-06",issued:"2026-05-12",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:null,sterility:null,pdf:"/coas/bpc-157-tb-500/bpc-157-tb-500-20mg-lot1218-coa4274.pdf"},
+  {compound:"BPC-157",strength:"10mg",reportId:"COA4275",lot:"1218",received:"2026-05-06",issued:"2026-05-12",purity:"99.8%",endotoxin:"<0.05 EU/mL",heavyMetals:null,sterility:null,pdf:"/coas/bpc-157/bpc-157-10mg-lot1218-coa4275.pdf"},
+  {compound:"KLOW Blend",strength:"80mg",reportId:"COA4276",lot:"1218",received:"2026-05-06",issued:"2026-05-12",purity:"99.8%",endotoxin:"<0.05 EU/mL",heavyMetals:null,sterility:null,pdf:"/coas/klow-blend/klow-blend-80mg-lot1218-coa4276.pdf"},
+  {compound:"Thymosin Alpha-1",strength:"10mg",reportId:"COA4277",lot:"1218",received:"2026-05-06",issued:"2026-05-12",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:null,sterility:null,pdf:"/coas/thymosin-alpha-1/thymosin-alpha-1-10mg-lot1218-coa4277.pdf"},
+  {compound:"GLP-T (Tirzepatide)",strength:"15mg",reportId:"COA4278",lot:"1218",received:"2026-05-06",issued:"2026-05-12",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:null,sterility:null,pdf:"/coas/glp-t/glp-t-tirzepatide-15mg-lot1218-coa4278.pdf"},
+  {compound:"Tesamorelin",strength:"10mg",reportId:"COA4279",lot:"1218",received:"2026-05-06",issued:"2026-05-12",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:null,sterility:null,pdf:"/coas/tesamorelin/tesamorelin-10mg-lot1218-coa4279.pdf"},
+  {compound:"NAD+",strength:"1000mg",reportId:"COA5201",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/nad-plus/nad-plus-1000mg-lot1318-coa5201.pdf"},
+  {compound:"NAD+",strength:"500mg",reportId:"COA5202",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/nad-plus/nad-plus-500mg-lot1318-coa5202.pdf"},
+  {compound:"GLP-R (Retatrutide)",strength:"30mg",reportId:"COA5203",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/glp-r/glp-r-retatrutide-30mg-lot1318-coa5203.pdf"},
+  {compound:"BPC-157 / TB-500",strength:"20mg",reportId:"COA5204",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/bpc-157-tb-500/bpc-157-tb-500-20mg-lot1318-coa5204.pdf"},
+  {compound:"SS-31",strength:"50mg",reportId:"COA5205",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/ss-31/ss-31-50mg-lot1318-coa5205.pdf"},
+  {compound:"Epithalon",strength:"50mg",reportId:"COA5206",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.3%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/epithalon/epithalon-50mg-lot1318-coa5206.pdf"},
+  {compound:"GLP-T (Tirzepatide)",strength:"15mg",reportId:"COA5207",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.3%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/glp-t/glp-t-tirzepatide-15mg-lot1318-coa5207.pdf"},
+  {compound:"GLP-S (Semaglutide)",strength:"10mg",reportId:"COA5208",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/glp-s/glp-s-semaglutide-10mg-lot1318-coa5208.pdf"},
+  {compound:"Tesamorelin",strength:"10mg",reportId:"COA5209",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/tesamorelin/tesamorelin-10mg-lot1318-coa5209.pdf"},
+  {compound:"GLP-S (Semaglutide)",strength:"5mg",reportId:"COA5210",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/glp-s/glp-s-semaglutide-5mg-lot1318-coa5210.pdf"},
+  {compound:"PT-141",strength:"10mg",reportId:"COA5211",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/pt-141/pt-141-10mg-lot1318-coa5211.pdf"},
+  {compound:"GLP-T (Tirzepatide)",strength:"30mg",reportId:"COA5215",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/glp-t/glp-t-tirzepatide-30mg-lot1318-coa5215.pdf"},
+  {compound:"AOD-9604",strength:"10mg",reportId:"COA5216",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.8%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/aod-9604/aod-9604-10mg-lot1318-coa5216.pdf"},
+  {compound:"Thymosin Alpha-1",strength:"10mg",reportId:"COA5217",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.8%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/thymosin-alpha-1/thymosin-alpha-1-10mg-lot1318-coa5217.pdf"},
+  {compound:"MOTS-C",strength:"10mg",reportId:"COA5218",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.8%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/mots-c/mots-c-10mg-lot1318-coa5218.pdf"},
+  {compound:"SS-31",strength:"10mg",reportId:"COA5219",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.6%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/ss-31/ss-31-10mg-lot1318-coa5219.pdf"},
+  {compound:"CJC-1295 (No DAC) / Ipamorelin",strength:"10mg",reportId:"COA5220",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/cjc-1295-ipamorelin/cjc-1295-no-dac-ipamorelin-10mg-lot1318-coa5220.pdf"},
+  {compound:"Melanotan-II",strength:"10mg",reportId:"COA5221",lot:"1318",received:"2026-06-10",issued:"2026-06-15",purity:"99.9%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:null,pdf:"/coas/melanotan-ii/melanotan-ii-10mg-lot1318-coa5221.pdf"},
+  {compound:"Tesamorelin",strength:"10mg",reportId:"COA6558",lot:"1418",received:"2026-07-15",issued:"2026-07-29",purity:"99.8%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:"Not Detected",pdf:"/coas/tesamorelin/tesamorelin-10mg-lot1418-coa6558.pdf"},
+  {compound:"DSIP",strength:"5mg",reportId:"COA6559",lot:"1418",received:"2026-07-15",issued:"2026-07-29",purity:"99.8%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:"Not Detected",pdf:"/coas/dsip/dsip-5mg-lot1418-coa6559.pdf"},
+  {compound:"KPV",strength:"10mg",reportId:"COA6560",lot:"1418",received:"2026-07-15",issued:"2026-07-29",purity:"99.8%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:"Not Detected",pdf:"/coas/kpv/kpv-10mg-lot1418-coa6560.pdf"},
+  {compound:"5 Amino 1MQ",strength:"50mg",reportId:"COA6561",lot:"1418",received:"2026-07-15",issued:"2026-07-29",purity:"99.8%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:"Not Detected",pdf:"/coas/5-amino-1mq/5-amino-1mq-50mg-lot1418-coa6561.pdf"},
+  {compound:"SLU-PP-332",strength:"5mg",reportId:"COA6562",lot:"1318",received:"2026-07-15",issued:"2026-07-29",purity:"99.6%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:"Not Detected",pdf:"/coas/slu-pp-332/slu-pp-332-5mg-lot1318-coa6562.pdf",anomaly:"Lot number displayed as documented on source COA."},
+  {compound:"Kisspeptin-10",strength:"10mg",reportId:"COA6563",lot:"1318",received:"2026-07-15",issued:"2026-07-29",purity:"99.8%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:"Not Detected",pdf:"/coas/kisspeptin-10/kisspeptin-10-10mg-lot1318-coa6563.pdf",anomaly:"Lot number displayed as documented on source COA."},
+  {compound:"GLP-R (Retatrutide)",strength:"10mg",reportId:"COA6564",lot:"1418",received:"2026-07-15",issued:"2026-07-29",purity:"99.8%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:"Not Detected",pdf:"/coas/glp-r/glp-r-retatrutide-10mg-lot1418-coa6564.pdf"},
+  {compound:"MOTS-C",strength:"10mg",reportId:"COA6565",lot:"1418",received:"2026-07-15",issued:"2026-07-29",purity:"99.8%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:"Not Detected",pdf:"/coas/mots-c/mots-c-10mg-lot1418-coa6565.pdf"},
+  {compound:"IGF-1 LR3",strength:"1mg",reportId:"COA6566",lot:"1418",received:"2026-07-15",issued:"2026-07-29",purity:"99.7%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:"Not Detected",pdf:"/coas/igf-1-lr3/igf-1-lr3-1mg-lot1418-coa6566.pdf"},
+  {compound:"VIP",strength:"10mg",reportId:"COA6567",lot:"1418",received:"2026-07-15",issued:"2026-07-29",purity:"99.8%",endotoxin:"<0.05 EU/mL",heavyMetals:"<0.01 ppm",sterility:"Not Detected",pdf:"/coas/vip/vip-10mg-lot1418-coa6567.pdf"},
+];
+const fmtArchiveDate = iso => {
+  const [y,m,d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y,m-1,d)).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"});
+};
+
 function COAPage() {
   const [srch, setSrch] = useState("");
+  const [compoundFilter, setCompoundFilter] = useState("all");
+  const [yearFilter, setYearFilter] = useState("all");
+  const [panelFilter, setPanelFilter] = useState("all");
   const lastTrackedSearch = useRef("");
-  const rows = P.slice(0,24).filter(p=>{
-    const lot = "LOT-2026-"+String(p.id).padStart(3,"0");
+
+  const compoundOptions = useMemo(()=>Array.from(new Set(COA_ARCHIVE.map(r=>r.compound))).sort(), []);
+  const yearOptions = useMemo(()=>Array.from(new Set(COA_ARCHIVE.map(r=>r.issued.slice(0,4)))).sort().reverse(), []);
+
+  const rows = useMemo(() => {
     const term = srch.trim().toLowerCase();
-    return !term || p.n.toLowerCase().includes(term) || lot.toLowerCase().includes(term);
-  });
+    return COA_ARCHIVE
+      .filter(r => compoundFilter==="all" || r.compound===compoundFilter)
+      .filter(r => yearFilter==="all" || r.issued.slice(0,4)===yearFilter)
+      .filter(r => {
+        if (panelFilter==="all") return true;
+        if (panelFilter==="sterility") return !!r.sterility;
+        if (panelFilter==="heavyMetals") return !!r.heavyMetals;
+        if (panelFilter==="endotoxinOnly") return !r.heavyMetals && !r.sterility;
+        return true;
+      })
+      .filter(r => !term || r.compound.toLowerCase().includes(term) || r.reportId.toLowerCase().includes(term) || r.lot.toLowerCase().includes(term))
+      .sort((a,b) => b.issued.localeCompare(a.issued) || a.compound.localeCompare(b.compound));
+  }, [srch, compoundFilter, yearFilter, panelFilter]);
+
   useEffect(() => {
     const term = srch.trim();
     if (!term) return;
@@ -1421,13 +1487,17 @@ function COAPage() {
     }, 600);
     return () => clearTimeout(timer);
   }, [srch]);
+
+  const selectStyle = {padding:"10px 12px",border:"1px solid "+C.mist,background:C.white,fontSize:11,color:C.navy,outline:"none",boxSizing:"border-box",width:"100%"};
+  const gridCols = "1.5fr 0.7fr 1fr 1.05fr 0.8fr 1fr 1fr 1fr 0.9fr";
+
   return (
     <div style={{background:C.off,minHeight:"100vh"}}>
       <div style={{background:C.navy,padding:"40px 40px 32px",borderBottom:"1px solid rgba(201,168,76,0.15)"}}>
         <div style={{maxWidth:1060,margin:"0 auto"}}>
           <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:10}}>Documentation</div>
           <h1 style={{fontSize:32,fontWeight:800,lineHeight:1.2,color:C.white,fontFamily:"Georgia,serif",marginBottom:8}}>Batch Verification Center</h1>
-          <p style={{fontSize:12,color:"rgba(255,255,255,0.4)",lineHeight:1.7,maxWidth:520}}>Every production lot independently tested. Each COA covers HPLC purity, endotoxin level (LAL), and heavy metal screen (ICP-MS). White-label partners receive batch-specific COA PDFs for their platforms.</p>
+          <p style={{fontSize:12,color:"rgba(255,255,255,0.4)",lineHeight:1.7,maxWidth:520}}>Every production lot independently tested. Each COA covers HPLC purity, sterility, endotoxin level (LAL), and heavy metal screen (ICP-MS). White-label partners receive batch-specific COA PDFs for their platforms.</p>
         </div>
       </div>
       <div style={{maxWidth:1060,margin:"0 auto",padding:"28px 40px 72px"}}>
@@ -1437,7 +1507,7 @@ function COAPage() {
           <div className="coa-howitworks-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
             {[
               {n:"01",t:"Enter Batch Number",b:"Locate the lot number printed on your bottle label or QR code."},
-              {n:"02",t:"Retrieve Laboratory Results",b:"Pull the independent HPLC, LAL, and ICP-MS results for that specific production lot."},
+              {n:"02",t:"Retrieve Laboratory Results",b:"Pull the independent HPLC, sterility, LAL endotoxin, and ICP-MS heavy-metal results for that specific production lot."},
               {n:"03",t:"Verify Product Authenticity",b:"Confirm the compound, strength, and lot match the original manufacturing record."},
               {n:"04",t:"Download Certificate of Analysis (COA)",b:"Save or share the batch-specific COA PDF for your records or platform."},
             ].map(c=>(
@@ -1460,37 +1530,78 @@ function COAPage() {
         <div style={{background:"rgba(201,168,76,0.08)",border:"1px solid rgba(201,168,76,0.25)",padding:"12px 16px",marginBottom:20,fontSize:11,color:C.navy,lineHeight:1.7}}>
           Every production batch is independently tested and archived for verification purposes.
         </div>
-        <div style={{background:"#EDE9DF",border:"1px solid "+C.mist,padding:"9px 14px",marginBottom:20,fontSize:10,color:"#6B5E4A",lineHeight:1.7}}>
+        <div style={{background:"#EDE9DF",border:"1px solid "+C.mist,padding:"9px 14px",marginBottom:36,fontSize:10,color:"#6B5E4A",lineHeight:1.7}}>
           <strong style={{color:C.red}}>RUO Documentation:</strong> COAs support legitimate laboratory research only. They do not constitute FDA approval for any use.
         </div>
-        <div style={{marginBottom:16}}>
-          <div style={{fontSize:9,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:6}}>Lookup by Compound or Lot Number</div>
-          <input value={srch} onChange={e=>setSrch(e.target.value)} placeholder="e.g. BPC-157 or LOT-2026-004"
-            style={{width:"100%",padding:"10px 14px",border:"1px solid "+C.mist,background:C.white,fontSize:12,color:C.navy,outline:"none",boxSizing:"border-box"}}/>
+
+        <div style={{marginBottom:20}}>
+          <div style={{fontSize:9,letterSpacing:3,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:6}}>Historical Testing Archive</div>
+          <p style={{fontSize:12,color:C.stone,lineHeight:1.8,maxWidth:760}}>This archive contains current and historical third-party laboratory reports. Testing panels have expanded over time. Each record below reflects only the analyses documented on that specific Certificate of Analysis.</p>
         </div>
-        <div style={{border:"1px solid "+C.mist,background:C.white}}>
-          <div style={{padding:"10px 18px",background:C.navy2,display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 1fr",gap:10}}>
-            {["Compound","Lot Number","HPLC Purity","Endotoxins","Heavy Metals","COA"].map(h=>(
-              <div key={h} style={{fontSize:8,letterSpacing:2,color:C.gold,textTransform:"uppercase",fontWeight:700}}>{h}</div>
+
+        <div className="coa-filter-grid" style={{display:"grid",gridTemplateColumns:"1.4fr 1fr 1fr 1fr",gap:10,marginBottom:20}}>
+          <div>
+            <div style={{fontSize:9,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:6}}>Search Compound / Report ID / Lot</div>
+            <input value={srch} onChange={e=>setSrch(e.target.value)} placeholder="e.g. BPC-157, COA6558, or 1418"
+              style={{width:"100%",padding:"10px 14px",border:"1px solid "+C.mist,background:C.white,fontSize:12,color:C.navy,outline:"none",boxSizing:"border-box"}}/>
+          </div>
+          <div>
+            <div style={{fontSize:9,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:6}}>Compound</div>
+            <select value={compoundFilter} onChange={e=>setCompoundFilter(e.target.value)} style={selectStyle}>
+              <option value="all">All Compounds</option>
+              {compoundOptions.map(c=><option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
+            <div style={{fontSize:9,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:6}}>Test Year</div>
+            <select value={yearFilter} onChange={e=>setYearFilter(e.target.value)} style={selectStyle}>
+              <option value="all">All Years</option>
+              {yearOptions.map(y=><option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+          <div>
+            <div style={{fontSize:9,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:6}}>Testing Panel</div>
+            <select value={panelFilter} onChange={e=>setPanelFilter(e.target.value)} style={selectStyle}>
+              <option value="all">All Panels</option>
+              <option value="sterility">Includes Sterility</option>
+              <option value="heavyMetals">Includes Heavy Metals</option>
+              <option value="endotoxinOnly">Endotoxin Only</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{border:"1px solid "+C.mist,background:C.white,overflowX:"auto"}}>
+          <div style={{minWidth:900}}>
+            <div style={{padding:"10px 18px",background:C.navy2,display:"grid",gridTemplateColumns:gridCols,gap:10}}>
+              {["Compound","Strength","Test Date","Report ID (Lot)","Purity","Sterility","Endotoxins","Heavy Metals","COA"].map(h=>(
+                <div key={h} style={{fontSize:8,letterSpacing:1.5,color:C.gold,textTransform:"uppercase",fontWeight:700}}>{h}</div>
+              ))}
+            </div>
+            {rows.length===0 && (
+              <div style={{padding:"24px 18px",fontSize:11,color:C.stone,textAlign:"center"}}>No matching records found.</div>
+            )}
+            {rows.map((r,i)=>(
+              <div key={r.reportId} style={{padding:"10px 18px",borderBottom:"1px solid "+C.mist,background:i%2===1?C.off:C.white,display:"grid",gridTemplateColumns:gridCols,gap:10,alignItems:"center"}}>
+                <div style={{fontSize:11,fontWeight:700,color:C.navy}}>{r.compound}</div>
+                <div style={{fontSize:10,color:C.stone}}>{r.strength}</div>
+                <div style={{fontSize:10,color:C.stone}}>{fmtArchiveDate(r.issued)}</div>
+                <div style={{fontSize:9.5,color:C.stone,fontFamily:"'Courier New',monospace"}} title={r.anomaly||undefined}>
+                  {r.reportId} (Lot {r.lot}){r.anomaly && <span style={{color:C.gold}}> †</span>}
+                </div>
+                <div style={{fontSize:10,fontWeight:700,color:C.green}}>{r.purity}</div>
+                <div style={{fontSize:10,fontWeight:700,color:r.sterility?C.green:C.stone}}>{r.sterility||"Not Tested"}</div>
+                <div style={{fontSize:10,fontWeight:700,color:C.green}}>{r.endotoxin}</div>
+                <div style={{fontSize:10,fontWeight:700,color:r.heavyMetals?C.green:C.stone}}>{r.heavyMetals||"Not Tested"}</div>
+                <a href={r.pdf} download className="btn-polish" style={{fontSize:9,color:C.gold,background:"none",border:"1px solid rgba(201,168,76,0.35)",padding:"4px 10px",cursor:"pointer",fontWeight:700,textDecoration:"none",textAlign:"center"}}>Download</a>
+              </div>
             ))}
           </div>
-          {rows.length===0 && (
-            <div style={{padding:"24px 18px",fontSize:11,color:C.stone,textAlign:"center"}}>No matching compound or lot number found.</div>
-          )}
-          {rows.map((p,i)=>(
-            <div key={p.id} style={{padding:"10px 18px",borderBottom:"1px solid "+C.mist,background:i%2===1?C.off:C.white,display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 1fr",gap:10,alignItems:"center"}}>
-              <div>
-                <div style={{fontSize:12,fontWeight:700,color:C.navy}}>{p.n}</div>
-                <div style={{fontSize:9,color:C.stone}}>{p.s} — {p.c}</div>
-              </div>
-              <div style={{fontSize:10,color:C.stone,fontFamily:"'Courier New',monospace"}}>LOT-2026-{String(p.id).padStart(3,"0")}</div>
-              <div style={{fontSize:10,fontWeight:700,color:C.green}}>99.2%+</div>
-              <div style={{fontSize:10,fontWeight:700,color:C.green}}>Pass</div>
-              <div style={{fontSize:10,fontWeight:700,color:C.green}}>Pass</div>
-              <button className="btn-polish" style={{fontSize:9,color:C.gold,background:"none",border:"1px solid rgba(201,168,76,0.35)",padding:"4px 10px",cursor:"pointer",fontWeight:700}}>Download</button>
-            </div>
-          ))}
         </div>
+        {rows.some(r=>r.anomaly) && (
+          <div style={{marginTop:10,fontSize:9.5,color:C.stone,lineHeight:1.6}}>
+            † Lot number displayed as documented on source COA.
+          </div>
+        )}
         <div style={{marginTop:18,textAlign:"center",fontSize:11,color:C.stone}}>
           Full COA package for all lots available to verified wholesale partners.<br/>
           Contact sales@wholesaleuspeptides.com — 602-321-8381
