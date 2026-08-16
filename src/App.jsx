@@ -171,6 +171,30 @@ function tierForQty(qty, minQty = DEFAULT_MIN_QTY) {
   return "R1";
 }
 
+// A handful of SKUs (e.g. Recon Water) don't follow the standard 8-tier
+// R1-T5 model at all — they have their own quantity breakpoints. Those
+// variants carry a `customTierRanges` array of {id, min, max} brackets,
+// and a literal field on the variant named after each bracket's id holding
+// that bracket's price — so every existing `variant[tier]` price lookup
+// elsewhere in the app keeps working unchanged, standard products included.
+function resolveTier(variant, qty) {
+  if (variant && variant.customTierRanges) {
+    const q = Math.max(DEFAULT_MIN_QTY, qty || DEFAULT_MIN_QTY);
+    const bracket = variant.customTierRanges.find(b => q >= b.min && (b.max === null || q <= b.max));
+    return (bracket || variant.customTierRanges[variant.customTierRanges.length - 1]).id;
+  }
+  return tierForQty(qty);
+}
+
+// The lowest-quantity bracket's price, for the "Starting At" display —
+// falls back to R1 for every standard (non-custom-tier) product.
+function startingPrice(variant) {
+  if (variant && variant.customTierRanges) {
+    return variant[variant.customTierRanges[0].id];
+  }
+  return variant.R1;
+}
+
 const fmt = n => n != null ? "$" + Number(n).toFixed(2) : "$0.00";
 
 // A price is only valid for display if it is a finite, positive number.
@@ -224,6 +248,11 @@ function fulfillmentStatus(variant) {
 function fulfillmentState(variant, qty) {
   const status = fulfillmentStatus(variant);
   if (status !== "in_stock") return status;
+  // A small number of SKUs (currently only Recon Water) are explicitly
+  // exempted from the site-wide 300-unit Large-Volume Review gate and stay
+  // normally purchasable at every quantity — every other in-stock product
+  // is unaffected and still flips to "large_volume" at the threshold.
+  if (variant && variant.exemptFromLargeVolumeReview) return "in_stock";
   return (qty || 0) >= LARGE_VOLUME_THRESHOLD ? "large_volume" : "in_stock";
 }
 
@@ -370,7 +399,11 @@ const P = [
   {id:83, c:"Topicals", n:"Repair Cream",         s:"50ml", R1:45,  R2:45,  R3:45,  T1:45,  T2:45,  T3:42.5,T4:42.5,T5:40,  stockStatus:"in_stock", hot:1},
   {id:84, c:"Topicals", n:"Smooth Cream",         s:"50ml", R1:49,  R2:49,  R3:49,  T1:49,  T2:49,  T3:46.5,T4:46.5,T5:44,  stockStatus:"in_stock", hot:0},
   {id:85, c:"Topicals", n:"Tan Cream",            s:"50ml", R1:45,  R2:45,  R3:45,  T1:45,  T2:45,  T3:42.5,T4:42.5,T5:40,  stockStatus:"in_stock", hot:0},
-  {id:86, c:"Diluents", n:"Water",                s:"10ml", R1:6.99,R2:6.49,R3:5.99,T1:4.5, T2:4.5, T3:4.5, T4:4.5, T5:4.5, hot:0},
+  {id:86, c:"Diluents", n:"Recon Water",           s:"10mL",
+    CT1:14.99, CT2:12.99, CT3:10.99,
+    customTierRanges:[{id:"CT1",min:10,max:100},{id:"CT2",min:101,max:300},{id:"CT3",min:301,max:null}],
+    exemptFromLargeVolumeReview:true,
+    stockStatus:"in_stock", hot:0},
   {id:87, c:"Capsules", n:"5 Amino 1MQ",          s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  stockStatus:"in_stock", hot:0},
   {id:88, c:"Capsules", n:"BPC-157",              s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  stockStatus:"in_stock", hot:0},
   {id:89, c:"Capsules", n:"Dihexa",               s:"60 ct",R1:70,  R2:70,  R3:70,  T1:65,  T2:65,  T3:65,  T4:65,  T5:65,  stockStatus:"in_stock", hot:0},
@@ -398,7 +431,7 @@ function groupProducts(flat) {
     }
     const grp = map.get(key);
     if (item.hot === 1) grp.hot = 1;
-    grp.variants.push({ id: item.id, s: item.s, R1:item.R1, R2:item.R2, R3:item.R3, T1:item.T1, T2:item.T2, T3:item.T3, T4:item.T4, T5:item.T5, stockStatus: item.stockStatus, customProductionAvailable: item.customProductionAvailable });
+    grp.variants.push({ id: item.id, s: item.s, R1:item.R1, R2:item.R2, R3:item.R3, T1:item.T1, T2:item.T2, T3:item.T3, T4:item.T4, T5:item.T5, CT1:item.CT1, CT2:item.CT2, CT3:item.CT3, customTierRanges: item.customTierRanges, exemptFromLargeVolumeReview: item.exemptFromLargeVolumeReview, stockStatus: item.stockStatus, customProductionAvailable: item.customProductionAvailable });
   }
   return Array.from(map.values());
 }
@@ -525,7 +558,7 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
   const variant = p.variants[varIdx];
   const fState = fulfillmentState(variant, qty);
   const meta = FULFILLMENT_META[fState];
-  const t = tierForQty(qty);
+  const t = resolveTier(variant, qty);
   const price = variant[t] || 0;
   const showPricing = fState === "in_stock" || fState === "large_volume";
   return (
@@ -565,10 +598,10 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
           </div>
         ) : (
           <div style={{marginBottom:14}}>
-            {hasPrice(variant.R1) ? (
+            {hasPrice(startingPrice(variant)) ? (
               <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:9}}>
                 <div style={{fontSize:8,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700}}>Starting At</div>
-                <div style={{fontSize:15,fontWeight:800,color:C.navy}}>{fmt(variant.R1)}</div>
+                <div style={{fontSize:15,fontWeight:800,color:C.navy}}>{fmt(startingPrice(variant))}</div>
                 <div style={{fontSize:9,color:C.stone}}>/unit ({DEFAULT_MIN_QTY}+ units)</div>
               </div>
             ) : (
@@ -1714,7 +1747,7 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
     if (item && !isPurchasable(item.variant, qty)) return;
     // The tier/unit price must always be recomputed from the new quantity —
     // never left at whatever tier applied when the line was first added.
-    setCart(p => p.map(i => (i.p.id===pid && i.variant.id===vid) ? {...i,qty,tier:tierForQty(qty)} : i));
+    setCart(p => p.map(i => (i.p.id===pid && i.variant.id===vid) ? {...i,qty,tier:resolveTier(i.variant,qty)} : i));
   };
   return (
     <>
@@ -1947,9 +1980,9 @@ export default function App() {
         // The tier/unit price must always be recomputed from the resulting
         // quantity — never carried over from whichever tier applied to the
         // smaller quantity already in the cart.
-        return prev.map(i=>(i.p.id===p.id && i.variant.id===variant.id)?{...i,qty:mergedQty,tier:tierForQty(mergedQty)}:i);
+        return prev.map(i=>(i.p.id===p.id && i.variant.id===variant.id)?{...i,qty:mergedQty,tier:resolveTier(variant,mergedQty)}:i);
       }
-      return [...prev,{p,variant,qty,tier:tierForQty(qty)}];
+      return [...prev,{p,variant,qty,tier:resolveTier(variant,qty)}];
     });
     setCopen(true);
   };
