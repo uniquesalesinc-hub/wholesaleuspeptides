@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { trackEvent } from "../lib/analytics";
+import { DEFAULT_MIN_QTY, resolveTier, hasPrice, fmt, splitDeposit } from "../lib/pricing";
 
 const NAVY = "#05111F";
 const GOLD = "#C9A84C";
@@ -27,7 +28,7 @@ const TYPE_META = {
   },
 };
 
-async function submitConsultationRequest(type, context, form) {
+async function submitConsultationRequest(type, context, form, qty, pricing) {
   const meta = TYPE_META[type] || TYPE_META.custom_production;
   try {
     await fetch("https://api.web3forms.com/submit", {
@@ -41,12 +42,21 @@ async function submitConsultationRequest(type, context, form) {
         request_type: meta.subject,
         product: context.productName,
         strength: context.strength,
-        requested_quantity: context.qty,
+        requested_quantity: qty,
         name: form.name,
         company: form.company,
         business_email: form.email,
         phone: form.phone || "Not provided",
         message: form.message || "Not provided",
+        // Estimate only — pricing.js's resolveTier() against the product's
+        // existing tier data, same logic the catalog/cart use. Final pricing
+        // is confirmed by the wholesale team before the order is accepted.
+        ...(pricing ? {
+          estimated_unit_price: fmt(pricing.unitPrice),
+          estimated_order_total: fmt(pricing.orderTotal),
+          estimated_deposit: fmt(pricing.deposit),
+          estimated_remaining_balance: fmt(pricing.remaining),
+        } : {}),
       }),
     });
   } catch (err) {
@@ -83,26 +93,43 @@ export default function ConsultationModal({ open, onClose, context }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
+  const [qty, setQty] = useState(DEFAULT_MIN_QTY);
 
   useEffect(() => {
-    if (open) { setForm(EMPTY_FORM); setSent(false); }
+    if (open) { setForm(EMPTY_FORM); setSent(false); setQty(context?.qty || DEFAULT_MIN_QTY); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   if (!open || !context) return null;
   const meta = TYPE_META[context.type] || TYPE_META.custom_production;
+  const isCustomProduction = context.type === "custom_production";
+
+  // Estimate only — same tier-resolution logic the catalog/cart use against
+  // the product's existing pricing data. No new pricing is introduced here.
+  let pricing = null;
+  if (isCustomProduction && context.variant) {
+    const tier = resolveTier(context.variant, qty);
+    const unitPrice = context.variant[tier] || 0;
+    if (hasPrice(unitPrice)) {
+      const orderTotal = unitPrice * qty;
+      const { deposit, remaining } = splitDeposit(orderTotal);
+      pricing = { unitPrice, orderTotal, deposit, remaining };
+    }
+  }
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const setQtyClamped = (v) => setQty(Math.max(DEFAULT_MIN_QTY, parseInt(v, 10) || DEFAULT_MIN_QTY));
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
   const canSubmit = form.name.trim() && form.company.trim() && emailValid && !submitting;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
-    await submitConsultationRequest(context.type, context, form);
+    await submitConsultationRequest(context.type, context, form, qty, pricing);
     setSubmitting(false);
     setSent(true);
     trackEvent(context.type === "custom_production" ? "custom_production_requested" : "large_volume_order_requested", {
-      product: context.productName, strength: context.strength, qty: context.qty,
+      product: context.productName, strength: context.strength, qty,
     });
   };
 
@@ -126,15 +153,49 @@ export default function ConsultationModal({ open, onClose, context }) {
           {!sent ? (
             <>
               <p style={{ fontSize: 12, color: STONE, lineHeight: 1.8, marginBottom: 16 }}>{meta.intro}</p>
-              <div style={{ background: OFF, border: "1px solid " + MIST, padding: "12px 14px", marginBottom: 18 }}>
+              <div style={{ background: OFF, border: "1px solid " + MIST, padding: "12px 14px", marginBottom: isCustomProduction ? 12 : 18 }}>
                 <div style={{ fontSize: 9, letterSpacing: 1.5, color: STONE, textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>Your Request</div>
-                {[["Product", context.productName], ["Strength", context.strength], ["Requested Quantity", context.qty]].map(([k, v]) => (
+                {[["Product", context.productName], ["Strength", context.strength]].map(([k, v]) => (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, padding: "3px 0" }}>
                     <span style={{ color: STONE }}>{k}</span>
                     <span style={{ fontWeight: 700, color: NAVY }}>{v}</span>
                   </div>
                 ))}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, padding: "3px 0" }}>
+                  <span style={{ color: STONE }}>Requested Quantity</span>
+                  {isCustomProduction ? (
+                    <input type="number" min={DEFAULT_MIN_QTY} value={qty} onChange={(e) => setQtyClamped(e.target.value)}
+                      style={{ width: 70, padding: "4px 6px", border: "1px solid " + MIST, background: "#fff", fontSize: 11, fontWeight: 700, color: NAVY, textAlign: "right", outline: "none" }} />
+                  ) : (
+                    <span style={{ fontWeight: 700, color: NAVY }}>{context.qty}</span>
+                  )}
+                </div>
               </div>
+              {isCustomProduction && (
+                <div style={{ background: OFF, border: "1px solid " + MIST, padding: "12px 14px", marginBottom: 18 }}>
+                  <div style={{ fontSize: 9, letterSpacing: 1.5, color: STONE, textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>Estimated Pricing</div>
+                  {pricing ? (
+                    <>
+                      {[
+                        ["Estimated Unit Price", fmt(pricing.unitPrice)],
+                        ["Estimated Order Total", fmt(pricing.orderTotal)],
+                        ["Estimated 50% Deposit", fmt(pricing.deposit)],
+                        ["Estimated Remaining Balance", fmt(pricing.remaining)],
+                      ].map(([k, v]) => (
+                        <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, padding: "3px 0" }}>
+                          <span style={{ color: STONE }}>{k}</span>
+                          <span style={{ fontWeight: 700, color: NAVY }}>{v}</span>
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    <div style={{ fontSize: 11, color: STONE }}>Pricing Available Upon Request</div>
+                  )}
+                  <p style={{ fontSize: 9.5, color: STONE, lineHeight: 1.6, marginTop: 8, marginBottom: 0 }}>
+                    Estimate only. Final pricing, lead time, testing requirements, and availability are confirmed by our wholesale team before the order is accepted.
+                  </p>
+                </div>
+              )}
               <Field label="Full Name">
                 <input style={inputStyle} value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Jane Doe" />
               </Field>
@@ -157,7 +218,7 @@ export default function ConsultationModal({ open, onClose, context }) {
             </>
           ) : (
             <p style={{ fontSize: 12, color: STONE, lineHeight: 1.8 }}>
-              Thank you. Our wholesale team will follow up with you regarding {context.productName} {context.strength} ({context.qty} units) shortly.
+              Thank you. Our wholesale team will follow up with you regarding {context.productName} {context.strength} ({isCustomProduction ? qty : context.qty} units) shortly.
             </p>
           )}
         </div>
