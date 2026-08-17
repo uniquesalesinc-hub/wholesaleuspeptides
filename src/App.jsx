@@ -587,7 +587,8 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
                 ["Production Lead Time","10–14 business days"],
                 ["Deposit","50% required to begin production"],
                 ["Balance","Remaining 50% due upon completion, prior to shipping"],
-                ["Shipping","2–5 business days after final payment"],
+                ["Shipping","2–3 business days after final payment"],
+                ["Testing","Optional third-party laboratory testing available"],
               ].map(([k,v])=>(
                 <div key={k} style={{fontSize:9.5,lineHeight:1.5}}>
                   <span style={{color:C.gold,fontWeight:700,textTransform:"uppercase",letterSpacing:0.4}}>{k}: </span>
@@ -618,7 +619,12 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
           </div>
         )}
         <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:18}}>
-          {(fState === "in_stock" || fState === "large_volume" ? [`Min. Order: ${DEFAULT_MIN_QTY} Units`,"COA Available"] : ["COA Available"]).map(f=>(
+          {(fState === "in_stock" || fState === "large_volume"
+            ? [`Min. Order: ${DEFAULT_MIN_QTY} Units`,"COA Available"]
+            : fState === "custom_production"
+            ? ["Third-Party Testing Available"]
+            : ["COA Available"]
+          ).map(f=>(
             <div key={f} style={{display:"flex",gap:7,alignItems:"center"}}>
               <div style={{width:4,height:4,borderRadius:"50%",background:C.green,flexShrink:0}}/>
               <div style={{fontSize:10,color:C.stone}}>{f}</div>
@@ -628,7 +634,10 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
         <div style={{marginBottom:16}}>
           <div style={{fontSize:8,letterSpacing:2,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:8}}>Manufacturing Standards</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
-            {["Manufactured in USA","Third Party Tested","White Label Available","Batch Verified"].map((b,i)=>(
+            {(fState === "custom_production"
+              ? ["Manufactured in USA","Testing Available","White Label Available","Compounded to Order"]
+              : ["Manufactured in USA","Third Party Tested","White Label Available","Batch Verified"]
+            ).map((b,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:5,padding:"5px 7px",background:C.off,border:"1px solid "+C.mist}}>
                 <span style={{width:4,height:4,borderRadius:"50%",background:C.gold,flexShrink:0}}/>
                 <span style={{fontSize:8,fontWeight:700,color:C.navy,textTransform:"uppercase",letterSpacing:0.2,lineHeight:1.3}}>{b}</span>

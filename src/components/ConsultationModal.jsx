@@ -18,7 +18,7 @@ const TYPE_META = {
     eyebrow: "Custom Production",
     title: "Request Custom Production",
     subject: "New Custom Production Request",
-    intro: "Custom Production orders require a 100-unit minimum per SKU — our compounders do not manufacture below this volume. Production lead time is 10–14 business days. A 50% deposit is required to begin production, with the remaining 50% due upon completion, prior to shipping. Shipping takes 2–5 business days after final payment.",
+    intro: "Custom Production orders require a 100-unit minimum per SKU — our compounders do not manufacture below this volume. Production lead time is 10–14 business days. A 50% deposit is required to begin production, with the remaining 50% due upon completion, prior to shipping. Shipping takes 2–3 business days after final payment.",
   },
   large_volume: {
     eyebrow: "Large-Volume Order",
@@ -28,7 +28,13 @@ const TYPE_META = {
   },
 };
 
-async function submitConsultationRequest(type, context, form, qty, pricing) {
+const TESTING_OPTIONS = {
+  none: "No additional testing",
+  standard: "Standard third-party testing — results typically 2–3 business days",
+  standard_sterility: "Standard testing + sterility — sterility results approximately 14 days",
+};
+
+async function submitConsultationRequest(type, context, form, qty, pricing, testing) {
   const meta = TYPE_META[type] || TYPE_META.custom_production;
   try {
     await fetch("https://api.web3forms.com/submit", {
@@ -57,6 +63,7 @@ async function submitConsultationRequest(type, context, form, qty, pricing) {
           estimated_deposit: fmt(pricing.deposit),
           estimated_remaining_balance: fmt(pricing.remaining),
         } : {}),
+        ...(type === "custom_production" ? { testing_option: TESTING_OPTIONS[testing] } : {}),
       }),
     });
   } catch (err) {
@@ -94,10 +101,11 @@ export default function ConsultationModal({ open, onClose, context }) {
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [qty, setQty] = useState(DEFAULT_MIN_QTY);
+  const [testing, setTesting] = useState("none");
 
   useEffect(() => {
     if (open) {
-      setForm(EMPTY_FORM); setSent(false);
+      setForm(EMPTY_FORM); setSent(false); setTesting("none");
       const floor = context?.type === "custom_production" ? CUSTOM_PRODUCTION_MIN_QTY : DEFAULT_MIN_QTY;
       setQty(context?.qty || floor);
     }
@@ -130,11 +138,11 @@ export default function ConsultationModal({ open, onClose, context }) {
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
-    await submitConsultationRequest(context.type, context, form, qty, pricing);
+    await submitConsultationRequest(context.type, context, form, qty, pricing, testing);
     setSubmitting(false);
     setSent(true);
     trackEvent(context.type === "custom_production" ? "custom_production_requested" : "large_volume_order_requested", {
-      product: context.productName, strength: context.strength, qty,
+      product: context.productName, strength: context.strength, qty, ...(isCustomProduction ? { testing } : {}),
     });
   };
 
@@ -179,6 +187,24 @@ export default function ConsultationModal({ open, onClose, context }) {
                   <div style={{ fontSize: 8.5, color: STONE, textAlign: "right", marginTop: 2 }}>100-unit minimum per SKU</div>
                 )}
               </div>
+              {isCustomProduction && (
+                <div style={{ background: OFF, border: "1px solid " + MIST, padding: "12px 14px", marginBottom: 18 }}>
+                  <div style={{ fontSize: 9, letterSpacing: 1.5, color: STONE, textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>Laboratory Testing (Optional)</div>
+                  <p style={{ fontSize: 10.5, color: STONE, lineHeight: 1.6, marginBottom: 10 }}>
+                    Laboratory testing and a Certificate of Analysis (COA) are not automatically included with Custom Production orders. Third-party testing may be purchased separately.
+                  </p>
+                  <select value={testing} onChange={(e) => setTesting(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
+                    {Object.entries(TESTING_OPTIONS).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                  {testing === "standard_sterility" && (
+                    <p style={{ fontSize: 9.5, color: STONE, lineHeight: 1.6, marginTop: 8, marginBottom: 0 }}>
+                      Sterility testing may extend your overall production and fulfillment timeline beyond the standard 10–14 business day lead time.
+                    </p>
+                  )}
+                </div>
+              )}
               {isCustomProduction && (
                 <div style={{ background: OFF, border: "1px solid " + MIST, padding: "12px 14px", marginBottom: 18 }}>
                   <div style={{ fontSize: 9, letterSpacing: 1.5, color: STONE, textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>Estimated Pricing</div>
@@ -226,7 +252,7 @@ export default function ConsultationModal({ open, onClose, context }) {
             </>
           ) : (
             <p style={{ fontSize: 12, color: STONE, lineHeight: 1.8 }}>
-              Thank you. Our wholesale team will follow up with you regarding {context.productName} {context.strength} ({isCustomProduction ? qty : context.qty} units) shortly.
+              Thank you. Our wholesale team will follow up with you regarding {context.productName} {context.strength} ({isCustomProduction ? qty : context.qty} units{isCustomProduction ? `, ${TESTING_OPTIONS[testing]}` : ""}) shortly.
             </p>
           )}
         </div>
