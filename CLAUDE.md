@@ -63,7 +63,11 @@
 - Ship after payment clears
 
 ## Pricing & Order Standards
-- **Minimum 10 units per SKU** — enforce everywhere
+- **Standard catalog minimum: 3 units per SKU**
+- **Peptides and Bio Regulators:** 3–4 units use Retail Tier 1 +20%; 5–9 units use Retail Tier 1 +15%; 10+ units continue using the existing wholesale pricing logic.
+- **Sprays, creams, and capsules:** minimum 3 units per SKU, but retain their existing pricing structure with no 20%/15% surcharge.
+- **Recon Water:** minimum 3 units; $14.99/unit through the existing 100-unit breakpoint, with existing 101+ volume pricing unchanged.
+- **White Label production:** remains a separate 10-unit-per-SKU minimum.
 - Wholesale buyers only
 - All pricing tiers visible publicly
 - 50% deposit required to initiate production

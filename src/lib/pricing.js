@@ -14,7 +14,23 @@ export const TIERS = [
   {id:"T5",lbl:"1000+/SKU",  min:1000,max:null,grp:"wholesale"},
 ];
 
-export const DEFAULT_MIN_QTY = 10;
+export const DEFAULT_MIN_QTY = 3;
+
+// Products in these internal categories carry the 3-4/5-9 unit surcharge.
+// Sprays, Topicals (Creams), Capsules, and Diluents (Recon Water) are
+// intentionally excluded — they keep their existing pricing untouched.
+const STANDARD_PEPTIDE_CATEGORIES = ["Peptides", "GLP", "Blends", "Bio Regulators"];
+export const isStandardPeptideCategory = c => STANDARD_PEPTIDE_CATEGORIES.includes(c);
+
+// 3-4 units: Tier 1 (R1) +20%. 5-9 units: Tier 1 (R1) +15%. 10+: no change —
+// the existing 8-tier ladder already applies at that point.
+export function surchargeMultiplier(qty, category) {
+  if (!isStandardPeptideCategory(category)) return 1;
+  const q = qty || 0;
+  if (q >= 3 && q < 5) return 1.20;
+  if (q >= 5 && q < 10) return 1.15;
+  return 1;
+}
 
 export function tierForQty(qty, minQty = DEFAULT_MIN_QTY) {
   const q = Math.max(minQty, qty || minQty);
@@ -34,9 +50,20 @@ export function resolveTier(variant, qty) {
   if (variant && variant.customTierRanges) {
     const q = Math.max(DEFAULT_MIN_QTY, qty || DEFAULT_MIN_QTY);
     const bracket = variant.customTierRanges.find(b => q >= b.min && (b.max === null || q <= b.max));
-    return (bracket || variant.customTierRanges[variant.customTierRanges.length - 1]).id;
+    // A qty below the lowest defined bracket (e.g. 3-9 units, below Recon
+    // Water's CT1 floor of 10) resolves to the entry-level bracket — never
+    // the deepest bulk-discount bracket.
+    return (bracket || variant.customTierRanges[0]).id;
   }
   return tierForQty(qty);
+}
+
+// The final per-unit price for a line: resolves the tier, then applies the
+// standard-peptide surcharge (a no-op for every other category/quantity).
+export function unitPriceFor(variant, qty, category) {
+  const tier = resolveTier(variant, qty);
+  const base = variant[tier];
+  return base == null ? base : base * surchargeMultiplier(qty, category);
 }
 
 // The lowest-quantity bracket's price, for the "Starting At" display —
