@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { trackEvent } from "../lib/analytics";
-import { DEFAULT_MIN_QTY, resolveTier, hasPrice, fmt, splitDeposit } from "../lib/pricing";
+import { DEFAULT_MIN_QTY, CUSTOM_PRODUCTION_MIN_QTY, resolveTier, hasPrice, fmt, splitDeposit } from "../lib/pricing";
 
 const NAVY = "#05111F";
 const GOLD = "#C9A84C";
@@ -18,7 +18,7 @@ const TYPE_META = {
     eyebrow: "Custom Production",
     title: "Request Custom Production",
     subject: "New Custom Production Request",
-    intro: "This strength is available through our custom production program and is not maintained as ready-to-ship inventory. Production lead time, testing requirements, and quantity must be confirmed with our wholesale team before the order is accepted. Once approved, a 50% deposit (ACH or Zelle) is required to begin production, with the remaining 50% due before shipment.",
+    intro: "Custom Production orders require a 100-unit minimum per SKU — our compounders do not manufacture below this volume. Production lead time is 10–14 business days. A 50% deposit is required to begin production, with the remaining 50% due upon completion, prior to shipping. Shipping takes 2–5 business days after final payment.",
   },
   large_volume: {
     eyebrow: "Large-Volume Order",
@@ -96,7 +96,11 @@ export default function ConsultationModal({ open, onClose, context }) {
   const [qty, setQty] = useState(DEFAULT_MIN_QTY);
 
   useEffect(() => {
-    if (open) { setForm(EMPTY_FORM); setSent(false); setQty(context?.qty || DEFAULT_MIN_QTY); }
+    if (open) {
+      setForm(EMPTY_FORM); setSent(false);
+      const floor = context?.type === "custom_production" ? CUSTOM_PRODUCTION_MIN_QTY : DEFAULT_MIN_QTY;
+      setQty(context?.qty || floor);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -118,7 +122,8 @@ export default function ConsultationModal({ open, onClose, context }) {
   }
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-  const setQtyClamped = (v) => setQty(Math.max(DEFAULT_MIN_QTY, parseInt(v, 10) || DEFAULT_MIN_QTY));
+  const qtyFloor = isCustomProduction ? CUSTOM_PRODUCTION_MIN_QTY : DEFAULT_MIN_QTY;
+  const setQtyClamped = (v) => setQty(Math.max(qtyFloor, parseInt(v, 10) || qtyFloor));
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
   const canSubmit = form.name.trim() && form.company.trim() && emailValid && !submitting;
 
@@ -164,12 +169,15 @@ export default function ConsultationModal({ open, onClose, context }) {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, padding: "3px 0" }}>
                   <span style={{ color: STONE }}>Requested Quantity</span>
                   {isCustomProduction ? (
-                    <input type="number" min={DEFAULT_MIN_QTY} value={qty} onChange={(e) => setQtyClamped(e.target.value)}
+                    <input type="number" min={CUSTOM_PRODUCTION_MIN_QTY} value={qty} onChange={(e) => setQtyClamped(e.target.value)}
                       style={{ width: 70, padding: "4px 6px", border: "1px solid " + MIST, background: "#fff", fontSize: 11, fontWeight: 700, color: NAVY, textAlign: "right", outline: "none" }} />
                   ) : (
                     <span style={{ fontWeight: 700, color: NAVY }}>{context.qty}</span>
                   )}
                 </div>
+                {isCustomProduction && (
+                  <div style={{ fontSize: 8.5, color: STONE, textAlign: "right", marginTop: 2 }}>100-unit minimum per SKU</div>
+                )}
               </div>
               {isCustomProduction && (
                 <div style={{ background: OFF, border: "1px solid " + MIST, padding: "12px 14px", marginBottom: 18 }}>

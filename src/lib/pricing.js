@@ -16,6 +16,11 @@ export const TIERS = [
 
 export const DEFAULT_MIN_QTY = 3;
 
+// Custom Production is a wholly separate purchasing path from ready-to-ship
+// catalog inventory — our compounders will not manufacture below this
+// volume, regardless of the standard in-stock 3-unit minimum above.
+export const CUSTOM_PRODUCTION_MIN_QTY = 100;
+
 // Products in these internal categories carry the 3-4/5-9 unit surcharge.
 // Sprays, Topicals (Creams), Capsules, and Diluents (Recon Water) are
 // intentionally excluded — they keep their existing pricing untouched.
