@@ -502,7 +502,10 @@ function ProductVisual({ name, strength, cat }) {
 // ── PRODUCT CARD ──────────────────────────────────────────────────────────────
 function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequestConsultation }) {
   const [hov, setHov] = useState(false);
-  const [varIdx, setVarIdx] = useState(0);
+  const [varIdx, setVarIdx] = useState(() => {
+    const idx = p.variants.findIndex(v => fulfillmentStatus(v) === "in_stock");
+    return idx === -1 ? 0 : idx;
+  });
   const [qty, setQty] = useState(DEFAULT_MIN_QTY);
   const variant = p.variants[varIdx];
   const fState = fulfillmentState(variant, qty);
@@ -524,11 +527,24 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
         {p.variants.length > 1 && (
           <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:14}}>
             {p.variants.map((v,i)=>{
-              const vState = fulfillmentState(v, qty);
+              const vStatus = fulfillmentStatus(v);
+              const selected = i===varIdx;
+              if (vStatus === "unavailable") {
+                return (
+                  <button key={v.id} onClick={()=>setVarIdx(i)} className="btn-polish"
+                    style={{padding:"3px 9px",fontSize:10,fontWeight:600,cursor:"pointer",border:"1px solid "+(selected?C.navy:C.mist),background:selected?C.navy:"transparent",color:selected?C.white:C.stone,transition:"all 0.15s"}}>
+                    {v.s} ×
+                  </button>
+                );
+              }
+              const isInStock = vStatus === "in_stock";
               return (
                 <button key={v.id} onClick={()=>setVarIdx(i)} className="btn-polish"
-                  style={{padding:"3px 9px",fontSize:10,fontWeight:600,cursor:"pointer",border:"1px solid "+(i===varIdx?C.navy:C.mist),background:i===varIdx?C.navy:"transparent",color:i===varIdx?C.white:C.stone,transition:"all 0.15s"}}>
-                  {v.s}{vState==="custom_production"?" *":vState==="unavailable"?" ×":""}
+                  style={{padding:"3px 9px 4px",fontSize:10,fontWeight:600,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:1,border:"1px solid "+(selected?(isInStock?C.navy:C.gold):C.mist),background:selected&&isInStock?C.navy:"transparent",color:selected&&isInStock?C.white:C.stone,transition:"all 0.15s"}}>
+                  <span>{v.s}</span>
+                  <span style={{fontSize:6.5,fontWeight:700,letterSpacing:0.6,textTransform:"uppercase",color:selected&&isInStock?"rgba(255,255,255,0.65)":(isInStock?C.green:C.gold)}}>
+                    {isInStock ? "In Stock" : "Custom"}
+                  </span>
                 </button>
               );
             })}
