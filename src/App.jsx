@@ -5,7 +5,7 @@ import ContactModal from "./components/ContactModal.jsx";
 import QuoteRequestModal from "./components/QuoteRequestModal.jsx";
 import ConsultationModal from "./components/ConsultationModal.jsx";
 import { trackEvent } from "./lib/analytics";
-import { DEFAULT_MIN_QTY, resolveTier, unitPriceFor, startingPrice, fmt, hasPrice, NO_PRICE_LABEL } from "./lib/pricing";
+import { DEFAULT_MIN_QTY, CUSTOM_PRODUCTION_MIN_QTY, resolveTier, unitPriceFor, startingPrice, fmt, hasPrice, NO_PRICE_LABEL } from "./lib/pricing";
 
 const PARTNER_ACCESS_KEY = "wsp_partner_access";
 
@@ -577,25 +577,46 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
             </button>
           </div>
         ))}
-        <div style={{background:C.off,padding:"12px 14px",marginBottom:16,border:"1px solid "+C.mist}}>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-            <div style={{fontSize:8,color:C.stone,letterSpacing:1,textTransform:"uppercase",fontWeight:700}}>Units</div>
-            <input type="number" min={DEFAULT_MIN_QTY} value={qty} onChange={e=>setQty(Math.max(DEFAULT_MIN_QTY,parseInt(e.target.value)||DEFAULT_MIN_QTY))}
-              style={{width:52,padding:"3px 6px",border:"1px solid "+C.mist,background:C.white,fontSize:11,color:C.navy,outline:"none",textAlign:"center"}}/>
+        {fState === "custom_production" ? (
+          <div style={{background:C.navy,border:"1px solid "+C.gold,padding:"14px",marginBottom:16}}>
+            <div style={{fontSize:8,letterSpacing:1.5,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:6}}>Custom Production</div>
+            <div style={{fontSize:14,fontWeight:800,color:C.white,marginBottom:8}}>100 Unit Minimum</div>
+            <p style={{fontSize:10,color:"rgba(255,255,255,0.55)",lineHeight:1.6,marginBottom:10}}>{meta.message}</p>
+            <div style={{display:"flex",flexDirection:"column",gap:5}}>
+              {[
+                ["Production Lead Time","10–14 business days"],
+                ["Deposit","50% required to begin production"],
+                ["Balance","Remaining 50% due upon completion, prior to shipping"],
+                ["Shipping","2–5 business days after final payment"],
+              ].map(([k,v])=>(
+                <div key={k} style={{fontSize:9.5,lineHeight:1.5}}>
+                  <span style={{color:C.gold,fontWeight:700,textTransform:"uppercase",letterSpacing:0.4}}>{k}: </span>
+                  <span style={{color:"rgba(255,255,255,0.72)"}}>{v}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          {fState === "in_stock" ? (
-            hasPrice(price) ? (
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
-                <div style={{fontSize:9,color:C.stone}}>{fmt(price)}/unit</div>
-                <div style={{fontSize:13,fontWeight:800,color:C.navy}}>{fmt(price*qty)}</div>
-              </div>
+        ) : (
+          <div style={{background:C.off,padding:"12px 14px",marginBottom:16,border:"1px solid "+C.mist}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+              <div style={{fontSize:8,color:C.stone,letterSpacing:1,textTransform:"uppercase",fontWeight:700}}>Units</div>
+              <input type="number" min={DEFAULT_MIN_QTY} value={qty} onChange={e=>setQty(Math.max(DEFAULT_MIN_QTY,parseInt(e.target.value)||DEFAULT_MIN_QTY))}
+                style={{width:52,padding:"3px 6px",border:"1px solid "+C.mist,background:C.white,fontSize:11,color:C.navy,outline:"none",textAlign:"center"}}/>
+            </div>
+            {fState === "in_stock" ? (
+              hasPrice(price) ? (
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
+                  <div style={{fontSize:9,color:C.stone}}>{fmt(price)}/unit</div>
+                  <div style={{fontSize:13,fontWeight:800,color:C.navy}}>{fmt(price*qty)}</div>
+                </div>
+              ) : (
+                <div style={{fontSize:11,fontWeight:700,color:C.stone}}>{NO_PRICE_LABEL}</div>
+              )
             ) : (
-              <div style={{fontSize:11,fontWeight:700,color:C.stone}}>{NO_PRICE_LABEL}</div>
-            )
-          ) : (
-            <div style={{fontSize:10.5,color:C.stone,lineHeight:1.6}}>{meta.message}</div>
-          )}
-        </div>
+              <div style={{fontSize:10.5,color:C.stone,lineHeight:1.6}}>{meta.message}</div>
+            )}
+          </div>
+        )}
         <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:18}}>
           {(fState === "in_stock" || fState === "large_volume" ? [`Min. Order: ${DEFAULT_MIN_QTY} Units`,"COA Available"] : ["COA Available"]).map(f=>(
             <div key={f} style={{display:"flex",gap:7,alignItems:"center"}}>
@@ -624,8 +645,13 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
             Add to Order
           </button>
         )}
-        {(fState === "large_volume" || fState === "custom_production") && (
+        {fState === "large_volume" && (
           <button onClick={()=>onRequestConsultation(fState, {productName:p.n, strength:variant.s, qty, variant})} className="btn-polish" style={{padding:"9px 0",background:C.navy,border:"1px solid "+C.navy,color:C.gold,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.25s ease"}}>
+            {meta.cta}
+          </button>
+        )}
+        {fState === "custom_production" && (
+          <button onClick={()=>onRequestConsultation(fState, {productName:p.n, strength:variant.s, qty: CUSTOM_PRODUCTION_MIN_QTY, variant})} className="btn-polish" style={{padding:"9px 0",background:C.navy,border:"1px solid "+C.navy,color:C.gold,fontSize:10,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",transition:"all 0.25s ease"}}>
             {meta.cta}
           </button>
         )}
