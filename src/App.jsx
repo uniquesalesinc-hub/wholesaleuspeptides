@@ -5,7 +5,7 @@ import ContactModal from "./components/ContactModal.jsx";
 import QuoteRequestModal from "./components/QuoteRequestModal.jsx";
 import ConsultationModal from "./components/ConsultationModal.jsx";
 import { trackEvent } from "./lib/analytics";
-import { DEFAULT_MIN_QTY, resolveTier, startingPrice, fmt, hasPrice, NO_PRICE_LABEL } from "./lib/pricing";
+import { DEFAULT_MIN_QTY, resolveTier, unitPriceFor, startingPrice, fmt, hasPrice, NO_PRICE_LABEL } from "./lib/pricing";
 
 const PARTNER_ACCESS_KEY = "wsp_partner_access";
 
@@ -35,7 +35,7 @@ const cartInputStyle = {
 // can keep the cart/contact info intact and surface a retryable error.
 async function submitOrderRequest(cart, total, units, contact) {
   const orderItems = cart.map(({ p, variant, qty, tier }) => {
-    const unitPrice = variant[tier] || 0;
+    const unitPrice = unitPriceFor(variant, qty, p.c) || 0;
     const lineTotal = unitPrice * qty;
     return `${p.n} — ${variant.s} — Qty ${qty} — Tier ${tier} — ${fmt(unitPrice)}/unit — Line Total ${fmt(lineTotal)}`;
   }).join("\n");
@@ -87,7 +87,7 @@ const PAGES = {
   catalog: {
     path: "/catalog", title: "Catalog",
     seoTitle: "Wholesale Peptides Catalog | Bulk Peptides & Tiered Pricing",
-    description: "Browse our full catalog of wholesale peptides and bulk peptide pricing tiers. Minimum 10 units per SKU. Domestic manufacturing, third-party tested, ready for research organizations and distributors.",
+    description: "Browse our full catalog of wholesale peptides and bulk peptide pricing tiers. Minimum 3 units per SKU. Domestic manufacturing, third-party tested, ready for research organizations and distributors.",
   },
   wl: {
     path: "/white-label", title: "White Label",
@@ -401,7 +401,7 @@ function Hero({ setPage }) {
         <div className="hero-copy">
           <div style={{display:"inline-flex",alignItems:"center",gap:10,marginBottom:22,padding:"6px 14px",border:"1px solid rgba(201,168,76,0.3)",background:"rgba(201,168,76,0.06)"}}>
             <div style={{width:6,height:6,borderRadius:"50%",background:C.gold}}/>
-            <span style={{fontSize:9,letterSpacing:3.5,color:C.gold,textTransform:"uppercase",fontWeight:700}}>Wholesale Manufacturing Platform — Minimum 10 Units Per SKU</span>
+            <span style={{fontSize:9,letterSpacing:3.5,color:C.gold,textTransform:"uppercase",fontWeight:700}}>Wholesale Manufacturing Platform — Minimum 3 Units Per SKU</span>
           </div>
           <div style={{width:56,height:3,background:C.gold,marginBottom:22}}/>
           <h1 style={{fontSize:44,fontWeight:800,color:C.white,lineHeight:1.16,marginBottom:18,letterSpacing:-1.2,fontFamily:"Georgia,serif",maxWidth:620}}>
@@ -412,7 +412,7 @@ function Hero({ setPage }) {
             WholesaleUSPeptides.com provides batch-verified peptide manufacturing, white-label packaging, and fulfillment solutions for research organizations, wellness brands, and qualified distributors.
           </p>
           <p style={{fontSize:11,color:C.gold,letterSpacing:1,lineHeight:1.7,maxWidth:540,marginBottom:32,fontWeight:600,textTransform:"uppercase"}}>
-            Minimum Order: 10 Units Per SKU &nbsp;·&nbsp; Quotes Delivered Within 48 Hours &nbsp;·&nbsp; Batch-Specific COAs Available
+            Minimum Order: 3 Units Per SKU &nbsp;·&nbsp; Quotes Delivered Within 48 Hours &nbsp;·&nbsp; Batch-Specific COAs Available
           </p>
           <div style={{display:"flex",gap:12,marginBottom:40,flexWrap:"wrap"}}>
             <button onClick={()=>setPage("catalog")} style={{padding:"13px 30px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
@@ -511,7 +511,7 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
   const fState = fulfillmentState(variant, qty);
   const meta = FULFILLMENT_META[fState];
   const t = resolveTier(variant, qty);
-  const price = variant[t] || 0;
+  const price = unitPriceFor(variant, qty, p.c) || 0;
   const showPricing = fState === "in_stock" || fState === "large_volume";
   return (
     <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
@@ -567,7 +567,7 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
               <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:9}}>
                 <div style={{fontSize:8,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700}}>Starting At</div>
                 <div style={{fontSize:15,fontWeight:800,color:C.navy}}>{fmt(startingPrice(variant))}</div>
-                <div style={{fontSize:9,color:C.stone}}>/unit ({DEFAULT_MIN_QTY}+ units)</div>
+                <div style={{fontSize:9,color:C.stone}}>/unit (10+ units)</div>
               </div>
             ) : (
               <div style={{fontSize:12,fontWeight:700,color:C.navy,marginBottom:9}}>{NO_PRICE_LABEL}</div>
@@ -657,7 +657,7 @@ function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick, initialC
         <div style={{maxWidth:1280,margin:"0 auto"}}>
           <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:10}}>Wholesale Catalog</div>
           <h1 style={{fontSize:32,fontWeight:800,lineHeight:1.18,color:C.white,fontFamily:"Georgia,serif",marginBottom:8}}>Research Compound Catalog</h1>
-          <p style={{fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.7}}>American Manufacturing — Independent Testing Per Lot — Minimum 10 Units Per SKU</p>
+          <p style={{fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.7}}>American Manufacturing — Independent Testing Per Lot — Minimum 3 Units Per SKU</p>
         </div>
       </div>
       <div style={{maxWidth:1400,margin:"0 auto",padding:"24px 40px 72px"}}>
@@ -975,7 +975,7 @@ function HomeSections({ setPage, onContactClick }) {
                   <div style={{fontSize:14,fontWeight:700,color:C.navy,marginBottom:3,fontFamily:"Georgia,serif"}}>{item.n}</div>
                   <div style={{fontSize:11,color:C.stone,marginBottom:12}}>{item.s}</div>
                   <div style={{display:"flex",flexDirection:"column",gap:5,marginBottom:14}}>
-                    {["Minimum Order: 10 Units","White Label Available","COA Available"].map(f=>(
+                    {["Minimum Order: 3 Units","White Label Available","COA Available"].map(f=>(
                       <div key={f} style={{display:"flex",gap:7,alignItems:"center"}}>
                         <div style={{width:4,height:4,borderRadius:"50%",background:C.green,flexShrink:0}}/>
                         <div style={{fontSize:10,color:C.stone}}>{f}</div>
@@ -1690,7 +1690,7 @@ function TermsOfServicePage() {
       updated={LEGAL_UPDATED}
       intro="These Terms of Service govern access to and use of the WholesaleUSPeptides.com wholesale manufacturing platform. By accessing the platform, you agree to the terms below."
       sections={[
-        {t:"Qualified Business Purchasers Only", b:"This platform is restricted to licensed wholesale buyers, distributors, research organizations, and private-label brands aged 18 and over. It is not intended for individual consumers. A minimum order of 10 units per SKU is enforced on all orders."},
+        {t:"Qualified Business Purchasers Only", b:"This platform is restricted to licensed wholesale buyers, distributors, research organizations, and private-label brands aged 18 and over. It is not intended for individual consumers. A minimum order of 3 units per SKU is enforced on all orders."},
         {t:"No Guarantee of Product Availability", b:"Product inventory, SKUs, and formulations are subject to change without notice. Submitting a quote request, partner access form, or white-label application does not guarantee product availability or order fulfillment. All orders are subject to internal review prior to acceptance."},
         {t:"Pricing Subject to Change", b:"All pricing tiers displayed on this platform are subject to change without notice. Quoted pricing is valid for a limited period and is subject to confirmation at the time an order is placed."},
         {t:"Manufacturing Timelines May Vary", b:"Quote turnaround and manufacturing lead times referenced on this platform are estimates only. Actual production and fulfillment timelines may vary based on order volume, custom formulation requirements, white-label specifications, and supply conditions."},
@@ -1778,7 +1778,7 @@ function Gate({ ok }) {
 
 // ── CART DRAWER ───────────────────────────────────────────────────────────────
 function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
-  const total = cart.reduce((s,i) => s + (i.variant[i.tier]||0)*i.qty, 0);
+  const total = cart.reduce((s,i) => s + (unitPriceFor(i.variant,i.qty,i.p.c)||0)*i.qty, 0);
   const units = cart.reduce((s,i) => s + i.qty, 0);
   const [contact, setContact] = useState(EMPTY_ORDER_CONTACT);
   const [submitting, setSubmitting] = useState(false);
@@ -1812,7 +1812,7 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
   };
 
   const upd = (pid, vid, qty) => {
-    if (qty < 1) { setCart(p => p.filter(i => !(i.p.id===pid && i.variant.id===vid))); return; }
+    if (qty < DEFAULT_MIN_QTY) { setCart(p => p.filter(i => !(i.p.id===pid && i.variant.id===vid))); return; }
     // Defense-in-depth: block +/- from ever pushing a line into a state
     // (large-volume threshold, custom production) that requires consultation
     // instead of standard checkout.
@@ -1876,7 +1876,9 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
                 )}
               </div>
             </div>
-          ) : cart.map(({p,variant,qty,tier})=>(
+          ) : cart.map(({p,variant,qty,tier})=>{
+            const up = unitPriceFor(variant, qty, p.c);
+            return (
             <div key={p.id+"-"+variant.id} style={{display:"flex",gap:12,paddingBottom:14,marginBottom:14,borderBottom:"1px solid "+C.mist}}>
               <div style={{width:54,height:54,background:"#F8F7F3",flexShrink:0,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>
                 <img src={masterAssetFor(p.c)} alt={p.n}
@@ -1885,26 +1887,26 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
               </div>
               <div style={{flex:1}}>
                 <div style={{fontSize:12,fontWeight:700,color:C.navy}}>{p.n}</div>
-                <div style={{fontSize:10,color:C.stone,marginBottom:6}}>{variant.s} — {hasPrice(variant[tier])?fmt(variant[tier])+"/unit":NO_PRICE_LABEL}</div>
+                <div style={{fontSize:10,color:C.stone,marginBottom:6}}>{variant.s} — {hasPrice(up)?fmt(up)+"/unit":NO_PRICE_LABEL}</div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                   <div style={{display:"flex",alignItems:"center",gap:5}}>
                     <button onClick={()=>upd(p.id,variant.id,qty-1)} style={{width:22,height:22,background:C.off,border:"1px solid "+C.mist,cursor:"pointer",color:C.navy,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>-</button>
                     <span style={{fontSize:12,color:C.navy,minWidth:22,textAlign:"center"}}>{qty}</span>
                     <button onClick={()=>upd(p.id,variant.id,qty+1)} style={{width:22,height:22,background:C.off,border:"1px solid "+C.mist,cursor:"pointer",color:C.navy,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
                   </div>
-                  <div style={{fontSize:12,fontWeight:700,color:C.navy}}>{hasPrice(variant[tier])?fmt(variant[tier]*qty):NO_PRICE_LABEL}</div>
+                  <div style={{fontSize:12,fontWeight:700,color:C.navy}}>{hasPrice(up)?fmt(up*qty):NO_PRICE_LABEL}</div>
                 </div>
               </div>
               <button onClick={()=>setCart(prev=>prev.filter(i=>!(i.p.id===p.id && i.variant.id===variant.id)))} style={{background:"none",border:"none",color:C.mist,cursor:"pointer",fontSize:18,alignSelf:"flex-start",lineHeight:1}}>x</button>
             </div>
-          ))}
+          );})}
         </div>
         {cart.length>0 && (
           <div style={{padding:"16px 22px",borderTop:"1px solid "+C.mist}}>
             {/* Line subtotals */}
             <div style={{marginBottom:14}}>
               {cart.map(({p,variant,qty,tier})=>{
-                const up=variant[tier];
+                const up=unitPriceFor(variant,qty,p.c);
                 return (
                   <div key={p.id+"-"+variant.id} style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.stone,padding:"4px 0",borderBottom:"1px solid "+C.mist}}>
                     <span style={{maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.n} {variant.s} x{qty}</span>

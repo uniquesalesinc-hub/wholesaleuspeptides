@@ -7,6 +7,7 @@ const STONE = "#8A8680";
 const MIST = "#D4CFC6";
 
 const VOLUME_TIERS = [
+  "3-9 units",
   "10-25 units",
   "25-50 units",
   "50-100 units",
