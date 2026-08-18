@@ -4,8 +4,12 @@ import PartnerAccessModal from "./components/PartnerAccessModal.jsx";
 import ContactModal from "./components/ContactModal.jsx";
 import QuoteRequestModal from "./components/QuoteRequestModal.jsx";
 import ConsultationModal from "./components/ConsultationModal.jsx";
+import OrderStatusPage from "./pages/OrderStatusPage.jsx";
+import AdminLoginPage from "./pages/AdminLoginPage.jsx";
+import AdminOrdersListPage from "./pages/AdminOrdersListPage.jsx";
+import AdminOrderDetailPage from "./pages/AdminOrderDetailPage.jsx";
 import { trackEvent } from "./lib/analytics";
-import { DEFAULT_MIN_QTY, CUSTOM_PRODUCTION_MIN_QTY, resolveTier, unitPriceFor, startingPrice, fmt, hasPrice, NO_PRICE_LABEL } from "./lib/pricing";
+import { DEFAULT_MIN_QTY, CUSTOM_PRODUCTION_MIN_QTY, TIERS, resolveTier, unitPriceFor, fmt, hasPrice, NO_PRICE_LABEL } from "./lib/pricing";
 
 const PARTNER_ACCESS_KEY = "wsp_partner_access";
 
@@ -124,9 +128,39 @@ const PAGES = {
     seoTitle: "Cookie Policy | WholesaleUSPeptides.com",
     description: "How WholesaleUSPeptides.com uses analytics, functional, and preference cookies across the wholesale manufacturing platform.",
   },
+  // Dynamic routes (order token / admin order id) — the exact `path`
+  // below is only used for document.title/meta bookkeeping, never for
+  // routing lookups. These pages are only ever reached by a direct URL
+  // (an email link, or an admin table row's link), so they're matched by
+  // prefix in pageIdFromPath rather than through setPage()'s normal
+  // exact-path history navigation.
+  orderStatus: {
+    path: "/order", title: "Order Status",
+    seoTitle: "Order Status | WholesaleUSPeptides.com",
+    description: "Track the status of your Custom Production order.",
+  },
+  adminLogin: {
+    path: "/admin/login", title: "Admin Sign In",
+    seoTitle: "Admin | WholesaleUSPeptides.com",
+    description: "Administrator sign-in.",
+  },
+  adminOrders: {
+    path: "/admin/orders", title: "Admin — Orders",
+    seoTitle: "Admin | WholesaleUSPeptides.com",
+    description: "Custom Production order administration.",
+  },
+  adminOrderDetail: {
+    path: "/admin/orders", title: "Admin — Order Detail",
+    seoTitle: "Admin | WholesaleUSPeptides.com",
+    description: "Custom Production order administration.",
+  },
 };
 
 function pageIdFromPath(path) {
+  if (path.startsWith("/order/")) return "orderStatus";
+  if (path === "/admin/login") return "adminLogin";
+  if (path === "/admin/orders") return "adminOrders";
+  if (path.startsWith("/admin/orders/")) return "adminOrderDetail";
   const found = Object.entries(PAGES).find(([, v]) => v.path === path);
   return found ? found[0] : "home";
 }
@@ -499,6 +533,32 @@ function ProductVisual({ name, strength, cat }) {
 
 
 
+// The quantity at which the sub-10 surcharge stops applying — a boundary in
+// the existing surcharge logic, included so the hint below can surface it.
+const SURCHARGE_END_QTY = 10;
+
+// Presentation-only helper: the smallest quantity above the one currently
+// selected at which this variant's unit price actually drops. Used for the
+// "volume pricing available at N+ units" hint, so the card points at a real
+// break instead of asserting a blanket "10+ units" — which would be wrong
+// for sprays, creams, and capsules, where the 3-9 price already equals the
+// 10-unit price and the first real discount lands much later. Reads the
+// existing pricing functions only; no pricing math is defined here.
+function nextVolumeBreak(variant, qty, cat) {
+  const current = unitPriceFor(variant, qty, cat);
+  if (!hasPrice(current)) return null;
+  const candidates = variant.customTierRanges
+    ? variant.customTierRanges.map(b => b.min)
+    : [5, SURCHARGE_END_QTY, ...TIERS.map(t => t.min)];
+  return candidates
+    .filter(q => q > qty)
+    .sort((a, b) => a - b)
+    .find(q => {
+      const p = unitPriceFor(variant, q, cat);
+      return hasPrice(p) && p < current;
+    }) || null;
+}
+
 // ── PRODUCT CARD ──────────────────────────────────────────────────────────────
 function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequestConsultation }) {
   const [hov, setHov] = useState(false);
@@ -512,6 +572,7 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
   const meta = FULFILLMENT_META[fState];
   const t = resolveTier(variant, qty);
   const price = unitPriceFor(variant, qty, p.c) || 0;
+  const volumeBreak = nextVolumeBreak(variant, qty, p.c);
   const showPricing = fState === "in_stock" || fState === "large_volume";
   return (
     <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
@@ -563,12 +624,22 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
           </div>
         ) : (
           <div style={{marginBottom:14}}>
-            {hasPrice(startingPrice(variant)) ? (
-              <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:9}}>
-                <div style={{fontSize:8,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700}}>Starting At</div>
-                <div style={{fontSize:15,fontWeight:800,color:C.navy}}>{fmt(startingPrice(variant))}</div>
-                <div style={{fontSize:9,color:C.stone}}>/unit (10+ units)</div>
-              </div>
+            {hasPrice(price) ? (
+              <>
+                {/* The headline price is always the real price for the
+                    quantity currently selected — never a lower volume
+                    price the buyer has not qualified for. */}
+                <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:volumeBreak?3:9}}>
+                  <div style={{fontSize:8,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700}}>Your Price</div>
+                  <div style={{fontSize:15,fontWeight:800,color:C.navy}}>{fmt(price)}</div>
+                  <div style={{fontSize:9,color:C.stone}}>/unit at {qty} units</div>
+                </div>
+                {volumeBreak && (
+                  <div style={{fontSize:9,color:C.stone,marginBottom:9}}>
+                    Next volume discount at {volumeBreak}+ units
+                  </div>
+                )}
+              </>
             ) : (
               <div style={{fontSize:12,fontWeight:700,color:C.navy,marginBottom:9}}>{NO_PRICE_LABEL}</div>
             )}
@@ -587,7 +658,8 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
                 ["Production Lead Time","10–14 business days"],
                 ["Deposit","50% required to begin production"],
                 ["Balance","Remaining 50% due upon completion, prior to shipping"],
-                ["Shipping","2–5 business days after final payment"],
+                ["Shipping","2–3 business days after final payment"],
+                ["Testing","Optional third-party laboratory testing available"],
               ].map(([k,v])=>(
                 <div key={k} style={{fontSize:9.5,lineHeight:1.5}}>
                   <span style={{color:C.gold,fontWeight:700,textTransform:"uppercase",letterSpacing:0.4}}>{k}: </span>
@@ -618,7 +690,12 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
           </div>
         )}
         <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:18}}>
-          {(fState === "in_stock" || fState === "large_volume" ? [`Min. Order: ${DEFAULT_MIN_QTY} Units`,"COA Available"] : ["COA Available"]).map(f=>(
+          {(fState === "in_stock" || fState === "large_volume"
+            ? [`Min. Order: ${DEFAULT_MIN_QTY} Units`,"COA Available"]
+            : fState === "custom_production"
+            ? ["Third-Party Testing Available"]
+            : ["COA Available"]
+          ).map(f=>(
             <div key={f} style={{display:"flex",gap:7,alignItems:"center"}}>
               <div style={{width:4,height:4,borderRadius:"50%",background:C.green,flexShrink:0}}/>
               <div style={{fontSize:10,color:C.stone}}>{f}</div>
@@ -628,7 +705,10 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
         <div style={{marginBottom:16}}>
           <div style={{fontSize:8,letterSpacing:2,color:C.stone,textTransform:"uppercase",fontWeight:700,marginBottom:8}}>Manufacturing Standards</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
-            {["Manufactured in USA","Third Party Tested","White Label Available","Batch Verified"].map((b,i)=>(
+            {(fState === "custom_production"
+              ? ["Manufactured in USA","Testing Available","White Label Available","Compounded to Order"]
+              : ["Manufactured in USA","Third Party Tested","White Label Available","Batch Verified"]
+            ).map((b,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:5,padding:"5px 7px",background:C.off,border:"1px solid "+C.mist}}>
                 <span style={{width:4,height:4,borderRadius:"50%",background:C.gold,flexShrink:0}}/>
                 <span style={{fontSize:8,fontWeight:700,color:C.navy,textTransform:"uppercase",letterSpacing:0.2,lineHeight:1.3}}>{b}</span>
@@ -2057,11 +2137,21 @@ export default function App() {
     const url = SITE_URL + (cfg.path === "/" ? "/" : cfg.path);
     document.title = fullTitle;
     upsertMeta("name", "description", cfg.description);
+    upsertMeta("name", "robots", ["orderStatus","adminLogin","adminOrders","adminOrderDetail"].includes(page) ? "noindex,nofollow" : "index,follow");
     upsertCanonical(url);
     upsertMeta("property", "og:title", fullTitle);
     upsertMeta("property", "og:description", cfg.description);
     upsertMeta("property", "og:url", url);
   }, [page]);
+
+  // Order-status and admin pages are standalone experiences (their own
+  // header, no site nav/footer/cart) and are never gated behind the RUO
+  // entry screen — a customer checking their order or an admin signing in
+  // isn't "browsing the catalog."
+  if (page === "orderStatus") return <OrderStatusPage/>;
+  if (page === "adminLogin") return <AdminLoginPage/>;
+  if (page === "adminOrders") return <AdminOrdersListPage/>;
+  if (page === "adminOrderDetail") return <AdminOrderDetailPage/>;
 
   if (gated) return <Gate ok={()=>setGated(false)}/>;
 
