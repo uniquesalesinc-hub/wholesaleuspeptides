@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "./supabaseAdmin.js";
+import { getSupabaseAdmin, getSupabaseAuthVerifier } from "./supabaseAdmin.js";
 
 // Verifies the Authorization: Bearer <supabase access token> header sent
 // by the admin frontend (src/lib/adminApi.js), then confirms the
@@ -10,10 +10,19 @@ export async function verifyAdmin(req) {
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
   if (!token) return { error: "missing_token" };
 
-  const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data?.user) return { error: "invalid_token" };
+  // Token verification runs against the user-context endpoint, so it uses
+  // the publishable-key client (see getSupabaseAuthVerifier). The reason
+  // is logged server-side only — the caller still gets a generic
+  // invalid_token so we never leak auth internals to the browser.
+  const { data, error } = await getSupabaseAuthVerifier().auth.getUser(token);
+  if (error || !data?.user) {
+    console.error("Admin token verification failed:", error?.message || "no user returned");
+    return { error: "invalid_token" };
+  }
 
+  // Database access continues to use the secret-key client, which is what
+  // bypasses RLS on admin_profiles.
+  const supabase = getSupabaseAdmin();
   const { data: profile } = await supabase
     .from("admin_profiles")
     .select("id,name")
