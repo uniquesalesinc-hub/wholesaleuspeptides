@@ -4,6 +4,10 @@ import PartnerAccessModal from "./components/PartnerAccessModal.jsx";
 import ContactModal from "./components/ContactModal.jsx";
 import QuoteRequestModal from "./components/QuoteRequestModal.jsx";
 import ConsultationModal from "./components/ConsultationModal.jsx";
+import OrderStatusPage from "./pages/OrderStatusPage.jsx";
+import AdminLoginPage from "./pages/AdminLoginPage.jsx";
+import AdminOrdersListPage from "./pages/AdminOrdersListPage.jsx";
+import AdminOrderDetailPage from "./pages/AdminOrderDetailPage.jsx";
 import { trackEvent } from "./lib/analytics";
 import { DEFAULT_MIN_QTY, CUSTOM_PRODUCTION_MIN_QTY, resolveTier, unitPriceFor, startingPrice, fmt, hasPrice, NO_PRICE_LABEL } from "./lib/pricing";
 
@@ -124,9 +128,39 @@ const PAGES = {
     seoTitle: "Cookie Policy | WholesaleUSPeptides.com",
     description: "How WholesaleUSPeptides.com uses analytics, functional, and preference cookies across the wholesale manufacturing platform.",
   },
+  // Dynamic routes (order token / admin order id) — the exact `path`
+  // below is only used for document.title/meta bookkeeping, never for
+  // routing lookups. These pages are only ever reached by a direct URL
+  // (an email link, or an admin table row's link), so they're matched by
+  // prefix in pageIdFromPath rather than through setPage()'s normal
+  // exact-path history navigation.
+  orderStatus: {
+    path: "/order", title: "Order Status",
+    seoTitle: "Order Status | WholesaleUSPeptides.com",
+    description: "Track the status of your Custom Production order.",
+  },
+  adminLogin: {
+    path: "/admin/login", title: "Admin Sign In",
+    seoTitle: "Admin | WholesaleUSPeptides.com",
+    description: "Administrator sign-in.",
+  },
+  adminOrders: {
+    path: "/admin/orders", title: "Admin — Orders",
+    seoTitle: "Admin | WholesaleUSPeptides.com",
+    description: "Custom Production order administration.",
+  },
+  adminOrderDetail: {
+    path: "/admin/orders", title: "Admin — Order Detail",
+    seoTitle: "Admin | WholesaleUSPeptides.com",
+    description: "Custom Production order administration.",
+  },
 };
 
 function pageIdFromPath(path) {
+  if (path.startsWith("/order/")) return "orderStatus";
+  if (path === "/admin/login") return "adminLogin";
+  if (path === "/admin/orders") return "adminOrders";
+  if (path.startsWith("/admin/orders/")) return "adminOrderDetail";
   const found = Object.entries(PAGES).find(([, v]) => v.path === path);
   return found ? found[0] : "home";
 }
@@ -2066,11 +2100,21 @@ export default function App() {
     const url = SITE_URL + (cfg.path === "/" ? "/" : cfg.path);
     document.title = fullTitle;
     upsertMeta("name", "description", cfg.description);
+    upsertMeta("name", "robots", ["orderStatus","adminLogin","adminOrders","adminOrderDetail"].includes(page) ? "noindex,nofollow" : "index,follow");
     upsertCanonical(url);
     upsertMeta("property", "og:title", fullTitle);
     upsertMeta("property", "og:description", cfg.description);
     upsertMeta("property", "og:url", url);
   }, [page]);
+
+  // Order-status and admin pages are standalone experiences (their own
+  // header, no site nav/footer/cart) and are never gated behind the RUO
+  // entry screen — a customer checking their order or an admin signing in
+  // isn't "browsing the catalog."
+  if (page === "orderStatus") return <OrderStatusPage/>;
+  if (page === "adminLogin") return <AdminLoginPage/>;
+  if (page === "adminOrders") return <AdminOrdersListPage/>;
+  if (page === "adminOrderDetail") return <AdminOrderDetailPage/>;
 
   if (gated) return <Gate ok={()=>setGated(false)}/>;
 
