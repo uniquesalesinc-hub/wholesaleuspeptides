@@ -9,7 +9,7 @@ import AdminLoginPage from "./pages/AdminLoginPage.jsx";
 import AdminOrdersListPage from "./pages/AdminOrdersListPage.jsx";
 import AdminOrderDetailPage from "./pages/AdminOrderDetailPage.jsx";
 import { trackEvent } from "./lib/analytics";
-import { DEFAULT_MIN_QTY, CUSTOM_PRODUCTION_MIN_QTY, resolveTier, unitPriceFor, startingPrice, fmt, hasPrice, NO_PRICE_LABEL } from "./lib/pricing";
+import { DEFAULT_MIN_QTY, CUSTOM_PRODUCTION_MIN_QTY, TIERS, resolveTier, unitPriceFor, fmt, hasPrice, NO_PRICE_LABEL } from "./lib/pricing";
 
 const PARTNER_ACCESS_KEY = "wsp_partner_access";
 
@@ -533,6 +533,32 @@ function ProductVisual({ name, strength, cat }) {
 
 
 
+// The quantity at which the sub-10 surcharge stops applying — a boundary in
+// the existing surcharge logic, included so the hint below can surface it.
+const SURCHARGE_END_QTY = 10;
+
+// Presentation-only helper: the smallest quantity above the one currently
+// selected at which this variant's unit price actually drops. Used for the
+// "volume pricing available at N+ units" hint, so the card points at a real
+// break instead of asserting a blanket "10+ units" — which would be wrong
+// for sprays, creams, and capsules, where the 3-9 price already equals the
+// 10-unit price and the first real discount lands much later. Reads the
+// existing pricing functions only; no pricing math is defined here.
+function nextVolumeBreak(variant, qty, cat) {
+  const current = unitPriceFor(variant, qty, cat);
+  if (!hasPrice(current)) return null;
+  const candidates = variant.customTierRanges
+    ? variant.customTierRanges.map(b => b.min)
+    : [5, SURCHARGE_END_QTY, ...TIERS.map(t => t.min)];
+  return candidates
+    .filter(q => q > qty)
+    .sort((a, b) => a - b)
+    .find(q => {
+      const p = unitPriceFor(variant, q, cat);
+      return hasPrice(p) && p < current;
+    }) || null;
+}
+
 // ── PRODUCT CARD ──────────────────────────────────────────────────────────────
 function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequestConsultation }) {
   const [hov, setHov] = useState(false);
@@ -546,6 +572,7 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
   const meta = FULFILLMENT_META[fState];
   const t = resolveTier(variant, qty);
   const price = unitPriceFor(variant, qty, p.c) || 0;
+  const volumeBreak = nextVolumeBreak(variant, qty, p.c);
   const showPricing = fState === "in_stock" || fState === "large_volume";
   return (
     <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
@@ -597,12 +624,22 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
           </div>
         ) : (
           <div style={{marginBottom:14}}>
-            {hasPrice(startingPrice(variant)) ? (
-              <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:9}}>
-                <div style={{fontSize:8,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700}}>Starting At</div>
-                <div style={{fontSize:15,fontWeight:800,color:C.navy}}>{fmt(startingPrice(variant))}</div>
-                <div style={{fontSize:9,color:C.stone}}>/unit (10+ units)</div>
-              </div>
+            {hasPrice(price) ? (
+              <>
+                {/* The headline price is always the real price for the
+                    quantity currently selected — never a lower volume
+                    price the buyer has not qualified for. */}
+                <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:volumeBreak?3:9}}>
+                  <div style={{fontSize:8,letterSpacing:1.5,color:C.stone,textTransform:"uppercase",fontWeight:700}}>Your Price</div>
+                  <div style={{fontSize:15,fontWeight:800,color:C.navy}}>{fmt(price)}</div>
+                  <div style={{fontSize:9,color:C.stone}}>/unit at {qty} units</div>
+                </div>
+                {volumeBreak && (
+                  <div style={{fontSize:9,color:C.stone,marginBottom:9}}>
+                    Next volume discount at {volumeBreak}+ units
+                  </div>
+                )}
+              </>
             ) : (
               <div style={{fontSize:12,fontWeight:700,color:C.navy,marginBottom:9}}>{NO_PRICE_LABEL}</div>
             )}
