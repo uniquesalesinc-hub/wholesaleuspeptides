@@ -56,6 +56,16 @@
 </head>
 <body>
   <div id="root"></div>
+  <!-- TEMPORARY diagnostic for the PR #60 blank-Preview investigation. Remove before merging. -->
+  <script>
+    window.addEventListener('error', function (e) {
+      var root = document.getElementById('root');
+      if (root && !root.hasChildNodes()) {
+        root.innerHTML = '<pre style="padding:24px;white-space:pre-wrap;font:12px monospace;color:#8B2E2E">Startup error: ' +
+          (e.error && e.error.stack || e.message) + '</pre>';
+      }
+    });
+  </script>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
