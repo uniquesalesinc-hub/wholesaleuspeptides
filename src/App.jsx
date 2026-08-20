@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import TrustBanner from "./components/TrustBanner.jsx";
 import PartnerAccessModal from "./components/PartnerAccessModal.jsx";
 import ContactModal from "./components/ContactModal.jsx";
@@ -2179,6 +2179,19 @@ export default function App() {
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
+
+  // This is a client-rendered page swap, not a real navigation, so the
+  // browser keeps whatever scroll position it had on the home page —
+  // which is why a quick-link click from deep in the "What We Supply"
+  // section was landing users partway (or further) down the catalog
+  // instead of at its top. Scoped to catalogCategory specifically so it
+  // only fires for these quick links, not for setPage's normal catalog
+  // navigation (nav bar, footer CTAs, etc.), which isn't reported broken.
+  // useLayoutEffect runs before the browser paints, so there's no visible
+  // jump from the stale position first.
+  useLayoutEffect(() => {
+    if (catalogCategory) window.scrollTo(0, 0);
+  }, [catalogCategory]);
 
   useEffect(() => {
     if (typeof window.gtag !== "function") return;
