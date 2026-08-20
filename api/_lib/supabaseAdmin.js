@@ -1,27 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 
-// New-format Supabase keys (sb_secret_…, sb_publishable_…) are opaque
-// tokens, not JWTs, and Supabase's gateway rejects them outright if they
-// arrive on the Authorization header — they are only valid on `apikey`.
-// The installed @supabase/supabase-js (2.112.3) knows this for its
-// Functions client (see its internal `omitApiKeyAsBearer` option) but not
-// yet for the plain REST/Postgrest client returned by `.from()`: with no
-// signed-in session, it falls back to sending the *same* key again on
-// Authorization as a Bearer token, which is exactly what breaks it (this
-// was the cause of the "Invalid API key" failure on admin_profiles
-// lookups). There is no public createClient option to disable that
-// fallback, so this custom fetch removes only that exact, erroneous
-// header — it never sets or invents an Authorization value itself.
-function stripKeyAsBearerFetch(key) {
-  return (input, init = {}) => {
-    const headers = new Headers(init.headers);
-    if (headers.get("Authorization") === `Bearer ${key}`) {
-      headers.delete("Authorization");
-    }
-    return fetch(input, { ...init, headers });
-  };
-}
-
 // Server-only client, authenticated with the Supabase SECRET key (the new
 // Supabase key format's server-side key — never the client-safe
 // publishable key). This bypasses Row Level Security by design, which is
@@ -39,7 +17,6 @@ export function getSupabaseAdmin() {
     }
     client = createClient(url, secretKey, {
       auth: { autoRefreshToken: false, persistSession: false },
-      global: { fetch: stripKeyAsBearerFetch(secretKey) },
     });
   }
   return client;
