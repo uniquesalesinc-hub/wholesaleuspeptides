@@ -1027,28 +1027,41 @@ function PersistentQuoteCTA({ onClick }) {
 // pre-filtered via goToCatalogCategory. Visually consistent with the
 // existing PartnerCard hover treatment (white background, gold border +
 // lift on hover) rather than any new styling.
-function CategoryQuickLinkCard({ label, desc, onClick }) {
+//
+// The CTA below is a plain div, not a <button>: the card itself is the
+// single interactive element, so nesting a real button inside it would
+// give screen readers two overlapping controls for one action. It is
+// styled as a solid filled block (see .cat-quicklink-cta) so it reads as
+// a tappable button on touch devices, where hover states never fire.
+function CategoryQuickLinkCard({ label, desc, cta, onClick }) {
   const [hov, setHov] = useState(false);
   return (
     <div
+      className="cat-quicklink"
       role="button" tabIndex={0}
       onClick={onClick}
       onKeyDown={(e)=>{ if (e.key==="Enter"||e.key===" ") { e.preventDefault(); onClick(); } }}
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{background:C.white,padding:"26px 22px",cursor:"pointer",outline:"none",border:"1px solid "+(hov?C.gold:"transparent"),boxShadow:hov?"0 12px 28px rgba(5,17,31,0.14)":"none",transform:hov?"translateY(-3px)":"translateY(0)",transition:"all 0.2s ease"}}>
+      style={{background:C.white,padding:"26px 22px",cursor:"pointer",display:"flex",flexDirection:"column",height:"100%",boxSizing:"border-box",border:"1px solid "+(hov?C.gold:"transparent"),boxShadow:hov?"0 12px 28px rgba(5,17,31,0.14)":"none",transform:hov?"translateY(-3px)":"translateY(0)",transition:"all 0.2s ease"}}>
       <div style={{width:22,height:2,background:C.gold,marginBottom:14}}/>
       <div style={{fontSize:13,fontWeight:700,color:C.navy,marginBottom:8,lineHeight:1.35}}>{label}</div>
-      <div style={{fontSize:11,color:C.stone,lineHeight:1.7}}>{desc}</div>
+      {/* flex:1 keeps every card's CTA aligned to the same baseline
+          regardless of how many lines the description runs to. */}
+      <div style={{fontSize:11,color:C.stone,lineHeight:1.7,flex:1}}>{desc}</div>
+      <div className="cat-quicklink-cta" style={{background:hov?C.gold:C.navy,color:hov?C.navy:C.white,borderColor:hov?C.gold:C.navy}}>
+        <span>{cta}</span>
+        <span aria-hidden="true">→</span>
+      </div>
     </div>
   );
 }
 
 function HomeSections({ setPage, goToCatalogCategory, onContactClick }) {
   const cats = [
-    {label:"Peptides",                     desc:"BPC-157, TB-500, CJC-1295, Ipamorelin, GLP research compounds", filter:"Peptides"},
-    {label:"Bio Regulators",               desc:"Pinealon, Thymalin, Vesugen, Cardiogen, and the full bio regulator line", filter:"Bio Regulators"},
-    {label:"Sprays, Creams & Capsules",    desc:"Nasal sprays, topical creams, and oral capsules — ready to ship", filter:SPRAYS_CREAMS_CAPSULES},
-    {label:"Custom Production",            desc:"Compounds available via 100-unit custom production runs", filter:CUSTOM_PRODUCTION_FILTER},
+    {label:"Peptides",                     desc:"BPC-157, TB-500, CJC-1295, Ipamorelin, GLP research compounds", cta:"Shop Peptides", filter:"Peptides"},
+    {label:"Bio Regulators",               desc:"Pinealon, Thymalin, Vesugen, Cardiogen, and the full bio regulator line", cta:"Shop Bio Regulators", filter:"Bio Regulators"},
+    {label:"Sprays, Creams & Capsules",    desc:"Nasal sprays, topical creams, and oral capsules — ready to ship", cta:"Shop Sprays, Creams & Capsules", filter:SPRAYS_CREAMS_CAPSULES},
+    {label:"Custom Production",            desc:"Compounds available via 100-unit custom production runs", cta:"View Custom Production", filter:CUSTOM_PRODUCTION_FILTER},
   ];
   const featured = [
     {n:"GLP-S", s:"5mg – 20mg", c:"GLP"},
@@ -1081,8 +1094,8 @@ function HomeSections({ setPage, goToCatalogCategory, onContactClick }) {
             <h2 style={{fontSize:34,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5}}>What We Supply</h2>
           </div>
           <div className="home-cats-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:1,background:C.mist}}>
-            {cats.map(({label,desc,filter})=>(
-              <CategoryQuickLinkCard key={filter} label={label} desc={desc} onClick={()=>goToCatalogCategory(filter)}/>
+            {cats.map(({label,desc,cta,filter})=>(
+              <CategoryQuickLinkCard key={filter} label={label} desc={desc} cta={cta} onClick={()=>goToCatalogCategory(filter)}/>
             ))}
           </div>
         </div>
