@@ -211,6 +211,22 @@ function displayCategory(item) {
   return (item && CATEGORY_DISPLAY[item.c]) || (item && item.c) || "";
 }
 
+// Homepage quick-link filter values that don't correspond to a single
+// CATS entry. These are matched specially in matchesCatalogFilter below
+// and are never added to CATS itself, so the catalog's own pill row is
+// unaffected — it only ever renders/sets plain CATS values.
+const SPRAYS_CREAMS_CAPSULES = "Sprays, Creams & Capsules";
+const CUSTOM_PRODUCTION_FILTER = "Custom Production";
+
+// Shared by the catalog's own pill filter (plain CATS values, exact
+// match) and the homepage quick links (the two combined filters above).
+function matchesCatalogFilter(p, cat) {
+  if (cat === "All") return true;
+  if (cat === SPRAYS_CREAMS_CAPSULES) return ["Sprays","Creams","Capsules"].includes(displayCategory(p));
+  if (cat === CUSTOM_PRODUCTION_FILTER) return p.variants.some(v => v.stockStatus === "custom_production");
+  return displayCategory(p) === cat;
+}
+
 // ── VARIANT-LEVEL STOCK / CUSTOM PRODUCTION AVAILABILITY ──────────────────────
 // Every SKU variant (exact product + strength) carries its own fulfillment
 // status — never inferred from sibling strengths of the same product. Until
@@ -750,7 +766,7 @@ function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick, initialC
   const [cat, setCat] = useState(initialCategory || "All");
   const [srch, setSrch] = useState("");
   const [toast, setToast] = useState("");
-  const rows = GROUPED.filter(p=>(cat==="All"||displayCategory(p)===cat)&&(!srch||p.n.toLowerCase().includes(srch.toLowerCase())||displayCategory(p).toLowerCase().includes(srch.toLowerCase())||p.variants.some(v=>v.s.toLowerCase().includes(srch.toLowerCase()))));
+  const rows = GROUPED.filter(p=>matchesCatalogFilter(p,cat)&&(!srch||p.n.toLowerCase().includes(srch.toLowerCase())||displayCategory(p).toLowerCase().includes(srch.toLowerCase())||p.variants.some(v=>v.s.toLowerCase().includes(srch.toLowerCase()))));
   const add = (p,variant,qty,tier) => {
     if (addToCart) addToCart(p,variant,qty,tier);
     setToast(p.n);
@@ -1007,14 +1023,45 @@ function PersistentQuoteCTA({ onClick }) {
   );
 }
 
-function HomeSections({ setPage, onContactClick }) {
+// Whole-card clickable link from a homepage category into the catalog,
+// pre-filtered via goToCatalogCategory. Visually consistent with the
+// existing PartnerCard hover treatment (white background, gold border +
+// lift on hover) rather than any new styling.
+//
+// The CTA below is a plain div, not a <button>: the card itself is the
+// single interactive element, so nesting a real button inside it would
+// give screen readers two overlapping controls for one action. It is
+// styled as a solid filled block (see .cat-quicklink-cta) so it reads as
+// a tappable button on touch devices, where hover states never fire.
+function CategoryQuickLinkCard({ label, desc, cta, onClick }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <div
+      className="cat-quicklink"
+      role="button" tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e)=>{ if (e.key==="Enter"||e.key===" ") { e.preventDefault(); onClick(); } }}
+      onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{background:C.white,padding:"26px 22px",cursor:"pointer",display:"flex",flexDirection:"column",height:"100%",boxSizing:"border-box",border:"1px solid "+(hov?C.gold:"transparent"),boxShadow:hov?"0 12px 28px rgba(5,17,31,0.14)":"none",transform:hov?"translateY(-3px)":"translateY(0)",transition:"all 0.2s ease"}}>
+      <div style={{width:22,height:2,background:C.gold,marginBottom:14}}/>
+      <div style={{fontSize:13,fontWeight:700,color:C.navy,marginBottom:8,lineHeight:1.35}}>{label}</div>
+      {/* flex:1 keeps every card's CTA aligned to the same baseline
+          regardless of how many lines the description runs to. */}
+      <div style={{fontSize:11,color:C.stone,lineHeight:1.7,flex:1}}>{desc}</div>
+      <div className="cat-quicklink-cta" style={{background:hov?C.gold:C.navy,color:hov?C.navy:C.white,borderColor:hov?C.gold:C.navy}}>
+        <span>{cta}</span>
+        <span aria-hidden="true">→</span>
+      </div>
+    </div>
+  );
+}
+
+function HomeSections({ setPage, goToCatalogCategory, onContactClick }) {
   const cats = [
-    {label:"GLP Research",         desc:"GLP-S, GLP-T, GLP-R"},
-    {label:"Regenerative Compounds",desc:"BPC-157, TB-500, GHK-Cu, NAD+, MOTS-C, Thymosin Alpha-1"},
-    {label:"Research Peptides",     desc:"Ipamorelin, CJC-1295, GHRP-2, GHRP-6, AOD-9604, IGF-1 LR3, Tesamorelin"},
-    {label:"Research Compounds",    desc:"Bio Regulators, Epithalon, KPV, VIP, PT-141, DSIP, SS-31"},
-    {label:"Capsules",               desc:"BPC-157, TB-500, GHK-Cu, Dihexa, GLP-1, GLP-2, Gut Restore, Repair & Fix"},
-    {label:"Custom Formulations",   desc:"Blends, Sprays, Topicals — custom ratios available on request"},
+    {label:"Peptides",                     desc:"BPC-157, TB-500, CJC-1295, Ipamorelin, GLP research compounds", cta:"Shop Peptides", filter:"Peptides"},
+    {label:"Bio Regulators",               desc:"Pinealon, Thymalin, Vesugen, Cardiogen, and the full bio regulator line", cta:"Shop Bio Regulators", filter:"Bio Regulators"},
+    {label:"Sprays, Creams & Capsules",    desc:"Nasal sprays, topical creams, and oral capsules — ready to ship", cta:"Shop Sprays, Creams & Capsules", filter:SPRAYS_CREAMS_CAPSULES},
+    {label:"Custom Production",            desc:"Compounds available via 100-unit custom production runs", cta:"View Custom Production", filter:CUSTOM_PRODUCTION_FILTER},
   ];
   const featured = [
     {n:"GLP-S", s:"5mg – 20mg", c:"GLP"},
@@ -1046,13 +1093,9 @@ function HomeSections({ setPage, onContactClick }) {
             <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:12}}>Product Categories</div>
             <h2 style={{fontSize:34,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5}}>What We Supply</h2>
           </div>
-          <div className="home-cats-grid" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:1,background:C.mist}}>
-            {cats.map(({label,desc},i)=>(
-              <div key={i} onClick={()=>setPage("catalog")} style={{background:C.white,padding:"26px 22px",cursor:"pointer"}}>
-                <div style={{width:22,height:2,background:C.gold,marginBottom:14}}/>
-                <div style={{fontSize:13,fontWeight:700,color:C.navy,marginBottom:8,lineHeight:1.35}}>{label}</div>
-                <div style={{fontSize:11,color:C.stone,lineHeight:1.7}}>{desc}</div>
-              </div>
+          <div className="home-cats-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:1,background:C.mist}}>
+            {cats.map(({label,desc,cta,filter})=>(
+              <CategoryQuickLinkCard key={filter} label={label} desc={desc} cta={cta} onClick={()=>goToCatalogCategory(filter)}/>
             ))}
           </div>
         </div>
@@ -2100,6 +2143,7 @@ export default function App() {
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [consultationRequest, setConsultationRequest] = useState(null);
   const [navOpen, setNavOpen] = useState(false);
+  const [catalogCategory, setCatalogCategory] = useState(null);
   const partnerUnlocked = !!partnerAccess?.unlocked;
   const unlockPartnerAccess = (lead) => {
     const record = { unlocked: true, lead, unlockedAt: new Date().toISOString() };
@@ -2109,10 +2153,25 @@ export default function App() {
   const count = cart.reduce((s,i)=>s+i.qty,0);
 
   const setPage = (id) => {
+    // Any normal navigation lands on the catalog unfiltered — only
+    // goToCatalogCategory below sets a filtered arrival.
+    setCatalogCategory(null);
     setPageState(id);
     setNavOpen(false);
     const path = (PAGES[id] || PAGES.home).path;
     if (window.location.pathname !== path) window.history.pushState({page:id}, "", path);
+  };
+
+  // Used only by the homepage category quick links: navigates to the
+  // catalog pre-filtered to the given category. Kept separate from
+  // setPage (rather than calling it) so its category isn't clobbered by
+  // setPage's own reset-to-unfiltered line above.
+  const goToCatalogCategory = (cat) => {
+    setCatalogCategory(cat);
+    setPageState("catalog");
+    setNavOpen(false);
+    const path = PAGES.catalog.path;
+    if (window.location.pathname !== path) window.history.pushState({page:"catalog"}, "", path);
   };
 
   useEffect(() => {
@@ -2221,8 +2280,8 @@ export default function App() {
           </div>
         )}
       </nav>
-      {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><WhoWeServe/><UnlockPartnerCTA partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} setPage={setPage}/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage} onContactClick={()=>setContactModalOpen(true)}/></>}
-      {page==="catalog" && <Catalog addToCart={addToCart} openCart={()=>setCopen(true)} partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} onRequestConsultation={(type,ctx)=>setConsultationRequest({type,...ctx})}/>}
+      {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><WhoWeServe/><UnlockPartnerCTA partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} setPage={setPage}/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage} goToCatalogCategory={goToCatalogCategory} onContactClick={()=>setContactModalOpen(true)}/></>}
+      {page==="catalog" && <Catalog addToCart={addToCart} openCart={()=>setCopen(true)} partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} onRequestConsultation={(type,ctx)=>setConsultationRequest({type,...ctx})} initialCategory={catalogCategory}/>}
       {page==="wl"      && <WLPage setPage={setPage}/>}
       {page==="about"   && <AboutPage/>}
       {page==="coa"     && <COAPage/>}
