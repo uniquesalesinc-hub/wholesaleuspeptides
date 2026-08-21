@@ -764,6 +764,16 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
 // ── CATALOG PAGE ──────────────────────────────────────────────────────────────
 function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick, initialCategory, onRequestConsultation }) {
   const [cat, setCat] = useState(initialCategory || "All");
+  // initialCategory only seeds state on mount, which is all the homepage
+  // quick-link cards ever needed (they only reach this page from "home",
+  // so Catalog always mounts fresh). The header's All Products menu is
+  // reachable from every page, including this one — selecting a category
+  // while already on /catalog doesn't remount Catalog, so without this
+  // resync it silently did nothing. Scoped to initialCategory itself, so
+  // it never fires from the in-page pill row's own setCat calls.
+  useEffect(() => {
+    setCat(initialCategory || "All");
+  }, [initialCategory]);
   const [srch, setSrch] = useState("");
   const [toast, setToast] = useState("");
   const rows = GROUPED.filter(p=>matchesCatalogFilter(p,cat)&&(!srch||p.n.toLowerCase().includes(srch.toLowerCase())||displayCategory(p).toLowerCase().includes(srch.toLowerCase())||p.variants.some(v=>v.s.toLowerCase().includes(srch.toLowerCase()))));
