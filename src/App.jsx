@@ -2180,6 +2180,16 @@ export default function App() {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
+  // Standard hygiene for an app that drives its own navigation via
+  // history.pushState: stop the browser from trying to auto-restore a
+  // scroll offset on back/forward through these entries, since we manage
+  // scroll ourselves. (Measured directly: this alone does not explain or
+  // fix the quick-link scroll bug below — the browser's own
+  // pushState-triggered restoration was ruled out as its cause.)
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
+  }, []);
+
   // This is a client-rendered page swap, not a real navigation, so the
   // browser keeps whatever scroll position it had on the home page —
   // which is why a quick-link click from deep in the "What We Supply"
@@ -2187,10 +2197,28 @@ export default function App() {
   // instead of at its top. Scoped to catalogCategory specifically so it
   // only fires for these quick links, not for setPage's normal catalog
   // navigation (nav bar, footer CTAs, etc.), which isn't reported broken.
-  // useLayoutEffect runs before the browser paints, so there's no visible
-  // jump from the stale position first.
+  //
+  // A single scrollTo(0,0) in useLayoutEffect (which runs before paint)
+  // is not enough on its own: a real quick-link click is reached by
+  // physically scrolling down the page first, and on touch devices that
+  // scroll gesture's momentum/deceleration can still be settling when the
+  // tap lands. That in-flight momentum keeps adjusting the scroll offset
+  // for a few frames after our own call, overriding it — confirmed here
+  // by instrumenting a click and logging every scrollY change: the
+  // position briefly snapped back to its exact pre-click value a couple
+  // of frames after being reset to 0. Re-asserting the scroll position on
+  // each of the next several frames (instead of once) wins that race
+  // without guessing at a fixed delay, and stops on its own once the
+  // window has passed.
   useLayoutEffect(() => {
-    if (catalogCategory) window.scrollTo(0, 0);
+    if (!catalogCategory) return;
+    window.scrollTo(0, 0);
+    let framesLeft = 12; // ~200ms at 60fps — comfortably outlasts residual scroll momentum
+    let handle = requestAnimationFrame(function reassert() {
+      window.scrollTo(0, 0);
+      if (--framesLeft > 0) handle = requestAnimationFrame(reassert);
+    });
+    return () => cancelAnimationFrame(handle);
   }, [catalogCategory]);
 
   useEffect(() => {
