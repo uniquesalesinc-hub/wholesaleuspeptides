@@ -764,6 +764,16 @@ function ProdCard({ p, onAdd, onOpenCart, partnerUnlocked, onUnlockClick, onRequ
 // ── CATALOG PAGE ──────────────────────────────────────────────────────────────
 function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick, initialCategory, onRequestConsultation }) {
   const [cat, setCat] = useState(initialCategory || "All");
+  // initialCategory only seeds state on mount, which is all the homepage
+  // quick-link cards ever needed (they only reach this page from "home",
+  // so Catalog always mounts fresh). The header's All Products menu is
+  // reachable from every page, including this one — selecting a category
+  // while already on /catalog doesn't remount Catalog, so without this
+  // resync it silently did nothing. Scoped to initialCategory itself, so
+  // it never fires from the in-page pill row's own setCat calls.
+  useEffect(() => {
+    setCat(initialCategory || "All");
+  }, [initialCategory]);
   const [srch, setSrch] = useState("");
   const [toast, setToast] = useState("");
   const rows = GROUPED.filter(p=>matchesCatalogFilter(p,cat)&&(!srch||p.n.toLowerCase().includes(srch.toLowerCase())||displayCategory(p).toLowerCase().includes(srch.toLowerCase())||p.variants.some(v=>v.s.toLowerCase().includes(srch.toLowerCase()))));
@@ -2143,6 +2153,7 @@ export default function App() {
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [consultationRequest, setConsultationRequest] = useState(null);
   const [navOpen, setNavOpen] = useState(false);
+  const [productsMenuOpen, setProductsMenuOpen] = useState(false);
   const [catalogCategory, setCatalogCategory] = useState(null);
   const partnerUnlocked = !!partnerAccess?.unlocked;
   const unlockPartnerAccess = (lead) => {
@@ -2158,21 +2169,36 @@ export default function App() {
     setCatalogCategory(null);
     setPageState(id);
     setNavOpen(false);
+    setProductsMenuOpen(false);
     const path = (PAGES[id] || PAGES.home).path;
     if (window.location.pathname !== path) window.history.pushState({page:id}, "", path);
   };
 
-  // Used only by the homepage category quick links: navigates to the
-  // catalog pre-filtered to the given category. Kept separate from
-  // setPage (rather than calling it) so its category isn't clobbered by
-  // setPage's own reset-to-unfiltered line above.
+  // Used by both the homepage quick-link cards and the header's "All
+  // Products" menu: navigates to the catalog pre-filtered to the given
+  // category. Kept separate from setPage (rather than calling it) so its
+  // category isn't clobbered by setPage's own reset-to-unfiltered line
+  // above.
   const goToCatalogCategory = (cat) => {
     setCatalogCategory(cat);
     setPageState("catalog");
     setNavOpen(false);
+    setProductsMenuOpen(false);
     const path = PAGES.catalog.path;
     if (window.location.pathname !== path) window.history.pushState({page:"catalog"}, "", path);
   };
+
+  // Single source of truth for the "All Products" menu, shared verbatim
+  // between the desktop dropdown and the mobile panel below so the two
+  // can never drift apart. "View Full Catalog" reuses the exact same
+  // unfiltered navigation as every other plain nav link.
+  const productMenuItems = [
+    { label: "Peptides", onSelect: () => goToCatalogCategory("Peptides") },
+    { label: "Bio Regulators", onSelect: () => goToCatalogCategory("Bio Regulators") },
+    { label: "Sprays, Creams & Capsules", onSelect: () => goToCatalogCategory(SPRAYS_CREAMS_CAPSULES) },
+    { label: "Custom Production", onSelect: () => goToCatalogCategory(CUSTOM_PRODUCTION_FILTER) },
+    { label: "View Full Catalog", onSelect: () => setPage("catalog") },
+  ];
 
   useEffect(() => {
     const onPop = () => setPageState(pageIdFromPath(window.location.pathname));
@@ -2292,12 +2318,39 @@ export default function App() {
           <div style={{fontSize:14,fontWeight:800,color:C.white,fontFamily:"Georgia,serif"}}>WholesaleUSPeptides.com</div>
           <div style={{fontSize:7,letterSpacing:3,color:C.gold,textTransform:"uppercase",marginTop:2,opacity:0.8}}>Wholesale Manufacturing & White Label</div>
         </button>
-        <div className="nav-links" style={{display:"flex"}}>
-          {[["home","Home"],["catalog","Catalog"],["wl","White Label"],["about","Standards"],["coa","Batch Verification"]].map(([id,l])=>(
+        <div className="nav-links" style={{display:"flex",position:"relative"}}>
+          <button key="home" onClick={()=>setPage("home")} style={{background:"none",border:"none",padding:"0 13px",height:62,fontSize:10,fontWeight:600,color:page==="home"?C.gold:"rgba(255,255,255,0.5)",borderBottom:page==="home"?"2px solid "+C.gold:"2px solid transparent",cursor:"pointer",whiteSpace:"nowrap",letterSpacing:0.3}}>
+            Home
+          </button>
+          <button
+            onClick={()=>setProductsMenuOpen(o=>!o)}
+            aria-haspopup="true" aria-expanded={productsMenuOpen}
+            style={{background:"none",border:"none",padding:"0 13px",height:62,fontSize:10,fontWeight:600,display:"flex",alignItems:"center",gap:5,color:(page==="catalog"||productsMenuOpen)?C.gold:"rgba(255,255,255,0.5)",borderBottom:page==="catalog"?"2px solid "+C.gold:"2px solid transparent",cursor:"pointer",whiteSpace:"nowrap",letterSpacing:0.3}}>
+            All Products
+            <span aria-hidden="true" style={{fontSize:8,transform:productsMenuOpen?"rotate(180deg)":"none",transition:"transform 0.15s"}}>▾</span>
+          </button>
+          {[["wl","White Label"],["about","Standards"],["coa","Batch Verification"]].map(([id,l])=>(
             <button key={id} onClick={()=>setPage(id)} style={{background:"none",border:"none",padding:"0 13px",height:62,fontSize:10,fontWeight:600,color:page===id?C.gold:"rgba(255,255,255,0.5)",borderBottom:page===id?"2px solid "+C.gold:"2px solid transparent",cursor:"pointer",whiteSpace:"nowrap",letterSpacing:0.3}}>
               {l}
             </button>
           ))}
+          {productsMenuOpen && (
+            <>
+              {/* Transparent full-viewport catcher: any click outside the
+                  panel closes it. Sits below the nav (which stays on top,
+                  so the toggle button itself remains clickable to close)
+                  but above everything else. */}
+              <div onClick={()=>setProductsMenuOpen(false)} style={{position:"fixed",inset:0,zIndex:690}}/>
+              <div className="products-dropdown" style={{position:"absolute",top:"100%",left:13,background:C.white,minWidth:240,boxShadow:"0 16px 34px rgba(5,17,31,0.22)",border:"1px solid "+C.mist,zIndex:750,display:"flex",flexDirection:"column",padding:"6px 0"}}>
+                {productMenuItems.map(({label,onSelect})=>(
+                  <button key={label} onClick={onSelect} style={{background:"none",border:"none",padding:"12px 18px",textAlign:"left",fontSize:12,fontWeight:600,color:C.navy,cursor:"pointer",whiteSpace:"nowrap"}}
+                    onMouseEnter={e=>e.currentTarget.style.background=C.off} onMouseLeave={e=>e.currentTarget.style.background="none"}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
           <button className="nav-mobile-toggle" onClick={()=>setNavOpen(o=>!o)} aria-label={navOpen?"Close navigation menu":"Open navigation menu"} aria-expanded={navOpen} style={{background:"none",border:"1px solid rgba(201,168,76,0.4)",color:C.gold,fontSize:16,width:36,height:36,cursor:"pointer",lineHeight:1}}>
@@ -2312,8 +2365,17 @@ export default function App() {
           // fixed viewport offset, so it lands correctly whether the sticky
           // nav is still in normal flow below the announcement bar or
           // already stuck to the top of the viewport after scrolling.
-          <div className="nav-mobile-panel" style={{position:"absolute",top:"100%",left:0,right:0,background:C.navy,borderBottom:"1px solid rgba(201,168,76,0.25)",boxShadow:"0 12px 24px rgba(5,17,31,0.3)",display:"flex",flexDirection:"column",padding:"6px 0"}}>
-            {[["home","Home"],["catalog","Catalog"],["wl","White Label"],["about","Standards"],["coa","Batch Verification"]].map(([id,l])=>(
+          <div className="nav-mobile-panel" style={{position:"absolute",top:"100%",left:0,right:0,background:C.navy,borderBottom:"1px solid rgba(201,168,76,0.25)",boxShadow:"0 12px 24px rgba(5,17,31,0.3)",display:"flex",flexDirection:"column",padding:"6px 0",maxHeight:"calc(100vh - 62px)",overflowY:"auto"}}>
+            <button onClick={()=>setPage("home")} style={{background:"none",border:"none",padding:"15px 24px",textAlign:"left",fontSize:12,fontWeight:600,color:page==="home"?C.gold:"rgba(255,255,255,0.7)",borderBottom:"1px solid rgba(255,255,255,0.06)",cursor:"pointer"}}>
+              Home
+            </button>
+            <div style={{padding:"14px 24px 6px",fontSize:9,letterSpacing:2,color:C.gold,textTransform:"uppercase",fontWeight:700}}>All Products</div>
+            {productMenuItems.map(({label,onSelect})=>(
+              <button key={label} onClick={onSelect} style={{background:"none",border:"none",padding:"14px 24px",textAlign:"left",fontSize:12,fontWeight:600,color:"rgba(255,255,255,0.7)",borderBottom:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",minHeight:48}}>
+                {label}
+              </button>
+            ))}
+            {[["wl","White Label"],["about","Standards"],["coa","Batch Verification"]].map(([id,l])=>(
               <button key={id} onClick={()=>setPage(id)} style={{background:"none",border:"none",padding:"15px 24px",textAlign:"left",fontSize:12,fontWeight:600,color:page===id?C.gold:"rgba(255,255,255,0.7)",borderBottom:"1px solid rgba(255,255,255,0.06)",cursor:"pointer"}}>
                 {l}
               </button>

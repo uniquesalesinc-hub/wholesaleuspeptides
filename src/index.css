@@ -315,9 +315,15 @@
 }
 
 /* ── GLOBAL OVERFLOW SAFEGUARD ─────────────────────────────────────────────── */
+/* overflow-x: hidden here breaks position: sticky on any descendant
+   (confirmed directly — the site header stopped sticking entirely) because
+   it turns html/body into a scroll container that sticky elements get
+   scoped to instead of the real viewport. overflow-x: clip gives the same
+   "no horizontal scrollbar" protection without creating that scroll
+   container, so it doesn't interfere with sticky descendants. */
 html, body {
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* ── NAV — mobile collapse ──────────────────────────────────────────────────── */
