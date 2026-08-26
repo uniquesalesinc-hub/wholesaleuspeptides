@@ -462,7 +462,7 @@ function Hero({ setPage }) {
             WholesaleUSPeptides.com provides batch-verified peptide manufacturing, white-label packaging, and fulfillment solutions for research organizations, wellness brands, and qualified distributors.
           </p>
           <p style={{fontSize:11,color:C.gold,letterSpacing:1,lineHeight:1.7,maxWidth:540,marginBottom:32,fontWeight:600,textTransform:"uppercase"}}>
-            Minimum Order: 3 Units Per SKU &nbsp;·&nbsp; Quotes Delivered Within 48 Hours &nbsp;·&nbsp; Batch-Specific COAs Available
+            Minimum Order: 3 Units Per SKU &nbsp;·&nbsp; Quotes On Request &nbsp;·&nbsp; Batch-Specific COAs Available
           </p>
           <div style={{display:"flex",gap:12,marginBottom:40,flexWrap:"wrap"}}>
             <button onClick={()=>setPage("catalog")} style={{padding:"13px 30px",background:C.gold,border:"none",color:C.navy,fontSize:11,fontWeight:800,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}}>
@@ -846,9 +846,9 @@ function WhyPartners() {
     <div style={{background:C.off,padding:"68px 40px"}}>
       <div style={{maxWidth:1280,margin:"0 auto"}}>
         <div style={{textAlign:"center",marginBottom:44}}>
-          <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:12}}>Why Partners Choose Us</div>
+          <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:12}}>Manufacturing & Fulfillment</div>
           <h2 style={{fontSize:32,fontWeight:700,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:14}}>Built For Long-Term Manufacturing Partnerships.</h2>
-          <p style={{fontSize:14,color:C.stone,lineHeight:1.8,maxWidth:620,margin:"0 auto"}}>Everything required to launch and scale a private-label peptide business under one trusted manufacturing partner.</p>
+          <p style={{fontSize:14,color:C.stone,lineHeight:1.8,maxWidth:620,margin:"0 auto"}}>Manufacturing, testing, fulfillment, and white-label packaging in one place.</p>
         </div>
         <div className="why-partners-grid">
           {cards.map((c,i)=><PartnerCard key={i} {...c}/>)}
@@ -867,9 +867,6 @@ function WhoWeServe() {
         <div style={{textAlign:"center",marginBottom:44}}>
           <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:14}}>Who We Serve</div>
           <h2 style={{fontSize:36,fontWeight:800,lineHeight:1.18,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.5,marginBottom:12}}>Trusted by Distribution Partners &amp; Private-Label Brands</h2>
-          <p style={{fontSize:14,color:C.stone,lineHeight:1.85,maxWidth:540,margin:"0 auto"}}>
-            WholesaleUSPeptides.com supports qualified organizations nationwide.
-          </p>
         </div>
         <div className="home-serve-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:1,background:C.mist}}>
           {served.map((label,i)=>(
@@ -926,7 +923,7 @@ function StatsStrip() {
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
-  const stats = ["10 Unit Minimums","126+ Product Configurations","48 Hour Quotes","Batch Traceability"];
+  const stats = ["10 Unit Minimums","126+ Product Configurations","Quotes On Request","Batch Traceability"];
   return (
     <div ref={ref} style={{background:C.navy,padding:"64px 40px"}}>
       <div style={{maxWidth:1400,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(4,1fr)"}} className="stats-strip-grid">
@@ -1088,7 +1085,7 @@ function HomeSections({ setPage, goToCatalogCategory, onContactClick }) {
     {t:"Third-Party Sterility Testing",b:"Sterility testing performed by an independent U.S. laboratory according to applicable product and production requirements."},
     {t:"Third-Party Endotoxin Testing",b:"Endotoxin verification via LAL (Limulus Amebocyte Lysate) assay, performed by an independent U.S. laboratory on applicable production lots."},
     {t:"HPLC Purity Analysis",         b:"High-performance liquid chromatography purity testing confirms compound integrity at 99%+ on applicable production lots."},
-    {t:"Heavy Metal Screening",        b:"ICP-MS heavy metal screening provides a complete safety profile for applicable production lots."},
+    {t:"Heavy Metal Screening",        b:"ICP-MS heavy-metal screening on applicable production lots."},
     {t:"Batch Traceability",           b:"Every lot is assigned a unique batch number. Full chain-of-custody documentation available to verified partners."},
     {t:"COA Documentation",            b:"Batch-specific Certificates of Analysis delivered to white-label partners for publishing on their platforms."},
   ];
@@ -1433,7 +1430,7 @@ function WLPage({ setPage }) {
         {step===5 && (
           <div>
             <h2 style={{fontSize:19,fontWeight:700,fontFamily:"Georgia,serif",marginBottom:7}}>Review & Submit</h2>
-            <p style={{fontSize:12,color:C.stone,marginBottom:18}}>Confirm your details below. Our team will contact you within 2 business days with specifications and a formal quote.</p>
+            <p style={{fontSize:12,color:C.stone,marginBottom:18}}>Confirm your details below. Our team will follow up with specifications and a formal quote.</p>
 
             <div style={{background:C.white,border:"1px solid "+C.mist,padding:"18px 20px",marginBottom:22}}>
               <div style={{fontSize:10,letterSpacing:1.5,fontWeight:700,color:C.navy,textTransform:"uppercase",marginBottom:12}}>Application Summary</div>
@@ -1518,7 +1515,7 @@ function WLPage({ setPage }) {
             <div style={{width:50,height:50,borderRadius:"50%",background:"rgba(46,107,74,0.1)",border:"2px solid "+C.green,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:700,color:C.green,margin:"0 auto 16px"}}>OK</div>
             <div style={{width:30,height:2,background:C.gold,margin:"0 auto 14px"}}/>
             <h2 style={{fontSize:21,fontWeight:700,fontFamily:"Georgia,serif",color:C.navy,marginBottom:10}}>Application Received</h2>
-            <p style={{fontSize:12,color:C.stone,lineHeight:1.85,marginBottom:18}}>Our wholesale team will contact you at <strong>{fm.em||"the email you provided"}</strong> within 2 business days to confirm specifications and issue a formal quote.</p>
+            <p style={{fontSize:12,color:C.stone,lineHeight:1.85,marginBottom:18}}>Our wholesale team will contact you at <strong>{fm.em||"the email you provided"}</strong> to confirm specifications and issue a formal quote.</p>
             <div style={{background:C.white,border:"1px solid "+C.mist,padding:"14px 18px",marginBottom:18,textAlign:"left"}}>
               {["Artwork reviewed for spec and compliance","QR placement confirmed","Formal quote and deposit invoice issued","Production begins upon 50% ACH deposit","Production lead time confirmed at order approval","Batch-specific COA documents emailed"].map((s,i)=>(
                 <div key={i} style={{display:"flex",gap:10,padding:"5px 0",borderBottom:"1px solid "+C.mist,fontSize:11,color:C.stone}}>
@@ -1701,9 +1698,6 @@ function COAPage() {
               <span style={{fontSize:9.5,fontWeight:700,letterSpacing:0.3,color:C.navy,textTransform:"uppercase"}}>{b}</span>
             </div>
           ))}
-        </div>
-        <div style={{background:"rgba(201,168,76,0.08)",border:"1px solid rgba(201,168,76,0.25)",padding:"12px 16px",marginBottom:20,fontSize:11,color:C.navy,lineHeight:1.7}}>
-          Every production batch is independently tested and archived for verification purposes.
         </div>
         <div style={{background:"#EDE9DF",border:"1px solid "+C.mist,padding:"9px 14px",marginBottom:36,fontSize:10,color:"#6B5E4A",lineHeight:1.7}}>
           <strong style={{color:C.red}}>RUO Documentation:</strong> COAs support legitimate laboratory research only. They do not constitute FDA approval for any use.
@@ -2015,7 +2009,7 @@ function CartDrawer({ cart, setCart, open, setOpen, setPage }) {
               </div>
 
               <div style={{textAlign:"center",fontSize:11,color:C.gold,fontWeight:600,marginBottom:20}}>
-                We typically respond within 1 business day.
+                Our wholesale team will follow up with you.
               </div>
 
               <div style={{background:C.off,border:"1px solid "+C.mist,padding:"14px 16px",marginBottom:20}}>

@@ -118,7 +118,7 @@ export default function ContactModal({ open, onClose }) {
             </>
           ) : (
             <p style={{ fontSize: 12, color: STONE, lineHeight: 1.8 }}>
-              Thank you. Our wholesale team typically responds within 1 business day.
+              Thank you. Our wholesale team will follow up with you.
             </p>
           )}
         </div>
