@@ -151,7 +151,7 @@ export default function QuoteRequestModal({ open, onClose }) {
             </>
           ) : (
             <p style={{ fontSize: 12, color: STONE, lineHeight: 1.8 }}>
-              Thank you. A manufacturing specialist will contact you within 48 hours.
+              Thank you. A manufacturing specialist will follow up with you.
             </p>
           )}
         </div>
