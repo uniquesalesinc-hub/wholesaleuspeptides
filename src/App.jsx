@@ -411,8 +411,8 @@ const P = [
   {id:84, c:"Topicals", n:"Smooth Cream",         s:"50ml", R1:78,  R2:78,  R3:78,  T1:78,  T2:78,  T3:75.5,T4:75.5,T5:73,  stockStatus:"in_stock", hot:0},
   {id:85, c:"Topicals", n:"Tan Cream",            s:"50ml", R1:68,  R2:68,  R3:68,  T1:68,  T2:68,  T3:65.5,T4:65.5,T5:63,  stockStatus:"in_stock", hot:0},
   {id:86, c:"Diluents", n:"Recon Water",           s:"10mL",
-    CT1:14.99, CT2:12.99, CT3:10.99,
-    customTierRanges:[{id:"CT1",min:10,max:100},{id:"CT2",min:101,max:300},{id:"CT3",min:301,max:null}],
+    CT1:14.99, CT2:12.99, CT3:10.99, CT4:9.99,
+    customTierRanges:[{id:"CT1",min:3,max:4},{id:"CT2",min:5,max:9},{id:"CT3",min:10,max:19},{id:"CT4",min:20,max:null}],
     exemptFromLargeVolumeReview:true,
     stockStatus:"in_stock", hot:0},
   {id:87, c:"Capsules", n:"5 Amino 1MQ",          s:"60 ct",R1:80,  R2:80,  R3:78,  T1:76,  T2:74,  T3:72,  T4:70,  T5:68,  stockStatus:"in_stock", hot:0},
@@ -442,7 +442,7 @@ function groupProducts(flat) {
     }
     const grp = map.get(key);
     if (item.hot === 1) grp.hot = 1;
-    grp.variants.push({ id: item.id, s: item.s, R1:item.R1, R2:item.R2, R3:item.R3, T1:item.T1, T2:item.T2, T3:item.T3, T4:item.T4, T5:item.T5, CT1:item.CT1, CT2:item.CT2, CT3:item.CT3, customTierRanges: item.customTierRanges, exemptFromLargeVolumeReview: item.exemptFromLargeVolumeReview, stockStatus: item.stockStatus, customProductionAvailable: item.customProductionAvailable });
+    grp.variants.push({ id: item.id, s: item.s, R1:item.R1, R2:item.R2, R3:item.R3, T1:item.T1, T2:item.T2, T3:item.T3, T4:item.T4, T5:item.T5, CT1:item.CT1, CT2:item.CT2, CT3:item.CT3, CT4:item.CT4, customTierRanges: item.customTierRanges, exemptFromLargeVolumeReview: item.exemptFromLargeVolumeReview, stockStatus: item.stockStatus, customProductionAvailable: item.customProductionAvailable });
   }
   return Array.from(map.values());
 }
