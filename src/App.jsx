@@ -218,13 +218,23 @@ function displayCategory(item) {
 const SPRAYS_CREAMS_CAPSULES = "Sprays, Creams & Capsules";
 const CUSTOM_PRODUCTION_FILTER = "Custom Production";
 
+// Cross-category supporting products: kept in their own internal category
+// (so pricing/data stay untouched) but also shown under these customer-
+// facing tabs. Recon Water stays out of Sprays/Creams/Capsules — it's not
+// added to those categories' lists below.
+const CROSS_LISTED_CATEGORIES = {
+  "Diluents": ["Peptides", "Bio Regulators"],
+};
+
 // Shared by the catalog's own pill filter (plain CATS values, exact
 // match) and the homepage quick links (the two combined filters above).
 function matchesCatalogFilter(p, cat) {
   if (cat === "All") return true;
   if (cat === SPRAYS_CREAMS_CAPSULES) return ["Sprays","Creams","Capsules"].includes(displayCategory(p));
   if (cat === CUSTOM_PRODUCTION_FILTER) return p.variants.some(v => v.stockStatus === "custom_production");
-  return displayCategory(p) === cat;
+  if (displayCategory(p) === cat) return true;
+  const crossListed = CROSS_LISTED_CATEGORIES[p.c];
+  return !!crossListed && crossListed.includes(cat);
 }
 
 // ── VARIANT-LEVEL STOCK / CUSTOM PRODUCTION AVAILABILITY ──────────────────────
@@ -439,6 +449,23 @@ function groupProducts(flat) {
 
 const GROUPED = groupProducts(P);
 
+// Recon Water is cross-listed into the Peptides and Bio Regulators tabs
+// (see CROSS_LISTED_CATEGORIES), but its one product record sits far down
+// the flat P array — filtering alone would bury it at the bottom of one of
+// those two tabs. Reposition it at render time only (never mutates P or
+// GROUPED), so it reads as prominent supporting inventory rather than a
+// peptide or bio regulator itself, without duplicating or moving the
+// underlying product record.
+const RECON_WATER_PROMINENT_INDEX = 6;
+function withReconWaterPositioned(rows, cat) {
+  if (cat !== "Peptides" && cat !== "Bio Regulators") return rows;
+  const idx = rows.findIndex(p => p.n === "Recon Water" && p.c === "Diluents");
+  if (idx <= 0) return rows;
+  const reordered = rows.slice();
+  const [reconWater] = reordered.splice(idx, 1);
+  reordered.splice(Math.min(RECON_WATER_PROMINENT_INDEX, reordered.length), 0, reconWater);
+  return reordered;
+}
 
 function Hero({ setPage }) {
   return (
@@ -778,7 +805,7 @@ function Catalog({ addToCart, openCart, partnerUnlocked, onUnlockClick, initialC
   }, [initialCategory]);
   const [srch, setSrch] = useState("");
   const [toast, setToast] = useState("");
-  const rows = GROUPED.filter(p=>matchesCatalogFilter(p,cat)&&(!srch||p.n.toLowerCase().includes(srch.toLowerCase())||displayCategory(p).toLowerCase().includes(srch.toLowerCase())||p.variants.some(v=>v.s.toLowerCase().includes(srch.toLowerCase()))));
+  const rows = withReconWaterPositioned(GROUPED.filter(p=>matchesCatalogFilter(p,cat)&&(!srch||p.n.toLowerCase().includes(srch.toLowerCase())||displayCategory(p).toLowerCase().includes(srch.toLowerCase())||p.variants.some(v=>v.s.toLowerCase().includes(srch.toLowerCase())))), cat);
   const add = (p,variant,qty,tier) => {
     if (addToCart) addToCart(p,variant,qty,tier);
     setToast(p.n);
@@ -1081,6 +1108,7 @@ function HomeSections({ setPage, goToCatalogCategory, onContactClick }) {
     {n:"GHK-Cu",      s:"50mg – 100mg",c:"Peptides"},
     {n:"NAD+",        s:"500mg – 1g", c:"Peptides"},
     {n:"MOTS-C",      s:"10mg – 20mg",c:"Peptides"},
+    {n:"Recon Water", s:"10mL",       c:"Diluents"},
   ];
   const mfg = [
     {t:"Quality Control",              b:"Applicable production lots are subject to documented quality control procedures from synthesis through final packaging."},
