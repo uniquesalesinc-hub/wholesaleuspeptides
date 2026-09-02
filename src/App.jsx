@@ -101,7 +101,7 @@ const PAGES = {
   about: {
     path: "/standards", title: "Standards",
     seoTitle: "Peptide Manufacturing Standards & Quality Testing",
-    description: "Our peptide manufacturing standards: third-party HPLC, LAL, and ICP-MS testing on domestic compliant facilities, with full batch transparency on every wholesale peptide supplier order.",
+    description: "Our peptide manufacturing standards: third-party purity, heavy metals, endotoxin, and sterility testing on domestic compliant facilities, with full batch transparency on every wholesale peptide supplier order.",
   },
   coa: {
     path: "/batch-verification", title: "Batch Verification",
@@ -961,6 +961,31 @@ function StatsStrip() {
             <div style={{fontSize:28,fontWeight:800,color:C.gold,fontFamily:"Georgia,serif",letterSpacing:-0.3,lineHeight:1.3}} className="stats-strip-num">{s}</div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ── INDEPENDENT LABORATORY TESTING ────────────────────────────────────────────
+// Concise, factual callout of the four testing areas every applicable
+// production lot is tested for. Deliberately does not restate specific test
+// methods (HPLC/LAL/ICP-MS) or thresholds — those already live in the
+// Standards and Batch Verification pages; this is the at-a-glance summary.
+function LabTestingSection() {
+  const items = ["Purity", "Heavy Metals", "Endotoxins", "Sterility"];
+  return (
+    <div style={{background:C.white,padding:"56px 40px",borderBottom:"1px solid "+C.mist}}>
+      <div style={{maxWidth:1280,margin:"0 auto",textAlign:"center"}}>
+        <div style={{fontSize:9,letterSpacing:4,color:C.gold,textTransform:"uppercase",fontWeight:700,marginBottom:12}}>Quality Assurance</div>
+        <h2 style={{fontSize:28,fontWeight:800,lineHeight:1.2,color:C.navy,fontFamily:"Georgia,serif",letterSpacing:-0.3,marginBottom:10}}>Independent Laboratory Testing</h2>
+        <p style={{fontSize:13,color:C.stone,lineHeight:1.8,maxWidth:520,margin:"0 auto 24px"}}>
+          Testing includes purity, heavy metals, endotoxins, and sterility.
+        </p>
+        <div style={{display:"flex",justifyContent:"center",gap:10,flexWrap:"wrap"}}>
+          {items.map(it=>(
+            <div key={it} style={{padding:"8px 20px",border:"1px solid "+C.mist,fontSize:11,fontWeight:700,color:C.navy,letterSpacing:0.5}}>{it}</div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -2407,7 +2432,7 @@ export default function App() {
           </div>
         )}
       </nav>
-      {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><WhoWeServe/><UnlockPartnerCTA partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} setPage={setPage}/><StatsStrip/><TrustBanner/><HomeSections setPage={setPage} goToCatalogCategory={goToCatalogCategory} onContactClick={()=>setContactModalOpen(true)}/></>}
+      {page==="home"    && <><Hero setPage={setPage}/><WhyPartners/><WhoWeServe/><UnlockPartnerCTA partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} setPage={setPage}/><StatsStrip/><TrustBanner/><LabTestingSection/><HomeSections setPage={setPage} goToCatalogCategory={goToCatalogCategory} onContactClick={()=>setContactModalOpen(true)}/></>}
       {page==="catalog" && <Catalog addToCart={addToCart} openCart={()=>setCopen(true)} partnerUnlocked={partnerUnlocked} onUnlockClick={()=>setPartnerModalOpen(true)} onRequestConsultation={(type,ctx)=>setConsultationRequest({type,...ctx})} initialCategory={catalogCategory}/>}
       {page==="wl"      && <WLPage setPage={setPage}/>}
       {page==="about"   && <AboutPage/>}
