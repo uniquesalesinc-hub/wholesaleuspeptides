@@ -3,7 +3,7 @@ const GOLD = '#C9A84C';
 
 const PILLARS = [
   { label: 'Made in USA',                sub: 'Compounded & lyophilized domestically' },
-  { label: 'Independently Tested',         sub: 'HPLC · LAL endotoxin · ICP-MS metals' },
+  { label: 'Independently Tested',         sub: 'Purity · heavy metals · endotoxins · sterility' },
   { label: 'Domestic Compounding',         sub: 'Licensed U.S. manufacturing partners' },
   { label: 'Batch Traceability',           sub: 'Lot-specific COA on every order' },
   { label: 'White Label Ready',            sub: 'Your brand. Our manufacturing.' },
