@@ -1,0 +1,10 @@
+{
+  "name": "grok-bridge",
+  "private": true,
+  "type": "module",
+  "description": "Lets Grok send coding tasks to Claude Code for this repository",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
